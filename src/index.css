@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Color de acento principal — violeta FCF */
+  --color-brand:       #7c3aed;
+  --color-brand-dark:  #5b21b6;
+  --color-brand-light: #ede9fe;
+}
+
+@layer base {
+  :root {
+    --app-bg:     #f8f9fa;
+    --app-text:   #1a1f26;
+    --card-bg:    #ffffff;
+    --card-border:#e2e8f0;
+    --header-bg:  #ffffff;
+    --input-bg:   #f1f5f9;
+  }
+
+  .dark {
+    --app-bg:     #121212;
+    --app-text:   #ffffff;
+    --card-bg:    #1f1f1f;
+    --card-border:#333333;
+    --header-bg:  #121212;
+    --input-bg:   #1a1a1a;
+  }
+
+  body {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    @apply font-sans antialiased transition-colors duration-300;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }

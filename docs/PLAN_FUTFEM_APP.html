@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Maestro: FUTFEM_APP — Estadísticas FCF Fútbol Femenino</title>
+<style>
+  :root {
+    --purple: #7c3aed;
+    --purple-dark: #4c1d95;
+    --purple-mid: #5b21b6;
+    --purple-light: #ede9fe;
+    --violet: #6d28d9;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --yellow: #ca8a04;
+    --yellow-light: #fef9c3;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --orange: #ea580c;
+    --orange-light: #ffedd5;
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.09);
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.13);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+
+  /* ── HEADER ────────────────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #2e1065 0%, #4c1d95 45%, #6d28d9 100%);
+    color: white;
+    padding: 44px 56px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -70px; right: -70px;
+    width: 320px; height: 320px;
+    background: rgba(124,58,237,0.22);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 180px; height: 180px;
+    background: rgba(139,92,246,0.15);
+    border-radius: 50%;
+  }
+  .header-inner { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; color: #e9d5ff;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 2.4em; font-weight: 800; letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .header h1 span { color: #c4b5fd; }
+  .header .subtitle {
+    font-size: 1.05em; color: #ddd6fe; max-width: 680px;
+    margin-bottom: 28px;
+  }
+  .header-meta {
+    display: flex; flex-wrap: wrap; gap: 20px;
+  }
+  .meta-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 7px 14px;
+    font-size: 13px; color: #e9d5ff;
+  }
+  .meta-chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-green { background: #4ade80; }
+  .dot-yellow { background: #fbbf24; }
+  .dot-blue { background: #60a5fa; }
+
+  /* ── LAYOUT ────────────────────────────────────────── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+  .content { padding: 40px 28px 60px; max-width: 1100px; margin: 0 auto; }
+
+  /* ── TOC ───────────────────────────────────────────── */
+  .toc-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 28px;
+    overflow-x: auto;
+    white-space: nowrap;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .toc-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 0; }
+  .toc-item {
+    display: inline-block; padding: 13px 16px;
+    font-size: 13px; font-weight: 500; color: var(--gray-600);
+    text-decoration: none; border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .toc-item:hover { color: var(--purple); border-bottom-color: var(--purple-light); }
+
+  /* ── SECTIONS ──────────────────────────────────────── */
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .section-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .icon-purple { background: var(--purple-light); }
+  .icon-blue   { background: var(--blue-light); }
+  .icon-green  { background: var(--green-light); }
+  .icon-orange { background: var(--orange-light); }
+  .icon-yellow { background: var(--yellow-light); }
+  .icon-teal   { background: var(--teal-light); }
+  .section-title { font-size: 1.3em; font-weight: 700; color: var(--gray-900); }
+  .section-num {
+    font-size: 0.75em; font-weight: 600; color: var(--gray-400);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-left: 4px;
+  }
+
+  /* ── CARDS ─────────────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 0.9em; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--gray-600); margin-bottom: 12px;
+  }
+
+  /* ── GRID ──────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .header { padding: 28px 20px; }
+    .header h1 { font-size: 1.7em; }
+    .toc-bar { display: none; }
+  }
+
+  /* ── SUMMARY BOXES ─────────────────────────────────── */
+  .summary-box {
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .sb-purple { background: var(--purple-light); border: 1px solid #c4b5fd; }
+  .sb-blue   { background: var(--blue-light);   border: 1px solid #93c5fd; }
+  .sb-green  { background: var(--green-light);  border: 1px solid #86efac; }
+  .sb-orange { background: var(--orange-light); border: 1px solid #fdba74; }
+  .sb-yellow { background: var(--yellow-light); border: 1px solid #fde047; }
+  .sb-red    { background: var(--red-light);    border: 1px solid #fca5a5; }
+  .sb-teal   { background: var(--teal-light);   border: 1px solid #5eead4; }
+  .sb-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .sb-content h4 { font-size: 0.95em; font-weight: 700; margin-bottom: 4px; }
+  .sb-purple h4 { color: var(--purple-dark); }
+  .sb-blue   h4 { color: #1e40af; }
+  .sb-green  h4 { color: #166534; }
+  .sb-orange h4 { color: #9a3412; }
+  .sb-yellow h4 { color: #854d0e; }
+  .sb-red    h4 { color: #991b1b; }
+  .sb-teal   h4 { color: #134e4a; }
+  .sb-content p { font-size: 0.88em; color: var(--gray-700); line-height: 1.5; }
+  .sb-content code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 0.85em; background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 4px;
+  }
+
+  /* ── CHECKLIST ─────────────────────────────────────── */
+  .checklist { list-style: none; }
+  .checklist li {
+    padding: 9px 0 9px 30px;
+    position: relative;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 0.93em;
+    color: var(--gray-700);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: '☐';
+    position: absolute; left: 0;
+    color: var(--gray-400); font-size: 1em;
+  }
+  .checklist li strong { color: var(--gray-900); }
+  .checklist li code {
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 0.83em; background: var(--gray-100);
+    padding: 1px 6px; border-radius: 4px; color: var(--purple);
+  }
+  .checklist .sub {
+    margin-top: 6px; margin-left: 0;
+    list-style: disc; padding-left: 18px;
+    color: var(--gray-600); font-size: 0.9em;
+  }
+  .checklist .sub li {
+    padding-left: 0; border-bottom: none;
+  }
+  .checklist .sub li::before { content: none; }
+
+  /* ── CODE BLOCKS ───────────────────────────────────── */
+  pre {
+    background: #1e1b2e;
+    color: #e2e8f0;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 8px 0;
+    border: 1px solid #2d2a3e;
+  }
+  pre .comment  { color: #6c7897; }
+  pre .kw       { color: #c084fc; }
+  pre .str      { color: #86efac; }
+  pre .fn       { color: #7dd3fc; }
+  pre .type     { color: #f9a8d4; }
+  pre .num      { color: #fb923c; }
+  pre .op       { color: #94a3b8; }
+  code {
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 0.87em;
+    background: var(--gray-100); color: var(--purple);
+    padding: 2px 7px; border-radius: 4px;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── TABLES ────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+  th {
+    background: var(--gray-50); color: var(--gray-700);
+    font-weight: 700; font-size: 0.82em;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 10px 16px; text-align: left;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray-50); }
+  td code {
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 0.82em; background: var(--gray-100); padding: 1px 5px; border-radius: 3px;
+  }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 0.78em; font-weight: 600;
+  }
+  .badge-green  { background: var(--green-light);  color: #166534; }
+  .badge-red    { background: var(--red-light);    color: #991b1b; }
+  .badge-purple { background: var(--purple-light); color: var(--purple-dark); }
+  .badge-blue   { background: var(--blue-light);   color: #1e40af; }
+  .badge-gray   { background: var(--gray-100);     color: var(--gray-600); }
+
+  /* ── PHASES TIMELINE ───────────────────────────────── */
+  .phases { position: relative; padding-left: 28px; }
+  .phases::before {
+    content: '';
+    position: absolute; left: 11px; top: 8px;
+    width: 2px; bottom: 0;
+    background: linear-gradient(180deg, var(--purple) 0%, #c4b5fd 100%);
+  }
+  .phase {
+    position: relative; margin-bottom: 24px;
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: var(--radius); padding: 16px 20px;
+    box-shadow: var(--shadow);
+  }
+  .phase::before {
+    content: '';
+    position: absolute; left: -23px; top: 18px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--purple); border: 2px solid var(--white);
+    box-shadow: 0 0 0 2px var(--purple);
+  }
+  .phase-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .phase-title { font-weight: 700; font-size: 0.95em; color: var(--gray-900); }
+  .phase-num {
+    font-size: 0.72em; font-weight: 700; color: var(--purple);
+    background: var(--purple-light); padding: 2px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .phase-time {
+    font-size: 0.78em; color: var(--gray-400); font-weight: 600;
+  }
+  .phase ul { padding-left: 18px; color: var(--gray-600); font-size: 0.88em; }
+  .phase ul li { margin-bottom: 4px; }
+  .phase ul li code {
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 0.83em; background: var(--gray-100);
+    padding: 1px 5px; border-radius: 3px; color: var(--purple);
+  }
+
+  /* ── FOLDER TREE ───────────────────────────────────── */
+  .tree {
+    background: #1e1b2e; color: #e2e8f0;
+    border-radius: var(--radius); padding: 20px 24px;
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 13px; line-height: 1.9;
+    border: 1px solid #2d2a3e;
+  }
+  .tree .folder { color: #c084fc; font-weight: 600; }
+  .tree .file   { color: #e2e8f0; }
+  .tree .note   { color: #6c7897; font-style: italic; }
+
+  /* ── DIFF TABLE ────────────────────────────────────── */
+  .diff-old { color: #f87171; text-decoration: line-through; }
+  .diff-new { color: #4ade80; }
+
+  /* ── ALERT ─────────────────────────────────────────── */
+  .alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 18px; border-radius: var(--radius);
+    margin-bottom: 16px; font-size: 0.9em;
+  }
+  .alert-info  { background: var(--blue-light);   border: 1px solid #93c5fd; color: #1e40af; }
+  .alert-warn  { background: var(--yellow-light);  border: 1px solid #fde047; color: #854d0e; }
+  .alert-tip   { background: var(--green-light);   border: 1px solid #86efac; color: #166534; }
+  .alert-icon  { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── FOOTER ────────────────────────────────────────── */
+  footer {
+    background: var(--gray-900); color: var(--gray-400);
+    text-align: center; padding: 24px;
+    font-size: 0.83em;
+  }
+  footer strong { color: var(--gray-200); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-badge">⚽ Plan Maestro · Nueva App Autónoma</div>
+    <h1>FUTFEM<span>_APP</span></h1>
+    <p class="subtitle">
+      App independiente para recoger y visualizar estadísticas de jugadoras
+      de las ligas femeninas de la FCF — extensible a múltiples divisiones.
+    </p>
+    <div class="header-meta">
+      <div class="meta-chip"><span class="dot dot-green"></span>Stack: React 19 + Vite + Supabase</div>
+      <div class="meta-chip"><span class="dot dot-blue"></span>Deploy: GitHub → Vercel</div>
+      <div class="meta-chip"><span class="dot dot-yellow"></span>Sync automático: GitHub Actions</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════ TOC -->
+<nav class="toc-bar">
+  <div class="toc-inner">
+    <a class="toc-item" href="#resumen">Resumen</a>
+    <a class="toc-item" href="#arquitectura">Arquitectura</a>
+    <a class="toc-item" href="#github">GitHub</a>
+    <a class="toc-item" href="#supabase">Supabase</a>
+    <a class="toc-item" href="#vercel">Vercel</a>
+    <a class="toc-item" href="#estructura">Estructura App</a>
+    <a class="toc-item" href="#script">Sync Script</a>
+    <a class="toc-item" href="#componentes">Componentes</a>
+    <a class="toc-item" href="#actions">GitHub Actions</a>
+    <a class="toc-item" href="#fases">Fases</a>
+    <a class="toc-item" href="#extension">Extensión</a>
+  </div>
+</nav>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════════ 1. RESUMEN -->
+<section class="section" id="resumen">
+  <div class="section-header">
+    <div class="section-icon icon-purple">🎯</div>
+    <div>
+      <div class="section-title">Resumen ejecutivo <span class="section-num">§1</span></div>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <span class="alert-icon">ℹ️</span>
+    <div>FUTFEM_APP replica la infraestructura de la sección <strong>Datos</strong> de ATClub (scraping FCF → Supabase → React) pero como app totalmente independiente, sin lógica de equipo propio y preparada para múltiples ligas/divisiones.</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="summary-box sb-purple">
+      <div class="sb-icon">🚀</div>
+      <div class="sb-content">
+        <h4>Qué hace la app</h4>
+        <p>Muestra estadísticas acumuladas de jugadoras (partidos, minutos, goles, tarjetas) extraídas automáticamente de las actas oficiales de la FCF. Sin login, 100% pública.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-blue">
+      <div class="sb-icon">🔗</div>
+      <div class="sb-content">
+        <h4>Independencia total</h4>
+        <p>Repo GitHub propio · Proyecto Supabase propio · Deploy Vercel propio. No comparte nada con ATClub — ni BD ni secrets ni dominio.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-green">
+      <div class="sb-icon">🏟️</div>
+      <div class="sb-content">
+        <h4>Multi-liga desde el inicio</h4>
+        <p>Tabla <code>leagues</code> en Supabase como maestro. Añadir una nueva liga = insertar una fila + una línea en el workflow. Cero cambios de código.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-orange">
+      <div class="sb-icon">⚙️</div>
+      <div class="sb-content">
+        <h4>Sync automático</h4>
+        <p>GitHub Actions ejecuta el script de scraping cada lunes 10:00 UTC para todas las ligas activas. También disparo manual desde Actions UI.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Datos que se capturan por jugadora</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Descripción</th>
+            <th>Fuente en el acta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>player_fcf_name</code></td><td>Nombre oficial FCF (APELLIDO, NOMBRE)</td><td>Tabla titulars/suplents</td></tr>
+          <tr><td><code>dorsal</code></td><td>Número de camiseta</td><td>Tabla alineación</td></tr>
+          <tr><td><code>partidos</code></td><td>Partidos donde jugó ≥1 min</td><td>Aparición en acta</td></tr>
+          <tr><td><code>titular</code></td><td>Partidos como titular</td><td>Sección titulars</td></tr>
+          <tr><td><code>suplente</code></td><td>Partidos en el banquillo</td><td>Sección suplents</td></tr>
+          <tr><td><code>minutos</code></td><td>Minutos totales jugados</td><td>Sección substitucions</td></tr>
+          <tr><td><code>goles</code></td><td>Goles marcados</td><td>Sección gols</td></tr>
+          <tr><td><code>amarillas</code></td><td>Tarjetas amarillas</td><td>Sección targetes</td></tr>
+          <tr><td><code>rojas</code></td><td>Tarjetas rojas</td><td>Sección targetes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 2. ARQUITECTURA -->
+<section class="section" id="arquitectura">
+  <div class="section-header">
+    <div class="section-icon icon-blue">🏗️</div>
+    <div><div class="section-title">Decisiones de arquitectura <span class="section-num">§2</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Aspecto</th><th>ATClub (origen)</th><th>FUTFEM_APP (nuevo)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Stack</strong></td>
+            <td>React 19 + Vite 6 + TS + Tailwind 4</td>
+            <td><span class="badge badge-green">Mismo stack</span> — reutilizar config</td>
+          </tr>
+          <tr>
+            <td><strong>Autenticación</strong></td>
+            <td>Supabase Auth (admin/reader)</td>
+            <td><span class="badge badge-red">Eliminada</span> — app pública</td>
+          </tr>
+          <tr>
+            <td><strong>Liga</strong></td>
+            <td>Hardcodeada: Tercera Fed Fem Gr. V</td>
+            <td><span class="badge badge-purple">Tabla <code>leagues</code></span> en Supabase</td>
+          </tr>
+          <tr>
+            <td><strong>Equipo propio</strong></td>
+            <td>Igualada CF A (<code>is_own_team</code>)</td>
+            <td><span class="badge badge-red">Eliminado</span> — todos iguales</td>
+          </tr>
+          <tr>
+            <td><strong>Sync script</strong></td>
+            <td><code>--season</code>, liga fija</td>
+            <td><code>--league &lt;path&gt;</code> obligatorio</td>
+          </tr>
+          <tr>
+            <td><strong>Sync plantilla</strong></td>
+            <td>Sincroniza a tabla <code>players</code></td>
+            <td><span class="badge badge-red">Eliminado</span> — no hay plantilla</td>
+          </tr>
+          <tr>
+            <td><strong>Supabase</strong></td>
+            <td>Proyecto <code>yrbuadybzlnkibdfonwq</code></td>
+            <td><span class="badge badge-blue">Nuevo proyecto</span> separado</td>
+          </tr>
+          <tr>
+            <td><strong>Repo GitHub</strong></td>
+            <td><code>atclub_new</code></td>
+            <td><span class="badge badge-blue">Nuevo repo</span> <code>futfem_app</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="alert alert-tip">
+    <span class="alert-icon">✅</span>
+    <div>El scraping HTML (Cheerio), la lógica de parsing de actas y la idempotencia con <code>actas_procesadas</code> se reutilizan <strong>sin cambios</strong> del script de ATClub. Solo se adapta la capa de configuración (liga dinámica) y se elimina la sincronización con la plantilla.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 3. GITHUB -->
+<section class="section" id="github">
+  <div class="section-header">
+    <div class="section-icon icon-orange">🐙</div>
+    <div><div class="section-title">Preparación GitHub <span class="section-num">§3</span></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">3.1 Crear repositorio</div>
+      <ul class="checklist">
+        <li>Ir a <strong>github.com → New repository</strong></li>
+        <li>Nombre del repo: <code>futfem_app</code></li>
+        <li>Visibilidad: <strong>Público</strong> (o privado, a criterio)</li>
+        <li>Inicializar con README: <strong>No</strong> (lo haremos desde local)</li>
+        <li>Clonar en local:
+          <ul class="sub">
+            <li><code>git clone https://github.com/TU_USUARIO/futfem_app.git</code></li>
+            <li>O crear carpeta y hacer <code>git remote add origin ...</code></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">3.2 Secrets para GitHub Actions</div>
+      <p style="font-size:0.88em;color:var(--gray-600);margin-bottom:12px;">
+        Settings → Secrets and variables → Actions → New repository secret
+      </p>
+      <ul class="checklist">
+        <li>
+          <strong>SUPABASE_URL</strong>
+          <ul class="sub"><li>Valor: URL del nuevo proyecto Supabase<br>(ej. <code>https://xxxx.supabase.co</code>)</li></ul>
+        </li>
+        <li>
+          <strong>SUPABASE_SERVICE_ROLE_KEY</strong>
+          <ul class="sub">
+            <li>Valor: Service Role Key del nuevo proyecto</li>
+            <li>⚠️ Solo se usa en el workflow de sync — NUNCA en el frontend</li>
+          </ul>
+        </li>
+      </ul>
+      <div class="alert alert-warn" style="margin-top:12px;font-size:0.85em;">
+        <span class="alert-icon">⚠️</span>
+        <div>La <code>SUPABASE_SERVICE_ROLE_KEY</code> tiene acceso total (bypasa RLS). Solo va en GitHub Secrets — nunca en Vercel ni en el código.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 4. SUPABASE -->
+<section class="section" id="supabase">
+  <div class="section-header">
+    <div class="section-icon icon-green">🗄️</div>
+    <div><div class="section-title">Preparación Supabase <span class="section-num">§4</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">4.1 Crear proyecto</div>
+    <ul class="checklist">
+      <li>Ir a <strong>supabase.com → New project</strong></li>
+      <li>Organización: la tuya personal</li>
+      <li>Nombre del proyecto: <code>futfem-app</code></li>
+      <li>Contraseña BD: generar una fuerte y guardarla</li>
+      <li>Región: <strong>West EU (Ireland)</strong> — misma que ATClub para latencia similar</li>
+      <li>Plan: <strong>Free</strong> (suficiente para los datos de las ligas)</li>
+      <li>Esperar a que el proyecto esté activo (~1-2 min)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">4.2 Anotar credenciales — Settings → API</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Dónde usarla</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><code>Project URL</code></td><td>Vercel + GitHub Actions</td><td>URL base del proyecto Supabase</td></tr>
+          <tr><td><code>anon / public key</code></td><td>Vercel (VITE_SUPABASE_ANON_KEY)</td><td>Clave pública — segura en frontend</td></tr>
+          <tr><td><code>service_role key</code></td><td>GitHub Actions secret ÚNICAMENTE</td><td>Clave admin — nunca en frontend</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">4.3 Ejecutar schema SQL — Dashboard → SQL Editor → New query</div>
+    <p style="font-size:0.88em;color:var(--gray-600);margin-bottom:14px;">
+      Copiar y ejecutar el siguiente SQL completo de una vez:
+    </p>
+    <pre><span class="comment">-- ═══════════════════════════════════════════════════════════════
+-- FUTFEM_APP · Schema v1
+-- Ejecutar en: Supabase Dashboard → SQL Editor
+-- ═══════════════════════════════════════════════════════════════</span>
+
+<span class="comment">-- ── 1. leagues — master de ligas/divisiones FCF ─────────────────</span>
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> <span class="type">leagues</span> (
+  id          <span class="type">UUID</span>        <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  name        <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,          <span class="comment">-- 'Tercera Federació - Grup V'</span>
+  short_name  <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,          <span class="comment">-- '3ª Fed Gr.V'</span>
+  group_path  <span class="type">TEXT</span>        <span class="kw">NOT NULL UNIQUE</span>,   <span class="comment">-- segmento de URL FCF</span>
+  fcf_seasons <span class="type">TEXT[]</span>      <span class="kw">NOT NULL DEFAULT</span> <span class="str">'{}'</span>, <span class="comment">-- ['2526','2627']</span>
+  active      <span class="type">BOOLEAN</span>     <span class="kw">NOT NULL DEFAULT true</span>,
+  sort_order  <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  created_at  <span class="type">TIMESTAMPTZ</span> <span class="kw">NOT NULL DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="comment">-- ── 2. fcf_stats — stats acumuladas por jugadora ─────────────────</span>
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> <span class="type">fcf_stats</span> (
+  id              <span class="type">UUID</span>        <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  league_id       <span class="type">UUID</span>        <span class="kw">NOT NULL REFERENCES</span> <span class="type">leagues</span>(id) <span class="kw">ON DELETE CASCADE</span>,
+  season          <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,    <span class="comment">-- '25-26' | '26-27'</span>
+  team_slug       <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,
+  team_name       <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,
+  player_fcf_name <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,    <span class="comment">-- 'RIBAS CAELLES, LAURA'</span>
+  dorsal          <span class="type">INT</span>,
+  partidos        <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  titular         <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  suplente        <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  minutos         <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  goles           <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  amarillas       <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  rojas           <span class="type">INT</span>         <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+  updated_at      <span class="type">TIMESTAMPTZ</span> <span class="kw">NOT NULL DEFAULT</span> <span class="fn">now</span>(),
+  <span class="kw">CONSTRAINT</span> fcf_stats_unique <span class="kw">UNIQUE</span> (league_id, season, team_slug, player_fcf_name)
+);
+
+<span class="kw">CREATE INDEX IF NOT EXISTS</span> idx_fcf_stats_league_season <span class="kw">ON</span> <span class="type">fcf_stats</span>(league_id, season);
+<span class="kw">CREATE INDEX IF NOT EXISTS</span> idx_fcf_stats_team <span class="kw">ON</span> <span class="type">fcf_stats</span>(league_id, season, team_slug);
+
+<span class="comment">-- ── 3. actas_procesadas — idempotencia del sync ──────────────────</span>
+<span class="kw">CREATE TABLE IF NOT EXISTS</span> <span class="type">actas_procesadas</span> (
+  id            <span class="type">UUID</span>        <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  league_id     <span class="type">UUID</span>        <span class="kw">NOT NULL REFERENCES</span> <span class="type">leagues</span>(id) <span class="kw">ON DELETE CASCADE</span>,
+  season        <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,
+  fcf_season    <span class="type">TEXT</span>        <span class="kw">NOT NULL</span>,   <span class="comment">-- '2526' | '2627'</span>
+  acta_url      <span class="type">TEXT</span>        <span class="kw">NOT NULL UNIQUE</span>,
+  jornada       <span class="type">INT</span>,
+  local_slug    <span class="type">TEXT</span>,  visitant_slug   <span class="type">TEXT</span>,
+  local_name    <span class="type">TEXT</span>,  visitant_name   <span class="type">TEXT</span>,
+  players_count <span class="type">INT</span>         <span class="kw">DEFAULT</span> <span class="num">0</span>,
+  processed_at  <span class="type">TIMESTAMPTZ</span> <span class="kw">NOT NULL DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="kw">CREATE INDEX IF NOT EXISTS</span> idx_actas_league_season <span class="kw">ON</span> <span class="type">actas_procesadas</span>(league_id, season);
+
+<span class="comment">-- ── 4. RLS — SELECT público, writes solo via service_role ────────</span>
+<span class="kw">ALTER TABLE</span> <span class="type">leagues</span>          <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">ALTER TABLE</span> <span class="type">fcf_stats</span>        <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">ALTER TABLE</span> <span class="type">actas_procesadas</span> <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+
+<span class="kw">CREATE POLICY</span> <span class="str">"leagues_read"</span>
+  <span class="kw">ON</span> <span class="type">leagues</span> <span class="kw">FOR SELECT USING</span> (<span class="kw">true</span>);
+<span class="kw">CREATE POLICY</span> <span class="str">"fcf_stats_read"</span>
+  <span class="kw">ON</span> <span class="type">fcf_stats</span> <span class="kw">FOR SELECT USING</span> (<span class="kw">true</span>);
+<span class="kw">CREATE POLICY</span> <span class="str">"actas_procesadas_read"</span>
+  <span class="kw">ON</span> <span class="type">actas_procesadas</span> <span class="kw">FOR SELECT USING</span> (<span class="kw">true</span>);
+
+<span class="comment">-- ── 5. Seed inicial de ligas ─────────────────────────────────────</span>
+<span class="kw">INSERT INTO</span> <span class="type">leagues</span> (name, short_name, group_path, fcf_seasons, active, sort_order)
+<span class="kw">VALUES</span> (
+  <span class="str">'Tercera Federació - Grup V'</span>,
+  <span class="str">'3ª Fed Gr.V'</span>,
+  <span class="str">'futbol-femeni/tercera-federacio-futbol-femeni/grup-v'</span>,
+  <span class="kw">ARRAY</span>[<span class="str">'2526'</span>, <span class="str">'2627'</span>],
+  <span class="kw">true</span>, <span class="num">1</span>
+)
+<span class="kw">ON CONFLICT</span> (group_path) <span class="kw">DO NOTHING</span>;</pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">4.4 Verificar RLS</div>
+      <ul class="checklist">
+        <li>En SQL Editor: <code>SELECT * FROM leagues;</code> → devuelve datos ✅</li>
+        <li>En consola del navegador (con anon key):
+          <ul class="sub">
+            <li><code>supabase.from('leagues').select('*')</code> → OK</li>
+            <li><code>supabase.from('fcf_stats').insert({...})</code> → Error 403 ✅</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">4.5 Añadir ligas futuras</div>
+      <p style="font-size:0.88em;color:var(--gray-600);margin-bottom:10px;">
+        Para cada nueva liga/división, solo insertar una fila:
+      </p>
+      <pre style="font-size:12px;padding:14px;"><span class="kw">INSERT INTO</span> <span class="type">leagues</span>
+  (name, short_name, group_path, fcf_seasons, active)
+<span class="kw">VALUES</span> (
+  <span class="str">'Nombre de la Liga'</span>,
+  <span class="str">'Abrev'</span>,
+  <span class="str">'futbol-femeni/path-fcf'</span>,
+  <span class="kw">ARRAY</span>[<span class="str">'2627'</span>],
+  <span class="kw">true</span>
+);</pre>
+      <p style="font-size:0.82em;color:var(--gray-500);margin-top:8px;">
+        + añadir su <code>group_path</code> al matrix del workflow → listo.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 5. VERCEL -->
+<section class="section" id="vercel">
+  <div class="section-header">
+    <div class="section-icon icon-teal">▲</div>
+    <div><div class="section-title">Preparación Vercel <span class="section-num">§5</span></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">5.1 Crear proyecto en Vercel</div>
+      <ul class="checklist">
+        <li>Ir a <strong>vercel.com → Add New Project</strong></li>
+        <li>Import Git Repository → seleccionar <code>futfem_app</code></li>
+        <li>Framework Preset: <strong>Vite</strong> (auto-detectado)</li>
+        <li>Build Command: <code>npm run build</code> (default)</li>
+        <li>Output Directory: <code>dist</code> (default)</li>
+        <li>Root Directory: <strong>./</strong> (raíz del repo)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">5.2 Variables de entorno</div>
+      <p style="font-size:0.88em;color:var(--gray-600);margin-bottom:12px;">
+        Settings → Environment Variables → aplicar a Production + Preview + Development
+      </p>
+      <ul class="checklist">
+        <li>
+          <code>VITE_SUPABASE_URL</code>
+          <ul class="sub"><li>Valor: Project URL de Supabase (ej. <code>https://xxxx.supabase.co</code>)</li></ul>
+        </li>
+        <li>
+          <code>VITE_SUPABASE_ANON_KEY</code>
+          <ul class="sub">
+            <li>Valor: anon/public key de Supabase</li>
+            <li>✅ Es seguro — solo da acceso SELECT con RLS</li>
+          </ul>
+        </li>
+      </ul>
+      <div class="alert alert-warn" style="margin-top:12px;font-size:0.84em;">
+        <span class="alert-icon">🚫</span>
+        <div>La <code>SERVICE_ROLE_KEY</code> NO va en Vercel. Solo en GitHub Secrets.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">5.3 vercel.json — SPA routing (archivo en la raíz del repo)</div>
+    <pre><span class="op">{</span>
+  <span class="str">"version"</span><span class="op">:</span> <span class="num">2</span><span class="op">,</span>
+  <span class="str">"rewrites"</span><span class="op">:</span> <span class="op">[</span>
+    <span class="op">{</span> <span class="str">"source"</span><span class="op">:</span> <span class="str">"/(.*)"</span><span class="op">,</span> <span class="str">"destination"</span><span class="op">:</span> <span class="str">"/index.html"</span> <span class="op">}</span>
+  <span class="op">]</span>
+<span class="op">}</span></pre>
+    <p style="font-size:0.85em;color:var(--gray-600);margin-top:10px;">
+      Idéntico al de ATClub. Necesario para que React Router funcione con enlaces directos.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">5.4 Verificar deploy</div>
+    <ul class="checklist">
+      <li>Clicar <strong>Deploy</strong> — Vercel construirá el proyecto automáticamente</li>
+      <li>El dominio asignado será <code>futfem-app-xxxxx.vercel.app</code> (configurable luego)</li>
+      <li>Cada push a <code>main</code> en GitHub disparará un redeploy automático</li>
+      <li>Verificar que la app carga y las ligas aparecen desde Supabase</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 6. ESTRUCTURA -->
+<section class="section" id="estructura">
+  <div class="section-header">
+    <div class="section-icon icon-purple">📁</div>
+    <div><div class="section-title">Estructura del repositorio <span class="section-num">§6</span></div></div>
+  </div>
+
+  <div class="grid-2" style="align-items:start;">
+    <div class="tree">
+<span class="folder">futfem_app/</span>
+├── <span class="folder">.github/</span>
+│   └── <span class="folder">workflows/</span>
+│       └── <span class="file">sync-actas.yml</span>    <span class="note">← cron + dispatch</span>
+├── <span class="folder">docs/</span>
+│   └── <span class="file">PLAN_FUTFEM_APP.html</span>  <span class="note">← este doc</span>
+├── <span class="folder">scripts/</span>
+│   ├── <span class="folder">sql/</span>
+│   │   └── <span class="file">01_schema.sql</span>     <span class="note">← schema §4.3</span>
+│   └── <span class="file">sync-actas.js</span>     <span class="note">← script generalizado</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">components/</span>
+│   │   ├── <span class="file">LeagueSelector.tsx</span>
+│   │   ├── <span class="file">SeasonSelector.tsx</span>
+│   │   ├── <span class="file">TeamSelector.tsx</span>
+│   │   ├── <span class="file">StatsTable.tsx</span>    <span class="note">← de DatosSection</span>
+│   │   └── <span class="file">SyncStatusCard.tsx</span>
+│   ├── <span class="folder">lib/</span>
+│   │   └── <span class="file">supabase.ts</span>
+│   ├── <span class="folder">types/</span>
+│   │   └── <span class="file">index.ts</span>
+│   ├── <span class="file">App.tsx</span>           <span class="note">← sin auth</span>
+│   ├── <span class="file">main.tsx</span>
+│   └── <span class="file">index.css</span>
+├── <span class="folder">public/</span>
+│   └── <span class="file">favicon.png</span>
+├── <span class="file">.env.example</span>
+├── <span class="file">.gitignore</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+├── <span class="file">tsconfig.json</span>
+├── <span class="file">vite.config.ts</span>
+└── <span class="file">vercel.json</span>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Dependencias package.json</div>
+        <p style="font-size:0.85em;color:var(--gray-600);margin-bottom:10px;">Solo lo necesario — sin Gemini, PDF, Recharts ni Express:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Paquete</th><th>Uso</th></tr></thead>
+            <tbody>
+              <tr><td><code>@supabase/supabase-js</code></td><td>BD + auth</td></tr>
+              <tr><td><code>react</code> + <code>react-dom</code></td><td>UI</td></tr>
+              <tr><td><code>lucide-react</code></td><td>Iconos</td></tr>
+              <tr><td><code>clsx</code> + <code>tailwind-merge</code></td><td>Clases CSS</td></tr>
+              <tr><td><code>vite</code> + <code>@vitejs/plugin-react</code></td><td>Build</td></tr>
+              <tr><td><code>tailwindcss</code> + <code>@tailwindcss/vite</code></td><td>Estilos</td></tr>
+              <tr><td><code>cheerio</code> (devDep)</td><td>Scraping HTML</td></tr>
+              <tr><td><code>typescript</code> (devDep)</td><td>Tipos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <div class="card-title">.env.example</div>
+        <pre style="font-size:12px;padding:14px;"><span class="comment"># Supabase — Settings → API del nuevo proyecto</span>
+VITE_SUPABASE_URL=<span class="str">"https://xxxx.supabase.co"</span>
+VITE_SUPABASE_ANON_KEY=<span class="str">"eyJ..."</span>
+
+<span class="comment"># Solo para sync script local (NO va a Vercel)</span>
+<span class="comment"># SUPABASE_SERVICE_ROLE_KEY="eyJ..."</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 7. SCRIPT SYNC -->
+<section class="section" id="script">
+  <div class="section-header">
+    <div class="section-icon icon-orange">⚙️</div>
+    <div><div class="section-title">Sync script generalizado <span class="section-num">§7</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cambios vs. sync-actas-fcf.js de ATClub</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Elemento</th><th>ATClub</th><th>FUTFEM_APP</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GROUP_PATH</code></td>
+            <td class="diff-old">hardcodeado</td>
+            <td class="diff-new">leído de Supabase vía <code>--league</code></td>
+          </tr>
+          <tr>
+            <td><code>OWN_TEAM_SLUG / NAME</code></td>
+            <td class="diff-old">existía</td>
+            <td class="diff-new">eliminado</td>
+          </tr>
+          <tr>
+            <td><code>is_own_team</code></td>
+            <td class="diff-old">en upsert</td>
+            <td class="diff-new">eliminado de tabla y upsert</td>
+          </tr>
+          <tr>
+            <td><code>syncToPlantilla()</code></td>
+            <td class="diff-old">existía</td>
+            <td class="diff-new">eliminado</td>
+          </tr>
+          <tr>
+            <td><code>resolveLeague(path)</code></td>
+            <td class="diff-old">no existía</td>
+            <td class="diff-new"><span class="badge badge-green">nuevo</span> → devuelve <code>{ id, name }</code></td>
+          </tr>
+          <tr>
+            <td><code>upsertStats()</code></td>
+            <td>con <code>isOwnTeam</code></td>
+            <td>con <code>leagueId</code>, sin <code>isOwnTeam</code></td>
+          </tr>
+          <tr>
+            <td>Parsing HTML de actas</td>
+            <td>sin cambios</td>
+            <td><span class="badge badge-green">reutilizado íntegramente</span></td>
+          </tr>
+          <tr>
+            <td>Idempotencia</td>
+            <td>sin cambios</td>
+            <td><span class="badge badge-green">reutilizada íntegramente</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Uso del script</div>
+    <pre><span class="comment"># Backfill histórico (temporada 25-26) — solo una vez</span>
+node scripts/sync-actas.js \
+  <span class="kw">--league</span> <span class="str">futbol-femeni/tercera-federacio-futbol-femeni/grup-v</span> \
+  <span class="kw">--season</span> <span class="str">2526</span>
+
+<span class="comment"># Sync actual (temporada 26-27) — lo ejecuta GitHub Actions cada lunes</span>
+node scripts/sync-actas.js \
+  <span class="kw">--league</span> <span class="str">futbol-femeni/tercera-federacio-futbol-femeni/grup-v</span> \
+  <span class="kw">--season</span> <span class="str">2627</span>
+
+<span class="comment"># Test sin escribir a Supabase</span>
+node scripts/sync-actas.js \
+  <span class="kw">--league</span> <span class="str">futbol-femeni/tercera-federacio-futbol-femeni/grup-v</span> \
+  <span class="kw">--season</span> <span class="str">2627</span> \
+  <span class="kw">--dry-run</span>
+
+<span class="comment"># Reimportar actas ya procesadas (útil si hay que corregir datos)</span>
+node scripts/sync-actas.js \
+  <span class="kw">--league</span> <span class="str">futbol-femeni/tercera-federacio-futbol-femeni/grup-v</span> \
+  <span class="kw">--season</span> <span class="str">2627</span> \
+  <span class="kw">--force</span></pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Lógica de resolución de liga (nueva función)</div>
+    <pre><span class="comment">// Al inicio del script, resuelve el league_id desde Supabase</span>
+<span class="kw">async function</span> <span class="fn">resolveLeague</span>(groupPath) {
+  <span class="kw">const</span> { data, error } = <span class="kw">await</span> supabase
+    .from(<span class="str">'leagues'</span>)
+    .select(<span class="str">'id, name, group_path'</span>)
+    .eq(<span class="str">'group_path'</span>, groupPath)
+    .single();
+
+  <span class="kw">if</span> (error || !data) {
+    console.error(<span class="str">`Liga no encontrada: ${groupPath}`</span>);
+    process.exit(<span class="num">1</span>);
+  }
+  <span class="kw">return</span> data; <span class="comment">// { id: UUID, name: string, group_path: string }</span>
+}</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 8. COMPONENTES -->
+<section class="section" id="componentes">
+  <div class="section-header">
+    <div class="section-icon icon-blue">⚛️</div>
+    <div><div class="section-title">Componentes React <span class="section-num">§8</span></div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">LeagueSelector</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Pills horizontales con las ligas activas. Se oculta automáticamente si solo hay una liga (auto-selecciona).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">SeasonSelector</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Pills de temporada derivadas de <code>league.fcf_seasons</code> mapeadas a formato legible ('26-27').</p>
+    </div>
+    <div class="card">
+      <div class="card-title">TeamSelector</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Select estilizado con opción "Todos los equipos". Lista de equipos derivada de <code>allStats</code> sin llamada extra a BD.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">StatsTable ⭐</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Extraído de <code>DatosSection.tsx</code> de ATClub. Tabla ordenable con columnas: Jugadora, PJ, TIT, SUP, MIN, G, TA, TR. Sin cambios de lógica.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">SyncStatusCard</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Muestra total de actas procesadas, equipos vistos, última sync y próxima sync (lunes 10:00 UTC). Sin lógica de Igualada.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">App.tsx</div>
+      <p style="font-size:0.87em;color:var(--gray-600);">Sin auth. Carga ligas al mount, luego allStats+actas en paralelo al cambiar liga/temporada. Todo el filtrado es en memoria.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Flujo de datos en App.tsx</div>
+    <pre style="font-size:12.5px;"><span class="comment">// 1. Mount: cargar ligas</span>
+supabase.from(<span class="str">'leagues'</span>).select(<span class="str">'*'</span>).eq(<span class="str">'active'</span>, <span class="kw">true</span>).order(<span class="str">'sort_order'</span>)
+→ setLeagues(data) → auto-select leagues[0]
+
+<span class="comment">// 2. Al cambiar liga: derivar temporadas del objeto league</span>
+league.fcf_seasons.map(<span class="fn">fcfSeasonToApp</span>)  <span class="comment">// '2627' → '26-27'</span>
+→ setAvailableSeasons() → auto-select seasons[0]
+
+<span class="comment">// 3. Al cambiar (leagueId, season): cargar datos en paralelo</span>
+<span class="kw">await</span> Promise.all([
+  supabase.from(<span class="str">'fcf_stats'</span>)
+    .select(<span class="str">'*'</span>).eq(<span class="str">'league_id'</span>, leagueId).eq(<span class="str">'season'</span>, season),
+  supabase.from(<span class="str">'actas_procesadas'</span>)
+    .select(<span class="str">'*'</span>).eq(<span class="str">'league_id'</span>, leagueId).eq(<span class="str">'season'</span>, season)
+])
+→ setAllStats(stats) → setActas(actas)
+→ setTeams(dedup por team_slug)   <span class="comment">// sin llamada extra a BD</span>
+
+<span class="comment">// 4. Al cambiar team: filtrar allStats en memoria</span>
+setTeamStats(allStats.filter(s => s.team_slug === selectedTeam))
+
+<span class="comment">// 5. Búsqueda global (useMemo)</span>
+searchResults = allStats.filter(s =>
+  s.player_fcf_name.toLowerCase().includes(query.toLowerCase())
+)</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 9. GITHUB ACTIONS -->
+<section class="section" id="actions">
+  <div class="section-header">
+    <div class="section-icon icon-orange">🤖</div>
+    <div><div class="section-title">GitHub Actions workflow <span class="section-num">§9</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">.github/workflows/sync-actas.yml</div>
+    <pre><span class="kw">name:</span> <span class="str">Sync Actas FCF · FUTFEM</span>
+
+<span class="kw">on:</span>
+  <span class="comment"># Automático: cada lunes 10:00 UTC</span>
+  <span class="kw">schedule:</span>
+    - <span class="kw">cron:</span> <span class="str">'0 10 * * 1'</span>
+
+  <span class="comment"># Manual: desde GitHub Actions UI</span>
+  <span class="kw">workflow_dispatch:</span>
+    <span class="kw">inputs:</span>
+      <span class="kw">league:</span>
+        <span class="kw">description:</span> <span class="str">'group_path FCF (obligatorio)'</span>
+        <span class="kw">required:</span> <span class="kw">true</span>
+        <span class="kw">default:</span> <span class="str">'futbol-femeni/tercera-federacio-futbol-femeni/grup-v'</span>
+        <span class="kw">type:</span> <span class="str">string</span>
+      <span class="kw">season:</span>
+        <span class="kw">description:</span> <span class="str">'Código temporada FCF'</span>
+        <span class="kw">required:</span> <span class="kw">true</span>
+        <span class="kw">default:</span> <span class="str">'2627'</span>
+        <span class="kw">type:</span> <span class="str">choice</span>
+        <span class="kw">options:</span> [<span class="str">'2627'</span>, <span class="str">'2526'</span>]
+      <span class="kw">force:</span>
+        <span class="kw">description:</span> <span class="str">'Reimportar actas ya procesadas'</span>
+        <span class="kw">default:</span> <span class="str">'false'</span>
+        <span class="kw">type:</span> <span class="str">boolean</span>
+      <span class="kw">dry_run:</span>
+        <span class="kw">description:</span> <span class="str">'Solo parsear, no escribir en Supabase'</span>
+        <span class="kw">default:</span> <span class="str">'false'</span>
+        <span class="kw">type:</span> <span class="str">boolean</span>
+
+<span class="kw">jobs:</span>
+  <span class="comment"># ─── PROGRAMADO: todas las ligas activas ────────────────────────</span>
+  <span class="kw">sync-scheduled:</span>
+    <span class="kw">if:</span> <span class="str">github.event_name == 'schedule'</span>
+    <span class="kw">name:</span> <span class="str">Sync ${{ matrix.league }}</span>
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">timeout-minutes:</span> <span class="num">30</span>
+    <span class="kw">strategy:</span>
+      <span class="kw">fail-fast:</span> <span class="kw">false</span>
+      <span class="kw">matrix:</span>
+        <span class="comment"># ← Añadir nuevas ligas aquí (group_path)</span>
+        <span class="kw">league:</span>
+          - <span class="str">'futbol-femeni/tercera-federacio-futbol-femeni/grup-v'</span>
+        <span class="kw">season:</span>
+          - <span class="str">'2627'</span>
+    <span class="kw">steps:</span>
+      - <span class="kw">uses:</span> actions/checkout@v4
+      - <span class="kw">uses:</span> actions/setup-node@v4
+        <span class="kw">with:</span> { <span class="kw">node-version:</span> <span class="str">'24'</span>, <span class="kw">cache:</span> <span class="str">'npm'</span> }
+      - <span class="kw">run:</span> npm ci
+      - <span class="kw">name:</span> Run sync
+        <span class="kw">run:</span> |
+          node scripts/sync-actas.js \
+            --league <span class="str">"${{ matrix.league }}"</span> \
+            --season <span class="str">"${{ matrix.season }}"</span>
+        <span class="kw">env:</span>
+          SUPABASE_URL:              <span class="str">${{ secrets.SUPABASE_URL }}</span>
+          SUPABASE_SERVICE_ROLE_KEY: <span class="str">${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}</span>
+
+  <span class="comment"># ─── MANUAL: una liga + temporada específica ────────────────────</span>
+  <span class="kw">sync-manual:</span>
+    <span class="kw">if:</span> <span class="str">github.event_name == 'workflow_dispatch'</span>
+    <span class="kw">name:</span> Manual Sync
+    <span class="kw">runs-on:</span> ubuntu-latest
+    <span class="kw">timeout-minutes:</span> <span class="num">30</span>
+    <span class="kw">steps:</span>
+      - <span class="kw">uses:</span> actions/checkout@v4
+      - <span class="kw">uses:</span> actions/setup-node@v4
+        <span class="kw">with:</span> { <span class="kw">node-version:</span> <span class="str">'24'</span>, <span class="kw">cache:</span> <span class="str">'npm'</span> }
+      - <span class="kw">run:</span> npm ci
+      - <span class="kw">name:</span> Run sync
+        <span class="kw">run:</span> |
+          FLAGS=<span class="str">"--league ${{ inputs.league }} --season ${{ inputs.season }}"</span>
+          [ <span class="str">"${{ inputs.force }}"</span>   = <span class="str">"true"</span> ] && FLAGS=<span class="str">"$FLAGS --force"</span>
+          [ <span class="str">"${{ inputs.dry_run }}"</span> = <span class="str">"true"</span> ] && FLAGS=<span class="str">"$FLAGS --dry-run"</span>
+          node scripts/sync-actas.js $FLAGS
+        <span class="kw">env:</span>
+          SUPABASE_URL:              <span class="str">${{ secrets.SUPABASE_URL }}</span>
+          SUPABASE_SERVICE_ROLE_KEY: <span class="str">${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}</span></pre>
+  </div>
+
+  <div class="alert alert-tip">
+    <span class="alert-icon">💡</span>
+    <div>Para añadir una nueva liga al cron automático: añadir su <code>group_path</code> bajo <code>matrix.league</code> en el workflow. No hace falta tocar ningún otro fichero de código.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 10. FASES -->
+<section class="section" id="fases">
+  <div class="section-header">
+    <div class="section-icon icon-yellow">📋</div>
+    <div><div class="section-title">Fases de implementación <span class="section-num">§10</span></div></div>
+  </div>
+
+  <div class="phases">
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 1</span>
+          <div class="phase-title">Infraestructura — GitHub + Supabase + Vercel</div>
+        </div>
+        <div class="phase-time">~2 h</div>
+      </div>
+      <ul>
+        <li>Crear repo <code>futfem_app</code> en GitHub y clonar</li>
+        <li>Crear proyecto Supabase <code>futfem-app</code>, ejecutar <code>01_schema.sql</code></li>
+        <li>Añadir secrets en GitHub: <code>SUPABASE_URL</code> + <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
+        <li>Crear proyecto Vercel, conectar repo, añadir <code>VITE_SUPABASE_*</code></li>
+        <li>Crear <code>vercel.json</code>, hacer primer push, verificar deploy</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 2</span>
+          <div class="phase-title">Scaffold React app + archivos de configuración</div>
+        </div>
+        <div class="phase-time">~1 h</div>
+      </div>
+      <ul>
+        <li><code>npm create vite@latest futfem_app -- --template react-ts</code></li>
+        <li>Instalar dependencias: supabase-js, lucide-react, clsx, tailwind-merge, cheerio</li>
+        <li>Configurar <code>vite.config.ts</code>, <code>tsconfig.json</code>, <code>index.html</code>, <code>.gitignore</code></li>
+        <li>Crear <code>.env.local</code> con las credenciales reales (no se commitea)</li>
+        <li>Crear <code>.env.example</code> con valores placeholder</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 3</span>
+          <div class="phase-title">Adaptar sync script + backfill histórico</div>
+        </div>
+        <div class="phase-time">~2 h</div>
+      </div>
+      <ul>
+        <li>Copiar <code>sync-actas-fcf.js</code> de ATClub como base</li>
+        <li>Añadir <code>--league</code> flag + función <code>resolveLeague()</code></li>
+        <li>Eliminar <code>OWN_TEAM_SLUG</code>, <code>is_own_team</code>, <code>syncToPlantilla()</code></li>
+        <li>Actualizar <code>upsertStats()</code> con <code>leagueId</code> FK</li>
+        <li>Test con <code>--dry-run</code> → verificar output sin errores</li>
+        <li>Backfill: <code>node scripts/sync-actas.js --league ... --season 2526</code></li>
+        <li>Verificar datos en Supabase Table Editor</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 4</span>
+          <div class="phase-title">Componentes React + App.tsx</div>
+        </div>
+        <div class="phase-time">~3 h</div>
+      </div>
+      <ul>
+        <li>Crear <code>src/types/index.ts</code> (League, FcfStat, ActaProcesada)</li>
+        <li>Crear <code>src/lib/supabase.ts</code> + <code>src/lib/utils.ts</code></li>
+        <li>Extraer <code>StatsTable</code> de <code>DatosSection.tsx</code> de ATClub</li>
+        <li>Crear <code>SeasonSelector</code>, <code>LeagueSelector</code>, <code>TeamSelector</code></li>
+        <li>Adaptar <code>SyncStatusCard</code> (quitar lógica de Igualada)</li>
+        <li>Montar <code>App.tsx</code>: carga leagues → allStats → tabla</li>
+        <li>Verificar con <code>npm run dev</code> que todo funciona end-to-end</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 5</span>
+          <div class="phase-title">GitHub Actions + test cron manual</div>
+        </div>
+        <div class="phase-time">~30 min</div>
+      </div>
+      <ul>
+        <li>Crear <code>.github/workflows/sync-actas.yml</code></li>
+        <li>Push y verificar que el workflow aparece en Actions tab</li>
+        <li>Disparar manualmente con <code>--dry-run</code> → verificar que el job pasa</li>
+        <li>Disparar sync real (<code>--season 2627</code>) y verificar datos en Supabase</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 6</span>
+          <div class="phase-title">Deploy Vercel + verificación en producción</div>
+        </div>
+        <div class="phase-time">~30 min</div>
+      </div>
+      <ul>
+        <li>Push de <code>main</code> → Vercel auto-deploya</li>
+        <li>Verificar URL live: ligas cargan, tabla muestra datos, búsqueda funciona</li>
+        <li>Probar deep-link directo → SPA rewrite funciona</li>
+        <li>Layout mobile: tabla con scroll horizontal en pantallas estrechas</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div>
+          <span class="phase-num">Fase 7</span>
+          <div class="phase-title">Validación de datos + paridad con ATClub</div>
+        </div>
+        <div class="phase-time">~1 h</div>
+      </div>
+      <ul>
+        <li>Comparar stats de una jugadora en FUTFEM_APP vs. ATClub (misma temporada/grupo)</li>
+        <li>Confirmar RLS: intentar INSERT desde browser → debe fallar</li>
+        <li>Verificar GitHub Actions summary tras sync real</li>
+        <li>Comprobar cron programado en Actions → Scheduled runs</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 11. EXTENSION -->
+<section class="section" id="extension">
+  <div class="section-header">
+    <div class="section-icon icon-teal">🔭</div>
+    <div><div class="section-title">Extensión futura <span class="section-num">§11</span></div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="summary-box sb-purple">
+      <div class="sb-icon">🏆</div>
+      <div class="sb-content">
+        <h4>Nueva liga</h4>
+        <p>INSERT en <code>leagues</code> + <code>group_path</code> en matrix del workflow. Sin cambios de código. La app la mostrará automáticamente en <code>LeagueSelector</code>.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-blue">
+      <div class="sb-icon">📅</div>
+      <div class="sb-content">
+        <h4>Nueva temporada</h4>
+        <p>Añadir el código FCF al array <code>fcf_seasons</code> de la liga en Supabase. El <code>SeasonSelector</code> lo mostrará sin redeployar.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-green">
+      <div class="sb-icon">🥇</div>
+      <div class="sb-content">
+        <h4>Ranking global de goleadoras</h4>
+        <p>Query <code>fcf_stats</code> ORDER BY <code>goles DESC</code> sin filtro de equipo. Zero schema changes.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-orange">
+      <div class="sb-icon">📊</div>
+      <div class="sb-content">
+        <h4>Resumen por equipo</h4>
+        <p>Vista agregada: un row por equipo con totales. Computed en frontend desde <code>allStats</code> ya cargado.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-yellow">
+      <div class="sb-icon">🔍</div>
+      <div class="sb-content">
+        <h4>Perfil de jugadora</h4>
+        <p>Agrupar <code>player_fcf_name</code> entre temporadas para mostrar evolución histórica. Solo frontend.</p>
+      </div>
+    </div>
+    <div class="summary-box sb-teal">
+      <div class="sb-icon">⚽</div>
+      <div class="sb-content">
+        <h4>Detalle de partidos</h4>
+        <p><code>actas_procesadas</code> ya guarda jornada, local y visitante. Una vista de calendario/resultados solo requiere componente React.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /content -->
+
+<footer>
+  <strong>FUTFEM_APP</strong> — Plan Maestro v1.0 &nbsp;·&nbsp;
+  Dades: FCF (Federació Catalana de Futbol) · Fútbol Femení &nbsp;·&nbsp;
+  Stack: React 19 + Vite + Supabase + Vercel
+</footer>
+
+</body>
+</html>
