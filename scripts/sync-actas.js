@@ -220,7 +220,7 @@ function parseTargetesTable($, table) {
     const name   = normName($(row).find('a').first().text());
     if (!name) return;
     const groges = $(row).find('.groga-s').length;
-    const rojes  = $(row).find('.roja-s').length;
+    const rojes  = $(row).find('.vermella-s').length;  // FCF usa .vermella-s (vermell = rojo en catalán)
     if (groges > 0 || rojes > 0) {
       cards.push({ name, groga: groges, roja: rojes });
     }
