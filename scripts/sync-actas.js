@@ -244,20 +244,23 @@ async function parseActa(url) {
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  // Extraer slugs de la URL: /acta/2526/.../fn/local-slug/fn/visitant-slug
-  const fnParts      = url.split('/fn/');
-  const localSlug    = fnParts[1] || '';
-  const visitantSlug = fnParts[2] || '';
+  // Extraer slugs de la URL — el separador varía por división:
+  //   Tercera Federació → /fn/local-slug/fn/visitant-slug
+  //   Preferent, etc.   → /pf/local-slug/pf/visitant-slug
+  const sep = url.includes('/fn/') ? '/fn/' : url.includes('/pf/') ? '/pf/' : '/fn/';
+  const slugParts    = url.split(sep);
+  const localSlug    = slugParts[1] || '';
+  const visitantSlug = slugParts[2] || '';
 
   // Nombres de equipo
-  let localName   = localSlug;
+  let localName    = localSlug;
   let visitantName = visitantSlug;
   $('a[href*="/equip/"]').each((_, el) => {
     const href = $(el).attr('href') || '';
     const span = $(el).find('span').text().trim();
     if (!span) return;
-    if (href.endsWith(`/fn/${localSlug}`))    localName    = span;
-    if (href.endsWith(`/fn/${visitantSlug}`)) visitantName = span;
+    if (href.endsWith(`${sep}${localSlug}`))    localName    = span;
+    if (href.endsWith(`${sep}${visitantSlug}`)) visitantName = span;
   });
 
   const jornadaMatch = html.match(/jornada-(\d+)/);
