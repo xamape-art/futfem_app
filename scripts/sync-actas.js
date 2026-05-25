@@ -121,6 +121,7 @@ async function resolveLeague(groupPath) {
 
   if (error || !data) {
     err(`Liga no encontrada en Supabase: "${groupPath}"`);
+    if (error) err(`Detalle: ${error.message || error.code}`);
     err('Asegúrate de haber ejecutado el SQL de inicialización y de que la liga exista en la tabla leagues.');
     process.exit(1);
   }
