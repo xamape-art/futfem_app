@@ -45,6 +45,8 @@ jobs:
         league:
           - 'futbol-femeni/tercera-federacio-futbol-femeni/grup-v'
           - 'futbol-femeni/preferent-femeni/grup-1'
+          - 'futbol-femeni/primera-divisio-femeni/grup-1'
+          - 'futbol-femeni/primera-divisio-femeni/grup-2'
         season:
           - '2627'
 

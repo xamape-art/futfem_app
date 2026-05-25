@@ -244,10 +244,13 @@ async function parseActa(url) {
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  // Extraer slugs de la URL — el separador varía por división:
-  //   Tercera Federació → /fn/local-slug/fn/visitant-slug
-  //   Preferent, etc.   → /pf/local-slug/pf/visitant-slug
-  const sep = url.includes('/fn/') ? '/fn/' : url.includes('/pf/') ? '/pf/' : '/fn/';
+  // Extraer slugs de la URL — el separador varía por división FCF:
+  //   Tercera Federació  → /fn/local/fn/visitant
+  //   Preferent          → /pf/local/pf/visitant
+  //   Primera Divisió    → /1f/local/1f/visitant
+  // Detectamos el separador buscando el patrón /XX/slug/XX/ en la URL.
+  const sepMatch = url.match(/\/([a-z0-9]+)\/[^/]+\/\1\//);
+  const sep      = sepMatch ? `/${sepMatch[1]}/` : '/fn/';
   const slugParts    = url.split(sep);
   const localSlug    = slugParts[1] || '';
   const visitantSlug = slugParts[2] || '';
