@@ -23,11 +23,11 @@ on:
           - '2526'
       force:
         description: 'Reimportar actas ya procesadas'
-        default: 'false'
+        default: false
         type: boolean
       dry_run:
         description: 'Solo parsear, no escribir en Supabase'
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:
@@ -44,6 +44,7 @@ jobs:
         # ← Añadir aquí nuevas ligas (group_path) cuando se activen
         league:
           - 'futbol-femeni/tercera-federacio-futbol-femeni/grup-v'
+          - 'futbol-femeni/preferent-femeni/grup-1'
         season:
           - '2627'
 
