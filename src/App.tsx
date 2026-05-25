@@ -19,8 +19,9 @@ import SeasonSelector from './components/SeasonSelector';
 import StatsTable from './components/StatsTable';
 import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
+import TopTen from './components/TopTen';
 import { supabase } from './lib/supabase';
-import { cn, fcfSeasonToApp, formatPlayerName } from './lib/utils';
+import { cn, fcfSeasonToApp } from './lib/utils';
 import type { ActaProcesada, FcfStat, League, TeamOption } from './types';
 
 // ─── Dark mode helper ─────────────────────────────────────────────────────────
@@ -55,7 +56,6 @@ export default function App() {
 
   // ── Temporada activa ────────────────────────────────────────────────────────
   const [selectedSeason, setSelectedSeason] = useState<string>('');
-  const [availableSeasons, setAvailableSeasons] = useState<string[]>([]);
   const [availableFcfSeasons, setAvailableFcfSeasons] = useState<string[]>([]);
 
   // ── Datos ───────────────────────────────────────────────────────────────────
@@ -65,6 +65,9 @@ export default function App() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [teamStats, setTeamStats]       = useState<FcfStat[]>([]);
   const [loading, setLoading]           = useState(false);
+
+  // ── Vista activa ────────────────────────────────────────────────────────────
+  const [view, setView] = useState<'stats' | 'top10'>('stats');
 
   // ── Búsqueda global ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,7 +100,6 @@ export default function App() {
     const fcfSeasons = [...league.fcf_seasons].sort((a, b) => b.localeCompare(a));
     const appSeasons = fcfSeasons.map(fcfSeasonToApp);
     setAvailableFcfSeasons(fcfSeasons);
-    setAvailableSeasons(appSeasons);
     setSelectedSeason(appSeasons[0] ?? '');
     setSelectedTeam(null);
     setSearchQuery('');
@@ -112,6 +114,7 @@ export default function App() {
 
   async function loadData(leagueId: string, season: string) {
     setLoading(true);
+    setView('stats');
     setAllStats([]);
     setTeams([]);
     setTeamStats([]);
@@ -280,7 +283,36 @@ export default function App() {
               />
             )}
 
-            {/* Buscador global */}
+            {/* Toggle de vista */}
+            {!loading && allStats.length > 0 && (
+              <div className="flex gap-1.5 mb-5">
+                {(
+                  [
+                    { id: 'stats',  label: 'Estadístiques' },
+                    { id: 'top10', label: '🏆 Top 10'      },
+                  ] as const
+                ).map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setView(tab.id);
+                      setSearchQuery('');
+                    }}
+                    className={cn(
+                      'px-3.5 py-1.5 text-[12px] font-semibold rounded-full border transition-colors',
+                      view === tab.id
+                        ? 'bg-brand text-white border-brand'
+                        : 'bg-[var(--card-bg)] text-neutral-500 border-[var(--card-border)] hover:border-brand hover:text-brand'
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Buscador global (solo en vista estadístiques) */}
+            {view === 'stats' && (
             <div className="relative mb-4">
               <Search
                 size={13}
@@ -302,6 +334,7 @@ export default function App() {
                 </button>
               )}
             </div>
+            )}
 
             {/* Loading stats */}
             {loading && (
@@ -310,7 +343,17 @@ export default function App() {
               </div>
             )}
 
-            {!loading && (
+            {/* Vista Top 10 */}
+            {!loading && view === 'top10' && selectedLeague && (
+              <TopTen
+                allStats={allStats}
+                season={selectedSeason}
+                leagueName={selectedLeague.name}
+              />
+            )}
+
+            {/* Vista Estadístiques */}
+            {!loading && view === 'stats' && (
               <>
                 {/* ── Panel búsqueda ──────────────────────────────────────── */}
                 {searchResults !== null && (
