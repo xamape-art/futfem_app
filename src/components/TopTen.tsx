@@ -8,15 +8,24 @@ import { cn } from '../lib/utils';
 import { formatPlayerName } from '../lib/utils';
 import type { FcfStat } from '../types';
 
-// ─── Configuración de categorías ─────────────────────────────────────────────
+// ─── Configuració de categories ───────────────────────────────────────────────
 
 interface Category {
   key: keyof FcfStat;
   label: string;
   icon: string;
-  color: string;        // Tailwind text color para el valor
-  bgColor: string;      // Tailwind bg para el header de la card
-  emptyText: string;    // Texto si no hay datos
+  color: string;         // Tailwind text color per al valor
+  bgColor: string;       // Tailwind bg per al header de la card
+  emptyText: string;     // Text si no hi ha dades
+  /** Clau secundària que es mostra sota el valor principal (p.ex. titular sota minuts) */
+  secondaryKey?: keyof FcfStat;
+  secondaryLabel?: string;   // etiqueta petita per al valor secundari (p.ex. "tit.")
+  /** Valor calculat (per a mètriques derivades com min/gol) */
+  computedValue?: (s: FcfStat) => number;
+  /** Si true, millors primers = valors més baixos (p.ex. min/gol) */
+  sortAsc?: boolean;
+  /** Etiqueta petita sota el valor principal (p.ex. "min/gol") */
+  valueLabel?: string;
 }
 
 const CATEGORIES: Category[] = [
@@ -29,20 +38,26 @@ const CATEGORIES: Category[] = [
     emptyText: 'Cap gol marcat',
   },
   {
+    // Filtra jugadores amb goles > 0; valor = minutos / goles (min per gol)
+    key: 'goles',
+    label: 'Gols/minut',
+    icon: '⚡',
+    color: 'text-orange-500 dark:text-orange-400',
+    bgColor: 'from-orange-500 to-orange-600',
+    emptyText: 'Cap gol marcat',
+    computedValue: (s) => Math.round(s.minutos / s.goles),
+    sortAsc: true,
+    valueLabel: 'min/gol',
+  },
+  {
     key: 'minutos',
-    label: 'Més minuts',
+    label: 'Més minuts/titular',
     icon: '⏱️',
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'from-blue-500 to-blue-700',
     emptyText: 'Sense minuts',
-  },
-  {
-    key: 'titular',
-    label: 'Més titularitats',
-    icon: '🔵',
-    color: 'text-indigo-600 dark:text-indigo-400',
-    bgColor: 'from-indigo-500 to-indigo-700',
-    emptyText: 'Sense titularitats',
+    secondaryKey: 'titular',
+    secondaryLabel: 'tit.',
   },
   {
     key: 'suplente',
@@ -70,7 +85,7 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// ─── Medallas para el podio ───────────────────────────────────────────────────
+// ─── Medalles per al podi ─────────────────────────────────────────────────────
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -81,7 +96,7 @@ const rankStyle = (rank: number) => {
   return 'text-neutral-400 font-bold text-xs';
 };
 
-// ─── Card de una categoría ────────────────────────────────────────────────────
+// ─── Card d'una categoria ─────────────────────────────────────────────────────
 
 function CategoryCard({
   category,
@@ -90,15 +105,21 @@ function CategoryCard({
   category: Category;
   data: FcfStat[];
 }) {
-  // Top 10: filtrar valor > 0, ordenar desc, tomar 10
+  const getValue = (s: FcfStat): number =>
+    category.computedValue ? category.computedValue(s) : (s[category.key] as number);
+
   const top10 = [...data]
     .filter(s => (s[category.key] as number) > 0)
-    .sort((a, b) => (b[category.key] as number) - (a[category.key] as number))
+    .sort((a, b) =>
+      category.sortAsc
+        ? getValue(a) - getValue(b)
+        : getValue(b) - getValue(a)
+    )
     .slice(0, 10);
 
   return (
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-      {/* Header degradado */}
+      {/* Header degradat */}
       <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2', category.bgColor)}>
         <span className="text-xl">{category.icon}</span>
         <span className="text-white font-black text-xs uppercase tracking-wide whitespace-nowrap">
@@ -106,7 +127,7 @@ function CategoryCard({
         </span>
       </div>
 
-      {/* Lista */}
+      {/* Llista */}
       <div className="divide-y divide-[var(--card-border)]">
         {top10.length === 0 ? (
           <div className="px-4 py-6 text-center text-neutral-400 text-sm">
@@ -115,7 +136,7 @@ function CategoryCard({
         ) : (
           top10.map((player, i) => {
             const rank  = i + 1;
-            const value = player[category.key] as number;
+            const value = getValue(player);
             const name  = formatPlayerName(player.player_fcf_name);
 
             return (
@@ -126,12 +147,12 @@ function CategoryCard({
                   rank === 1 && 'bg-yellow-50/60 dark:bg-yellow-900/10'
                 )}
               >
-                {/* Posición */}
+                {/* Posició */}
                 <div className={cn('w-6 text-center shrink-0', rankStyle(rank))}>
                   {rank <= 3 ? MEDALS[rank - 1] : rank}
                 </div>
 
-                {/* Nombre + equipo */}
+                {/* Nom + equip */}
                 <div className="flex-1 min-w-0">
                   <div
                     className="text-[13px] font-semibold text-[var(--app-text)] leading-tight"
@@ -144,9 +165,24 @@ function CategoryCard({
                   </div>
                 </div>
 
-                {/* Valor */}
-                <div className={cn('text-sm font-black shrink-0', category.color)}>
-                  {value}
+                {/* Valor (principal + opcional secundari / etiqueta) */}
+                <div className="shrink-0 text-right">
+                  <div className={cn('text-sm font-black leading-tight', category.color)}>
+                    {value}
+                  </div>
+                  {/* Etiqueta sota el valor principal (p.ex. "min/gol") */}
+                  {category.valueLabel && (
+                    <div className="text-[10px] text-neutral-400 leading-tight">
+                      {category.valueLabel}
+                    </div>
+                  )}
+                  {/* Valor secundari (p.ex. titularitats sota minuts) */}
+                  {category.secondaryKey && (
+                    <div className="text-[10px] text-neutral-400 leading-tight">
+                      {player[category.secondaryKey] as number}{' '}
+                      {category.secondaryLabel ?? ''}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -157,7 +193,7 @@ function CategoryCard({
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+// ─── Component principal ──────────────────────────────────────────────────────
 
 interface TopTenProps {
   allStats: FcfStat[];
@@ -183,8 +219,8 @@ export default function TopTen({ allStats, season, leagueName }: TopTenProps) {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CATEGORIES.map(cat => (
-          <CategoryCard key={cat.key as string} category={cat} data={allStats} />
+        {CATEGORIES.map((cat, i) => (
+          <CategoryCard key={`${cat.key}-${i}`} category={cat} data={allStats} />
         ))}
       </div>
     </div>
