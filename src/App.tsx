@@ -452,8 +452,26 @@ export default function App() {
       </main>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="text-center py-6 text-[11px] text-neutral-400">
-        Dades: FCF · Federació Catalana de Futbol · Fútbol Femení
+      <footer className="text-center py-8 space-y-4">
+        <p className="text-[11px] text-neutral-400">
+          Dades: FCF · Federació Catalana de Futbol · Fútbol Femení
+        </p>
+        <div className="flex justify-center">
+          {/* Logo mode clar */}
+          <img
+            src="/xmp_logo_horizontal_color.png"
+            alt="XMP Football Analysis"
+            className="h-10 dark:hidden"
+            style={{ mixBlendMode: 'multiply' }}
+          />
+          {/* Logo mode fosc */}
+          <img
+            src="/xmp_logo_horizontal_blanco.png"
+            alt="XMP Football Analysis"
+            className="h-10 hidden dark:block opacity-80"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        </div>
       </footer>
     </div>
   );
