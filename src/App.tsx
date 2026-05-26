@@ -464,11 +464,12 @@ export default function App() {
             className="h-16 dark:hidden"
             style={{ mixBlendMode: 'multiply' }}
           />
-          {/* Logo mode fosc */}
+          {/* Logo mode fosc: invert(1) converteix fons blanc→negre i text fosc→clar */}
           <img
-            src="/xmp_logo_horizontal_blanco.png"
+            src="/xmp_logo_horizontal_color.png"
             alt="XMP Football Analysis"
             className="h-16 hidden dark:block"
+            style={{ filter: 'invert(1)', opacity: 0.85 }}
           />
         </div>
       </footer>
