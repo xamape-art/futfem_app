@@ -48,6 +48,8 @@ const CATEGORIES: Category[] = [
     computedValue: (s) => Math.round(s.minutos / s.goles),
     sortAsc: true,
     valueLabel: 'min/gol',
+    secondaryKey: 'goles',
+    secondaryLabel: 'gols',
   },
   {
     key: 'minutos',
