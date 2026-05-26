@@ -117,7 +117,7 @@ function CategoryCard({
         ? getValue(a) - getValue(b)
         : getValue(b) - getValue(a)
     )
-    .slice(0, 10);
+    .slice(0, 20);
 
   return (
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
@@ -215,7 +215,7 @@ export default function TopTen({ allStats, season, leagueName }: TopTenProps) {
   return (
     <div>
       <p className="text-[11px] text-neutral-400 mb-5">
-        Top 10 jugadores · {leagueName} · {season} ·{' '}
+        Top 20 jugadores · {leagueName} · {season} ·{' '}
         {new Set(allStats.map(s => s.team_slug)).size} equips ·{' '}
         {allStats.length} jugadores
       </p>

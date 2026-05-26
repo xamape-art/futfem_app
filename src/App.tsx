@@ -289,7 +289,7 @@ export default function App() {
                 {(
                   [
                     { id: 'stats',  label: 'Estadístiques' },
-                    { id: 'top10', label: '🏆 Top 10'      },
+                    { id: 'top10', label: '🏆 Top 20'      },
                   ] as const
                 ).map(tab => (
                   <button
