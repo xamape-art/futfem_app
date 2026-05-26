@@ -22,7 +22,7 @@ interface Category {
 const CATEGORIES: Category[] = [
   {
     key: 'goles',
-    label: 'Goleadores',
+    label: 'Golejadores',
     icon: '⚽',
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'from-emerald-500 to-emerald-700',
@@ -30,7 +30,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'minutos',
-    label: 'Más minutos',
+    label: 'Més minuts',
     icon: '⏱️',
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'from-blue-500 to-blue-700',
@@ -38,7 +38,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'titular',
-    label: 'Más titulares',
+    label: 'Més titularitats',
     icon: '🔵',
     color: 'text-indigo-600 dark:text-indigo-400',
     bgColor: 'from-indigo-500 to-indigo-700',
@@ -46,7 +46,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'suplente',
-    label: 'Más suplentes',
+    label: 'Més suplències',
     icon: '🟡',
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'from-amber-500 to-amber-600',
@@ -54,7 +54,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'amarillas',
-    label: 'Tarjetes grogues',
+    label: 'Targetes grogues',
     icon: '🟨',
     color: 'text-yellow-600 dark:text-yellow-400',
     bgColor: 'from-yellow-500 to-yellow-600',
@@ -62,11 +62,11 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'rojas',
-    label: 'Tarjetes roges',
+    label: 'Targetes vermellas',
     icon: '🟥',
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'from-red-500 to-red-700',
-    emptyText: 'Cap targeta roja',
+    emptyText: 'Cap targeta vermella',
   },
 ];
 
