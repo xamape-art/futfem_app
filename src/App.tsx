@@ -459,17 +459,15 @@ export default function App() {
         <div className="flex justify-center">
           {/* Logo mode clar */}
           <img
-            src="/xmp_logo_horizontal_color.png"
+            src="/xmp-logo-light.svg"
             alt="XMP Football Analysis"
             className="h-16 dark:hidden"
-            style={{ mixBlendMode: 'multiply' }}
           />
-          {/* Logo mode fosc: invert(1) converteix fons blanc→negre i text fosc→clar */}
+          {/* Logo mode fosc */}
           <img
-            src="/xmp_logo_horizontal_color.png"
+            src="/xmp-logo-dark.png"
             alt="XMP Football Analysis"
             className="h-16 hidden dark:block"
-            style={{ filter: 'invert(1)', opacity: 0.85 }}
           />
         </div>
       </footer>
