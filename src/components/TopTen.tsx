@@ -62,7 +62,7 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'rojas',
-    label: 'Targetes vermellas',
+    label: 'Targetes vermelles',
     icon: '🟥',
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'from-red-500 to-red-700',
@@ -101,7 +101,7 @@ function CategoryCard({
       {/* Header degradado */}
       <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2', category.bgColor)}>
         <span className="text-xl">{category.icon}</span>
-        <span className="text-white font-black text-sm uppercase tracking-wider">
+        <span className="text-white font-black text-xs uppercase tracking-wide whitespace-nowrap">
           {category.label}
         </span>
       </div>
