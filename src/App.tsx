@@ -461,15 +461,14 @@ export default function App() {
           <img
             src="/xmp_logo_horizontal_color.png"
             alt="XMP Football Analysis"
-            className="h-10 dark:hidden"
+            className="h-16 dark:hidden"
             style={{ mixBlendMode: 'multiply' }}
           />
           {/* Logo mode fosc */}
           <img
             src="/xmp_logo_horizontal_blanco.png"
             alt="XMP Football Analysis"
-            className="h-10 hidden dark:block opacity-80"
-            style={{ mixBlendMode: 'screen' }}
+            className="h-16 hidden dark:block"
           />
         </div>
       </footer>
