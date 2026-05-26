@@ -134,7 +134,7 @@ function CategoryCard({
                 {/* Nombre + equipo */}
                 <div className="flex-1 min-w-0">
                   <div
-                    className="text-[13px] font-semibold text-[var(--app-text)] truncate"
+                    className="text-[13px] font-semibold text-[var(--app-text)] leading-tight"
                     title={name}
                   >
                     {name}
@@ -145,7 +145,7 @@ function CategoryCard({
                 </div>
 
                 {/* Valor */}
-                <div className={cn('text-lg font-black shrink-0', category.color)}>
+                <div className={cn('text-sm font-black shrink-0', category.color)}>
                   {value}
                 </div>
               </div>
