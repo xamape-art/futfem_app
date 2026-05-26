@@ -26,6 +26,8 @@ interface Category {
   sortAsc?: boolean;
   /** Etiqueta petita sota el valor principal (p.ex. "min/gol") */
   valueLabel?: string;
+  /** Filtre addicional sobre els registres (a més del key > 0) */
+  extraFilter?: (s: FcfStat) => boolean;
 }
 
 const CATEGORIES: Category[] = [
@@ -50,6 +52,7 @@ const CATEGORIES: Category[] = [
     valueLabel: 'min/gol',
     secondaryKey: 'goles',
     secondaryLabel: 'gols',
+    extraFilter: (s) => s.minutos > 0,  // exclou suplents que no van entrar
   },
   {
     key: 'minutos',
@@ -111,7 +114,10 @@ function CategoryCard({
     category.computedValue ? category.computedValue(s) : (s[category.key] as number);
 
   const top10 = [...data]
-    .filter(s => (s[category.key] as number) > 0)
+    .filter(s =>
+      (s[category.key] as number) > 0 &&
+      (!category.extraFilter || category.extraFilter(s))
+    )
     .sort((a, b) =>
       category.sortAsc
         ? getValue(a) - getValue(b)
