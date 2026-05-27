@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FUTFEM APP — Pla de Millora de Disseny i Usabilitat</title>
+<style>
+  :root {
+    --brand: #7c3aed;
+    --brand-dark: #5b21b6;
+    --brand-light: #ede9fe;
+    --bg: #f8f9fa;
+    --text: #1a1f26;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --muted: #64748b;
+    --emerald: #059669;
+    --amber: #d97706;
+    --red: #dc2626;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Inter", BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ── TOP HEADER ── */
+  .doc-header {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%);
+    color: white;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  .doc-header .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    margin-bottom: 16px;
+  }
+  .doc-header h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .doc-header h1 span { opacity: 0.6; font-weight: 400; }
+  .doc-header p {
+    font-size: 15px;
+    opacity: 0.75;
+    max-width: 560px;
+    margin: 12px auto 0;
+  }
+  .doc-header .meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .doc-header .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    opacity: 0.8;
+    background: rgba(255,255,255,0.15);
+    border-radius: 99px;
+    padding: 4px 12px;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ── SUMMARY STATS ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .summary-card .num {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--brand);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .summary-card .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-top: 48px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--brand-light);
+  }
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-icon.violet { background: var(--brand-light); }
+  .section-icon.emerald { background: #d1fae5; }
+  .section-icon.amber { background: #fef3c7; }
+  .section-icon.blue { background: #dbeafe; }
+  .section-icon.red { background: #fee2e2; }
+  .section-icon.teal { background: #ccfbf1; }
+  .section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── IMPROVEMENT CARD ── */
+  .improvement {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .improvement-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .improvement-id {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 7px;
+    white-space: nowrap;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .improvement-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .improvement-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .badges {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 3px 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  .badge.high   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .badge.medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge.low    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge.time   { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+  .badge.star   { background: var(--brand-light); color: var(--brand); border: 1px solid #c4b5fd; }
+
+  .improvement-body {
+    padding: 16px 20px;
+  }
+  .improvement-body h4 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    margin-top: 14px;
+  }
+  .improvement-body h4:first-child { margin-top: 0; }
+  .improvement-body p {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 8px;
+  }
+  .improvement-body ul {
+    padding-left: 16px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+  .improvement-body li { margin-bottom: 2px; }
+
+  /* ── BEFORE / AFTER ── */
+  .before-after {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  @media (max-width: 600px) {
+    .before-after { grid-template-columns: 1fr; }
+  }
+  .ba-box {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .ba-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+  }
+  .ba-label.before { background: #fef2f2; color: #dc2626; }
+  .ba-label.after  { background: #f0fdf4; color: #16a34a; }
+  .ba-content {
+    padding: 12px;
+    font-size: 12px;
+    font-family: monospace;
+    line-height: 1.7;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── MOCKUP ── */
+  .mockup {
+    background: #f0f0f0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 12px;
+    font-family: -apple-system, sans-serif;
+  }
+  .mockup-phone {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    max-width: 360px;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    font-size: 12px;
+  }
+
+  /* Mini UI components for mockups */
+  .mock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+  }
+  .mock-logo { font-size: 16px; font-weight: 900; color: #7c3aed; }
+  .mock-logo span { opacity: 0.5; font-weight: 400; }
+  .mock-context-pill {
+    font-size: 10px;
+    font-weight: 700;
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .mock-toggle-group {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+    margin: 10px 0;
+  }
+  .mock-toggle-btn {
+    flex: 1;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mock-toggle-btn.active {
+    background: white;
+    color: #1a1f26;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  .mock-toggle-btn.inactive { color: #94a3b8; }
+  .mock-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 10px 16px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .mock-tab {
+    white-space: nowrap;
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .mock-tab.active { background: #7c3aed; color: white; }
+  .mock-tab.inactive { background: white; color: #64748b; border: 1px solid #e2e8f0; }
+
+  .mock-sync-compact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .mock-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+  .mock-sync-link { color: #7c3aed; margin-left: auto; font-weight: 600; }
+
+  .mock-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 10px 16px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .mock-search-icon { font-size: 13px; }
+  .mock-search-badge {
+    margin-left: auto;
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 1px 6px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .mock-table th {
+    text-align: left;
+    padding: 6px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    border-bottom: 1px solid #e2e8f0;
+    background: white;
+  }
+  .mock-table th.sticky { position: sticky; left: 0; background: white; }
+  .mock-table td { padding: 7px 8px; border-bottom: 1px solid #f1f5f9; }
+  .mock-table td.sticky { position: sticky; left: 0; background: white; }
+  .mock-table tr:nth-child(even) td { background: #f8fafc; }
+  .mock-table tr:nth-child(even) td.sticky { background: #f8fafc; }
+  .mock-table .goal { color: #059669; font-weight: 700; }
+  .mock-table .yellow { color: #d97706; font-weight: 700; }
+  .mock-table .red { color: #dc2626; font-weight: 700; }
+  .mock-dorsal {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 0 4px;
+    border-radius: 4px;
+    margin-left: 3px;
+  }
+
+  .mock-filter-chips {
+    display: flex;
+    gap: 5px;
+    padding: 6px 8px;
+    flex-wrap: wrap;
+  }
+  .mock-chip {
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 3px 8px;
+    border: 1px solid transparent;
+  }
+  .mock-chip.active-emerald { background: #d1fae5; color: #059669; border-color: #6ee7b7; }
+  .mock-chip.inactive { background: #f1f5f9; color: #94a3b8; }
+
+  .mock-skeleton {
+    background: #f1f5f9;
+    border-radius: 4px;
+    height: 10px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .mock-skeleton-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+  }
+
+  .mock-team-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 10px 16px;
+  }
+  .mock-team-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 99px;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mock-team-pill.active { background: #7c3aed; color: white; border-color: #7c3aed; }
+  .mock-team-pill.inactive { background: white; color: #64748b; }
+
+  .mock-ranking-card {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+  }
+  .mock-ranking-header {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .mock-ranking-header .count-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 10px;
+  }
+  .mock-rank-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+  }
+  .mock-rank-item.rank-1 { padding: 12px 14px; font-size: 14px; font-weight: 700; background: #fffbeb; }
+  .mock-rank-item.rank-2 { padding: 10px 14px; font-size: 13px; font-weight: 600; }
+  .mock-rank-item.rank-3 { padding: 9px 14px; font-size: 12.5px; font-weight: 600; }
+  .mock-rank-divider { height: 1px; background: #e2e8f0; margin: 4px 14px; }
+  .mock-rank-name { flex: 1; }
+  .mock-rank-team { font-size: 10px; color: #94a3b8; }
+  .mock-rank-value { font-weight: 800; color: #059669; }
+
+  .mock-teams-table { width: 100%; font-size: 11px; }
+  .mock-teams-table tr { cursor: pointer; }
+  .mock-teams-table tr:hover td { background: rgba(124,58,237,0.04); }
+  .mock-teams-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .mock-teams-table .chevron { color: #d1d5db; font-size: 14px; text-align: right; }
+  .mock-teams-table tr:hover .chevron { color: #7c3aed; }
+
+  .mock-empty {
+    text-align: center;
+    padding: 48px 20px;
+  }
+  .mock-empty .emoji { font-size: 40px; margin-bottom: 12px; }
+  .mock-empty h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .mock-empty p { font-size: 12px; color: #94a3b8; max-width: 220px; margin: 0 auto; }
+
+  /* ── FILES AFFECTED ── */
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .file-chip {
+    font-size: 11px;
+    font-family: monospace;
+    background: var(--brand-light);
+    color: var(--brand);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  /* ── ROADMAP ── */
+  .roadmap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-top: 24px;
+  }
+  .roadmap-week {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .roadmap-week:last-child { border-bottom: none; }
+  .roadmap-week h3 {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .roadmap-week .hours {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--muted);
+    padding: 2px 8px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+  }
+  .roadmap-week p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    margin-bottom: 10px;
+  }
+  .roadmap-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .roadmap-item {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+  .roadmap-item.high   { background: #fef2f2; color: #dc2626; }
+  .roadmap-item.medium { background: #fffbeb; color: #d97706; }
+  .roadmap-item.low    { background: #f0fdf4; color: #16a34a; }
+
+  /* ── NEW COMPONENTS ── */
+  .new-components {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .new-component-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .new-component-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--brand);
+    margin-bottom: 6px;
+  }
+  .new-component-card p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 24px 0;
+    box-shadow: var(--shadow);
+  }
+  .toc h2 {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 4px;
+  }
+  .toc a {
+    font-size: 12px;
+    color: var(--brand);
+    text-decoration: none;
+    padding: 3px 0;
+    display: block;
+  }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── ACCORDION (details) ── */
+  details { margin-top: 12px; }
+  details > summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand);
+    padding: 8px 12px;
+    background: var(--brand-light);
+    border-radius: var(--radius-sm);
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::after { content: " ▾"; }
+  details[open] > summary::after { content: " ▴"; }
+  details .details-content {
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    color: var(--text);
+  }
+
+  /* ── DIVIDER ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ HEADER -->
+<div class="doc-header">
+  <div class="tag">Pla de Disseny · v1.0 · Maig 2026</div>
+  <h1>FUTFEM APP <span>/</span> Millora UX·UI</h1>
+  <p>Proposta estructurada de millores de disseny i usabilitat per a l'aplicació d'estadístiques de futbol femení FCF.</p>
+  <div class="meta">
+    <span class="meta-item">⚡ React 19 + TypeScript</span>
+    <span class="meta-item">🎨 Tailwind CSS v4</span>
+    <span class="meta-item">📦 Sense dependències noves</span>
+    <span class="meta-item">🗓 3 setmanes estimades</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════ SUMMARY STATS -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="num">19</div>
+      <div class="label">Millores proposades</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">9</div>
+      <div class="label">Prioritat alta ★</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">~23h</div>
+      <div class="label">Temps total estimat</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">2</div>
+      <div class="label">Nous components</div>
+    </div>
+    <div class="summary-card">
+      <div class="num">0</div>
+      <div class="label">Paquets npm nous</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ TOC -->
+  <div class="toc">
+    <h2>📋 Contingut</h2>
+    <div class="toc-grid">
+      <a href="#header">1. Header</a>
+      <a href="#nav">2. Navegació</a>
+      <a href="#table">3. Taula d'Estadístiques</a>
+      <a href="#search">4. Cerca i Filtres</a>
+      <a href="#rankings">5. Rànquings Top 20</a>
+      <a href="#loading">6. Loading States</a>
+      <a href="#sync">7. SyncStatusCard</a>
+      <a href="#overview">8. Resum d'Equips</a>
+      <a href="#polish">9. Poliment General</a>
+      <a href="#roadmap">🗺 Full de Ruta</a>
+      <a href="#components">📦 Nous Components</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 1 — HEADER
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="header">
+    <div class="section-header">
+      <div class="section-icon violet">🏷️</div>
+      <div>
+        <div class="section-title">Grup 1 — Header</div>
+        <div class="section-subtitle">Context, branding i mode fosc/clar</div>
+      </div>
+    </div>
+
+    <!-- H1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">H1</div>
+        <div>
+          <div class="improvement-title">Context bar enganxosa mentre es fa scroll</div>
+          <div class="improvement-desc">Mostra la lliga i temporada actives quan l'usuari fa scroll avall</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 45 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Quan l'usuari fa scroll en una taula llarga, perd completament el context: no sap quina lliga o temporada està veient. El header mostra només "FUTFEM APP".</p>
+        <h4>Solució</h4>
+        <p>Afegir un pill de context al header que apareix de forma condicional quan hi ha una lliga i temporada seleccionades. Visible sempre gràcies a la posició <code>sticky</code> del header.</p>
+
+        <div class="before-after">
+          <div class="ba-box">
+            <div class="ba-label before">❌ Ara</div>
+            <div class="ba-content">┌─────────────────────────────┐
+│ FUTFEM APP            [☾]   │
+└─────────────────────────────┘
+(scroll avall... lliga perduda)</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-label after">✅ Millora</div>
+            <div class="ba-content">┌─────────────────────────────┐
+│ FUTFEM APP  [3ª Fed Gr.V·26-27] [☾] │
+└─────────────────────────────┘
+(sempre visible en fer scroll)</div>
+          </div>
+        </div>
+
+        <div class="mockup">
+          <div class="mock-header">
+            <div class="mock-logo">FUTFEM <span>APP</span></div>
+            <span class="mock-context-pill">3ª Fed Gr.V · 26-27</span>
+            <span style="font-size:16px; color:#94a3b8;">☾</span>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- H2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">H2</div>
+        <div>
+          <div class="improvement-title">Poliment visual del header i toggle dark mode</div>
+          <div class="improvement-desc">Toggle com a chip pressable, millor logotip, border dark mode més visible</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 1.5h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>El toggle de dark mode és una icona flotant sense cap visual affordance que indiqui que és un botó. El border del header en dark mode és quasi invisible contra <code>#121212</code>.</p>
+        <h4>Solució</h4>
+        <ul>
+          <li>Embolicar el toggle en <code>bg-neutral-100 dark:bg-white/10 rounded-lg p-1.5</code> per crear una "xip pressable".</li>
+          <li>Afegir <code>title="Mode fosc/clar"</code> per accessibilitat.</li>
+          <li>Augmentar contrast de <code>--card-border</code> en dark mode: <code>#333</code> → <code>#2e2e2e</code> amb <code>--card-shadow</code>.</li>
+          <li>Actualitzar <code>&lt;meta name="theme-color"&gt;</code> via <code>useEffect</code>.</li>
+        </ul>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+          <span class="file-chip">src/index.css</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 2 — NAVEGACIÓ
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="nav">
+    <div class="section-header">
+      <div class="section-icon blue">🧭</div>
+      <div>
+        <div class="section-title">Grup 2 — Navegació</div>
+        <div class="section-subtitle">Selector de lligues, temporades i vistes</div>
+      </div>
+    </div>
+
+    <!-- N1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">N1</div>
+        <div>
+          <div class="improvement-title">LeagueSelector: scroll horitzontal en lloc de wrap</div>
+          <div class="improvement-desc">Elimina el salt de línia quan hi ha moltes lligues</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Amb 8–9 lligues, els tabs es parteixen en 2 files, consumint ~40px de espai vertical i creant una interfície desordenada.</p>
+        <h4>Solució</h4>
+        <p>Canviar <code>flex flex-wrap</code> per <code>flex overflow-x-auto scrollbar-none</code>. Una sola fila scrollable, com els tabs de qualsevol app nativa.</p>
+
+        <div class="before-after">
+          <div class="ba-box">
+            <div class="ba-label before">❌ Ara (wrap)</div>
+            <div class="ba-content">[3ª Fed] [Pref.1] [1ªDiv.1] [1ªDiv.2]
+[Pref.Juv] [1ªDiv.Juv.1]
+[1ªDiv.Juv.2] [1ªDiv.Juv.3]
+</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-label after">✅ Millora (scroll)</div>
+            <div class="ba-content">[3ª Fed] [Pref.1] [1ªDiv.1] [1ªDiv.2] →
+(scroll horitzontal, una fila)
+</div>
+          </div>
+        </div>
+
+        <div class="mockup">
+          <div class="mock-tabs">
+            <div class="mock-tab active">3ª Fed Gr.V</div>
+            <div class="mock-tab inactive">Pref. Gr.1</div>
+            <div class="mock-tab inactive">1ª Div Gr.1</div>
+            <div class="mock-tab inactive">1ª Div Gr.2</div>
+            <div class="mock-tab inactive">Pref. Juv. Gr.1</div>
+            <div class="mock-tab inactive">1ª Div Juv. Gr.1</div>
+          </div>
+          <div style="font-size:10px; color:#94a3b8; text-align:center; padding:4px; background:#f8f9fa;">← scroll horitzontal →</div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/LeagueSelector.tsx</span>
+          <span class="file-chip">src/index.css</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- N2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">N2</div>
+        <div>
+          <div class="improvement-title">View toggle com a segmented control</div>
+          <div class="improvement-desc">Distinció visual clara entre navegació de context i canvi de vista</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 20 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Els botons "Estadístiques / Top 20" tenen el mateix estil pill que els tabs de lligues, creant confusió visual sobre quins controls fan quin tipus de navegació.</p>
+        <h4>Solució</h4>
+        <p>Embolicar els dos botons en un contenidor <code>bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1 flex gap-1</code> — el mismo patró que ja usa <code>SeasonSelector</code>. El botó actiu es converteix en un chip elevat amb <code>bg-white shadow-sm</code>.</p>
+
+        <div class="mockup">
+          <div style="padding: 10px 16px;">
+            <div class="mock-toggle-group" style="max-width: 220px; margin: 0 auto;">
+              <div class="mock-toggle-btn active">Estadístiques</div>
+              <div class="mock-toggle-btn inactive">🏆 Top 20</div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- N3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">N3</div>
+        <div>
+          <div class="improvement-title">Labels aria al SeasonSelector</div>
+          <div class="improvement-desc">Accessibilitat per a lectors de pantalla</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Els botons de temporada "26-27" i "25-26" no tenen <code>aria-label</code> ni <code>aria-pressed</code>. Un lector de pantalla anuncia simplement "26-27" sense cap context.</p>
+        <h4>Solució</h4>
+        <p>Afegir <code>aria-label="Temporada 26-27"</code>, <code>aria-pressed={selected === s}</code> a cada botó, i <code>role="group" aria-label="Selector de temporada"</code> al contenidor.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/SeasonSelector.tsx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 3 — TAULA D'ESTADÍSTIQUES
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="table">
+    <div class="section-header">
+      <div class="section-icon emerald">📊</div>
+      <div>
+        <div class="section-title">Grup 3 — Taula d'Estadístiques</div>
+        <div class="section-subtitle">Llegibilitat, mobilitat i filtres ràpids</div>
+      </div>
+    </div>
+
+    <!-- D1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">D1</div>
+        <div>
+          <div class="improvement-title">Primera columna enganxosa (sticky) a mòbil</div>
+          <div class="improvement-desc">El nom de la jugadora sempre visible en fer scroll horitzontal</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 45 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>En mòbil (320–480px), quan l'usuari fa scroll a la dreta per veure gols o targetes, el nom de la jugadora desapareix completament. L'usuari perd la referència de quina fila és quina.</p>
+        <h4>Solució</h4>
+        <p>Aplicar <code>sticky left-0 z-10 bg-[var(--card-bg)]</code> al primer <code>&lt;th&gt;</code> i <code>&lt;td&gt;</code> de la taula. Afegir una ombra dreta per indicar visualment que la columna està fixada.</p>
+
+        <div class="mockup">
+          <div style="overflow-x: auto;">
+            <table class="mock-table" style="min-width: 500px;">
+              <thead>
+                <tr>
+                  <th class="sticky" style="box-shadow: 2px 0 6px -2px rgba(0,0,0,0.1);">JUGADORA</th>
+                  <th style="text-align:right;">PJ</th>
+                  <th style="text-align:right;">TIT</th>
+                  <th style="text-align:right;">SUP</th>
+                  <th style="text-align:right;">MIN</th>
+                  <th style="text-align:right;">G</th>
+                  <th style="text-align:right;">TA</th>
+                  <th style="text-align:right;">TR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="sticky" style="box-shadow: 2px 0 6px -2px rgba(0,0,0,0.06);">
+                    García, Laura <span class="mock-dorsal">9</span>
+                  </td>
+                  <td style="text-align:right;">18</td>
+                  <td style="text-align:right;">15</td>
+                  <td style="text-align:right;">3</td>
+                  <td style="text-align:right;">1234</td>
+                  <td class="goal" style="text-align:right;">12</td>
+                  <td class="yellow" style="text-align:right;">2</td>
+                  <td style="text-align:right;">0</td>
+                </tr>
+                <tr>
+                  <td class="sticky" style="box-shadow: 2px 0 6px -2px rgba(0,0,0,0.06);">
+                    Martínez, Ana <span class="mock-dorsal">7</span>
+                  </td>
+                  <td style="text-align:right;">20</td>
+                  <td style="text-align:right;">18</td>
+                  <td style="text-align:right;">2</td>
+                  <td style="text-align:right;">1567</td>
+                  <td class="goal" style="text-align:right;">8</td>
+                  <td class="yellow" style="text-align:right;">3</td>
+                  <td class="red" style="text-align:right;">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:10px; color:#94a3b8; text-align:center; padding:6px;">← nom enganxós mentre es fa scroll →</div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+          <span class="file-chip">src/index.css</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">D2</div>
+        <div>
+          <div class="improvement-title">Augmentar touch targets de les files</div>
+          <div class="improvement-desc">Files de 44px mínims per a una millor experiència tàctil</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 20 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Les files actuals amb <code>py-2</code> (32px d'alçada) estan per sota del mínim de 44px recomanat per Apple i Google per a targets tàctils. Resulta en errors de clic a mòbil.</p>
+        <h4>Solució</h4>
+        <p>Canviar <code>py-2</code> → <code>py-2.5</code> a les celles <code>&lt;td&gt;</code> i <code>py-1.5</code> → <code>py-2</code> a les capçaleres <code>&lt;th&gt;</code>.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">D3</div>
+        <div>
+          <div class="improvement-title">Tooltips a les capçaleres de columna</div>
+          <div class="improvement-desc">Desplegar el significat complet de les abreviatures en hover</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>PJ, TIT, SUP, MIN, G, TA, TR — les abreviatures no són immediatament evidents per a usuaris nous. No hi ha cap manera de descobrir el significat complet.</p>
+        <h4>Solució</h4>
+        <p>Afegir <code>title</code> a cada <code>&lt;th&gt;</code>: "PJ → Partits jugats", "TIT → Partits de titular", "SUP → Suplent", etc. En desktop, el tooltip del navegador apareix automàticament. Zero canvis visuals.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D4 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">D4</div>
+        <div>
+          <div class="improvement-title">Chips de filtre ràpid a la taula</div>
+          <div class="improvement-desc">Un clic per veure golejadores, targetes grogues o vermelles</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 2h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>La pregunta més freqüent és "qui ha marcat?". Ara l'usuari ha de fer scroll per la taula sencera o saber que pot ordenar per gols clicant la capçalera. No hi ha accés directe als filtres més habituals.</p>
+        <h4>Solució</h4>
+        <p>Afegir 4 chips de filtre sobre la taula: "Totes", "⚽ Golejadores" (<code>goles > 0</code>), "🟨 Targetes grogues" (<code>amarillas > 0</code>), "🟥 Targetes vermelles" (<code>rojas > 0</code>). Estat local dins <code>StatsTable</code>.</p>
+
+        <div class="mockup">
+          <div class="mock-filter-chips">
+            <span class="mock-chip inactive">Totes</span>
+            <span class="mock-chip active-emerald">⚽ Golejadores</span>
+            <span class="mock-chip inactive">🟨 TA</span>
+            <span class="mock-chip inactive">🟥 TR</span>
+          </div>
+          <table class="mock-table">
+            <thead><tr>
+              <th>JUGADORA</th><th style="text-align:right;">G</th><th style="text-align:right;">PJ</th><th style="text-align:right;">MIN</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>García, Laura <span class="mock-dorsal">9</span></td><td class="goal" style="text-align:right;">12</td><td style="text-align:right;">18</td><td style="text-align:right;">1234</td></tr>
+              <tr><td>Martínez, Ana <span class="mock-dorsal">7</span></td><td class="goal" style="text-align:right;">8</td><td style="text-align:right;">20</td><td style="text-align:right;">1567</td></tr>
+              <tr><td>López, Carla <span class="mock-dorsal">11</span></td><td class="goal" style="text-align:right;">5</td><td style="text-align:right;">16</td><td style="text-align:right;">980</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D5 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">D5</div>
+        <div>
+          <div class="improvement-title">Badge estilitzat pel número de dorsal</div>
+          <div class="improvement-desc">El dorsal com a chip visual, no com a text pla</div>
+        </div>
+        <div class="badges">
+          <span class="badge low">Baixa</span>
+          <span class="badge time">⏱ 20 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Embolicar el dorsal en <code>&lt;span class="inline-block text-[9px] font-black px-1 rounded bg-neutral-100 dark:bg-white/10 text-neutral-400"&gt;{dorsal}&lt;/span&gt;</code> — un mini badge estil número de samarreta.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 4 — CERCA I FILTRES
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="search">
+    <div class="section-header">
+      <div class="section-icon amber">🔍</div>
+      <div>
+        <div class="section-title">Grup 4 — Cerca i Filtres</div>
+        <div class="section-subtitle">Cercador, resultats i selector d'equip</div>
+      </div>
+    </div>
+
+    <!-- S1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">S1</div>
+        <div>
+          <div class="improvement-title">Cercador: feedback visual + drecera de teclat <kbd>/</kbd></div>
+          <div class="improvement-desc">Badge de resultats dins del camp, focus via tecla barra inclinada</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 40 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>El cercador no mostra quants resultats s'han trobat. No hi ha drecera de teclat per activar-lo. L'estat de focus no és prou visible.</p>
+        <h4>Solució</h4>
+        <ul>
+          <li>Badge de resultats dins del camp (dreta): <code>3 jugadores</code> en pill violeta.</li>
+          <li>Drecera global <kbd>/</kbd> per posar el focus al cercador (via <code>useEffect</code> + <code>keydown</code>).</li>
+          <li>Estil <code>ring-2 ring-brand/30</code> en focus (addicionalment al border actual).</li>
+          <li>Afegir <code>title="Drecera: /"</code> a la icona de cerca.</li>
+        </ul>
+
+        <div class="mockup">
+          <div class="mock-search">
+            <span class="mock-search-icon">🔍</span>
+            <span style="flex:1; color:#94a3b8;">García</span>
+            <span class="mock-search-badge">3 jugadores</span>
+            <span style="color:#94a3b8; margin-left:4px; font-size:16px; cursor:pointer;">✕</span>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">S2</div>
+        <div>
+          <div class="improvement-title">Millora visual del panell de resultats de cerca</div>
+          <div class="improvement-desc">Separació clara entre grups d'equips, recompte de resultats més llegible</div>
+        </div>
+        <div class="badges">
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 45 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <ul>
+          <li>Afegir <code>border-l-2 border-brand pl-2</code> al header de cada grup d'equip.</li>
+          <li>Recompte de resultats en color: <code>&lt;span class="text-brand font-bold"&gt;N&lt;/span&gt; resultats</code>.</li>
+          <li>Augmentar gap entre grups: <code>space-y-6</code> → <code>space-y-8</code>.</li>
+        </ul>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">S3</div>
+        <div>
+          <div class="improvement-title">TeamSelector: grid de pills en lloc de &lt;select&gt; natiu</div>
+          <div class="improvement-desc">Control visualment consistent i tots els equips visibles d'un cop d'ull</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 2.5h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>El selector natiu <code>&lt;select&gt;</code> trenca el lenguatge visual de l'app. Amb 10–16 equips, un dropdown obliga l'usuari a obrir-lo, buscar i clicar — tres accions innecessàries quan els equips caben en una grid de pills.</p>
+        <h4>Solució</h4>
+        <p>Substituir el <code>&lt;select&gt;</code> per un grid de pills <code>flex flex-wrap gap-1.5</code>. Pill "Tots" al principi. Si hi ha > 8 equips, col·lapsar als primers 6 + el seleccionat amb un botó "Veure tots".</p>
+
+        <div class="mockup">
+          <div class="mock-team-pills">
+            <span class="mock-team-pill active">Tots</span>
+            <span class="mock-team-pill inactive">Barcelona FC</span>
+            <span class="mock-team-pill inactive">Cornellà A</span>
+            <span class="mock-team-pill inactive">Europa CE</span>
+            <span class="mock-team-pill inactive">Fontsanta A</span>
+            <span class="mock-team-pill inactive">Girona FC</span>
+            <span class="mock-team-pill inactive">Igualada</span>
+            <span style="font-size:11px; color:#7c3aed; padding: 5px 2px; cursor:pointer; font-weight:600;">+ 6 equips més →</span>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/TeamSelector.tsx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 5 — RÀNQUINGS TOP 20
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="rankings">
+    <div class="section-header">
+      <div class="section-icon teal">🏆</div>
+      <div>
+        <div class="section-title">Grup 5 — Rànquings Top 20</div>
+        <div class="section-subtitle">Jerarquia visual, podi i comptador per categoria</div>
+      </div>
+    </div>
+
+    <!-- R1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">R1</div>
+        <div>
+          <div class="improvement-title">Jerarquia visual als ítems del Top 20</div>
+          <div class="improvement-desc">El podi (top 3) visiblement diferent de la resta de posicions</div>
+        </div>
+        <div class="badges">
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 1h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>Tots els 20 ítems de cada rànquing tenen exactament la mateixa mida i pes visual. La 1a posició no es distingeix visualment de la 10a ni de la 20a.</p>
+        <h4>Solució</h4>
+        <ul>
+          <li><strong>Rang 1:</strong> <code>py-3.5</code>, nom <code>text-[14px] font-bold</code>, valor <code>text-base font-black</code>, fons <code>bg-yellow-50/60</code></li>
+          <li><strong>Rang 2–3:</strong> <code>py-3</code>, lleugera progressió de mida cap avall</li>
+          <li><strong>Rang 4–10:</strong> Estil actual sense canvis</li>
+          <li><strong>Rang 11–20:</strong> Lleugerament de-emphasis: <code>text-[12px] text-neutral-500</code></li>
+          <li>Divisor visual entre rang 3 i rang 4 (<code>h-px bg-[var(--card-border)]</code>)</li>
+        </ul>
+
+        <div class="mockup">
+          <div class="mock-ranking-card">
+            <div class="mock-ranking-header">
+              ⚽ Golejadores
+              <span class="count-badge">20</span>
+            </div>
+            <div class="mock-rank-item rank-1">
+              <span>🥇</span>
+              <div class="mock-rank-name">
+                García, Laura
+                <div class="mock-rank-team">BARCELONA, FC C</div>
+              </div>
+              <span class="mock-rank-value" style="font-size:18px;">12</span>
+            </div>
+            <div class="mock-rank-item rank-2">
+              <span>🥈</span>
+              <div class="mock-rank-name">
+                Martínez, Ana
+                <div class="mock-rank-team">CORNELLÀ A</div>
+              </div>
+              <span class="mock-rank-value">8</span>
+            </div>
+            <div class="mock-rank-item rank-3">
+              <span>🥉</span>
+              <div class="mock-rank-name">
+                López, Carla
+                <div class="mock-rank-team">GIRONA FC A</div>
+              </div>
+              <span class="mock-rank-value">5</span>
+            </div>
+            <div class="mock-rank-divider"></div>
+            <div class="mock-rank-item">
+              <span style="color:#94a3b8; font-size:11px; font-weight:700; min-width:20px; text-align:center;">4</span>
+              <div class="mock-rank-name">
+                Sánchez, Marta
+                <div class="mock-rank-team">EUROPA CE B</div>
+              </div>
+              <span class="mock-rank-value">4</span>
+            </div>
+            <div class="mock-rank-item" style="opacity:0.65; font-size:11px;">
+              <span style="color:#94a3b8; font-size:11px; font-weight:700; min-width:20px; text-align:center;">11</span>
+              <div class="mock-rank-name">
+                Fernández, Mía
+                <div class="mock-rank-team">IGUALADA CF A</div>
+              </div>
+              <span style="font-weight:700; color:#059669;">2</span>
+            </div>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/TopTen.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- R2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">R2</div>
+        <div>
+          <div class="improvement-title">Badge de comptador per cada categoria</div>
+          <div class="improvement-desc">Mostra quantes jugadores hi ha al rànquing (1–20)</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>La categoria "Targetes vermelles" pot tenir 3 jugadores en lloc de 20. L'usuari no sap si la llista és completa o truncada.</p>
+        <h4>Solució</h4>
+        <p>Afegir un pill blanc semitransparent al costat dret del header de cada card: <code>bg-white/20 text-white text-[10px]</code> mostrant el recompte actual.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/TopTen.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- R3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">R3</div>
+        <div>
+          <div class="improvement-title">Cards plegables a mòbil</div>
+          <div class="improvement-desc">Mostrar top 5 per defecte, expandir al clicar</div>
+        </div>
+        <div class="badges">
+          <span class="badge low">Baixa</span>
+          <span class="badge time">⏱ 2h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>6 cards × 20 files = 120 files de contingut en mòbil. La pàgina es fa molt llarga per a categories que no interessen a l'usuari.</p>
+        <h4>Solució</h4>
+        <p>A mòbil, mostrar per defecte els top 5 de cada categoria. Afegir un botó "Veure els 20 →" al final de cada card que expandeix la llista completa. Estat local <code>showAll</code> per card.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/TopTen.tsx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 6 — LOADING STATES
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="loading">
+    <div class="section-header">
+      <div class="section-icon violet">⏳</div>
+      <div>
+        <div class="section-title">Grup 6 — Loading States</div>
+        <div class="section-subtitle">Skeleton loaders i micro-animacions</div>
+      </div>
+    </div>
+
+    <!-- L1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">L1</div>
+        <div>
+          <div class="improvement-title">Skeleton loader per a StatsTable</div>
+          <div class="improvement-desc">Substitueix el text "Carregant..." per un placeholder animat que evita layout shift</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 1h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>L'estat de càrrega actual és un text centrat "Carregant estadístiques…". Quan arriben les dades, la taula apareix sobtadament causant un fort layout shift. Sembla poc professional.</p>
+        <h4>Solució</h4>
+        <p>Nou component <code>SkeletonTable</code> que replica l'estructura visual de <code>StatsTable</code> amb blocs animats <code>animate-pulse</code>. L'usuari percep que el contingut s'està carregant en el lloc exacte on apareixerà.</p>
+
+        <div class="mockup">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 0;">
+            <div style="display:flex; gap:8px; padding:10px 12px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+              <div class="mock-skeleton" style="width:120px;"></div>
+              <div class="mock-skeleton" style="width:24px; margin-left:auto;"></div>
+              <div class="mock-skeleton" style="width:24px;"></div>
+              <div class="mock-skeleton" style="width:24px;"></div>
+              <div class="mock-skeleton" style="width:24px;"></div>
+              <div class="mock-skeleton" style="width:24px;"></div>
+            </div>
+            <div class="mock-skeleton-row">
+              <div class="mock-skeleton" style="width:140px;"></div>
+              <div class="mock-skeleton" style="width:28px; margin-left:auto;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:32px;"></div>
+              <div class="mock-skeleton" style="width:16px;"></div>
+            </div>
+            <div class="mock-skeleton-row" style="opacity:0.7;">
+              <div class="mock-skeleton" style="width:110px;"></div>
+              <div class="mock-skeleton" style="width:28px; margin-left:auto;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:32px;"></div>
+              <div class="mock-skeleton" style="width:16px;"></div>
+            </div>
+            <div class="mock-skeleton-row" style="opacity:0.5;">
+              <div class="mock-skeleton" style="width:130px;"></div>
+              <div class="mock-skeleton" style="width:28px; margin-left:auto;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:20px;"></div>
+              <div class="mock-skeleton" style="width:32px;"></div>
+              <div class="mock-skeleton" style="width:16px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/SkeletonTable.tsx ✨ NOU</span>
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">L2</div>
+        <div>
+          <div class="improvement-title">Skeleton per a la vista Top 20</div>
+          <div class="improvement-desc">6 cards placeholder mentre carreguen els rànquings</div>
+        </div>
+        <div class="badges">
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 45 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Afegir export <code>SkeletonTopTen</code> al mateix fitxer <code>SkeletonTable.tsx</code>. Renderitza 6 cards en el mateix grid <code>grid-cols-1 sm:grid-cols-2 lg:grid-cols-3</code> amb headers de gradient shimmer i 5 files skeleton per card.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/SkeletonTable.tsx ✨ NOU</span>
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- L3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">L3</div>
+        <div>
+          <div class="improvement-title">Micro-animació fade-up a l'arribada de dades</div>
+          <div class="improvement-desc">La taula apareix amb una transició suau des d'avall</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Keyframe <code>fade-up</code> en <code>index.css</code>: <code>opacity: 0 + translateY(8px)</code> → <code>opacity: 1 + translateY(0)</code> en 250ms. Aplicar <code>animate-fade-up</code> a <code>&lt;tbody&gt;</code> de StatsTable i al contenidor grid de TopTen.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/index.css</span>
+          <span class="file-chip">src/components/StatsTable.tsx</span>
+          <span class="file-chip">src/components/TopTen.tsx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 7 — SYNCSTATUSCARD
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="sync">
+    <div class="section-header">
+      <div class="section-icon blue">🔄</div>
+      <div>
+        <div class="section-title">Grup 7 — SyncStatusCard</div>
+        <div class="section-subtitle">Compactar l'indicador de sincronització</div>
+      </div>
+    </div>
+
+    <!-- SC1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">SC1</div>
+        <div>
+          <div class="improvement-title">Compactar SyncStatusCard a una línia amb acordió</div>
+          <div class="improvement-desc">Recuperar ~70px d'espai vertical amb accés als detalls a demanda</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 1h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>La card actual ocupa 70–90px amb múltiples línies (última sync, propera auto-sync, link al log) que la majoria d'usuaris mai necessiten. Empenta el contingut important cap avall.</p>
+        <h4>Solució</h4>
+        <p>Una sola línia inline: punt de color (verd/gris) + text relatiu ("132 actes · fa 2 dies") + link "detalls" a la dreta. En expandir, l'acordió mostra el contingut actual.</p>
+
+        <div class="before-after">
+          <div class="ba-box">
+            <div class="ba-label before">❌ Ara (card gran)</div>
+            <div class="ba-content">┌──────────────────────────────┐
+│ 🗄 SYNC FCF · 26-27   [132 · 12] │
+│ ↺ Última sync: mar, 26/05/26     │
+│ 📅 Pròxima auto: lun, 01/06      │
+│    Tercera Fed · Grup V · Ver log│
+└──────────────────────────────┘
+(~80px d'alçada)</div>
+          </div>
+          <div class="ba-box">
+            <div class="ba-label after">✅ Millora (una línia)</div>
+            <div class="ba-content">  • 132 actes · fa 2 dies    detalls
+
+(~24px d'alçada, acordió per als detalls)
+</div>
+          </div>
+        </div>
+
+        <div class="mockup">
+          <div class="mock-sync-compact">
+            <div class="mock-dot"></div>
+            <span>132 actes · 12 equips · fa 2 dies</span>
+            <span class="mock-sync-link">detalls</span>
+          </div>
+        </div>
+
+        <h4>Nova utilitat necessària</h4>
+        <p><code>formatDateRelative(iso)</code> en <code>src/lib/utils.ts</code>: "avui", "ahir", "fa N dies".</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/components/SyncStatusCard.tsx</span>
+          <span class="file-chip">src/lib/utils.ts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 8 — RESUM D'EQUIPS
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-icon emerald">🏟️</div>
+      <div>
+        <div class="section-title">Grup 8 — Resum d'Equips</div>
+        <div class="section-subtitle">Taula general amb accés directe als equips</div>
+      </div>
+    </div>
+
+    <!-- A1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">A1</div>
+        <div>
+          <div class="improvement-title">Files clicables per filtrar equip directament</div>
+          <div class="improvement-desc">Click a qualsevol fila → veure les jugadores d'aquell equip</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 45 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>La taula de resum mostra tots els equips però no hi ha cap manera directa de filtrar per un equip des d'allà. L'usuari ha de fer scroll amunt, trobar el selector d'equip i seleccionar-lo manualment.</p>
+        <h4>Solució</h4>
+        <p>Fer cada <code>&lt;tr&gt;</code> clicable: <code>cursor-pointer hover:bg-brand/5</code>. Afegir una columna final amb un chevron <code>›</code> que apareix en hover. En fer click, <code>setSelectedTeam(slug)</code> + <code>window.scrollTo({top: 0})</code>.</p>
+
+        <div class="mockup">
+          <table class="mock-teams-table">
+            <tbody>
+              <tr>
+                <td><strong>BARCELONA, FC C</strong></td>
+                <td style="text-align:right; color:#64748b;">31</td>
+                <td class="goal" style="text-align:right;">61</td>
+                <td class="yellow" style="text-align:right;">23</td>
+                <td class="red" style="text-align:right;">2</td>
+                <td class="chevron">›</td>
+              </tr>
+              <tr style="background: rgba(124,58,237,0.04);">
+                <td><strong>FUNDACIO UNIO ESPORTIVA CORNELLA A</strong></td>
+                <td style="text-align:right; color:#64748b;">27</td>
+                <td class="goal" style="text-align:right;">52</td>
+                <td class="yellow" style="text-align:right;">28</td>
+                <td style="text-align:right; color:#64748b;">0</td>
+                <td class="chevron" style="color:#7c3aed;">›</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       GRUP 9 — POLIMENT GENERAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="polish">
+    <div class="section-header">
+      <div class="section-icon amber">✨</div>
+      <div>
+        <div class="section-title">Grup 9 — Poliment General</div>
+        <div class="section-subtitle">Variables CSS, empty states, footer i accessibilitat</div>
+      </div>
+    </div>
+
+    <!-- P1 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">P1</div>
+        <div>
+          <div class="improvement-title">Correcció de variables CSS: card-shadow i border dark mode</div>
+          <div class="improvement-desc">Les cards dark mode no es distingeixen prou del fons</div>
+        </div>
+        <div class="badges">
+          <span class="badge star">★ Quick Win</span>
+          <span class="badge high">Alta</span>
+          <span class="badge time">⏱ 15 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>En dark mode, <code>--card-border: #333333</code> és quasi invisible contra <code>--card-bg: #1f1f1f</code>. Les cards es fonen amb el fons. A més, no existeix cap variable de shadow.</p>
+        <h4>Solució</h4>
+        <ul>
+          <li>Afegir <code>--card-shadow</code> a <code>:root</code> i <code>.dark</code></li>
+          <li>Crear classe <code>.app-card</code> reutilitzable que aplica bg + border + shadow</li>
+          <li>Dark mode border lleugerament més brillant: <code>#333</code> → <code>#2e2e2e</code></li>
+        </ul>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/index.css</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P2 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">P2</div>
+        <div>
+          <div class="improvement-title">Empty state amigable per a l'usuari final</div>
+          <div class="improvement-desc">Substituir les instruccions CLI per un missatge clar i visual</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 1h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Problema</h4>
+        <p>L'estat buit mostra instruccions CLI dirigides al desenvolupador. Un usuari final que arriba a una temporada sense dades veu codi de terminal incomprensible.</p>
+        <h4>Solució</h4>
+        <div class="mockup">
+          <div class="mock-empty">
+            <div class="emoji">📭</div>
+            <h3>Sense estadístiques</h3>
+            <p>No hi ha dades per a 3ª Fed Gr.V · 25-26. Les estadístiques s'actualitzen cada dilluns.</p>
+          </div>
+        </div>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P3 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">P3</div>
+        <div>
+          <div class="improvement-title">Footer enriquit amb attributió i logo millor integrat</div>
+          <div class="improvement-desc">Border superior, layout en dues columnes, link a FCF</div>
+        </div>
+        <div class="badges">
+          <span class="badge low">Baixa</span>
+          <span class="badge time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Afegir <code>border-t border-[var(--card-border)]</code> al footer. Layout en dues columnes a desktop: logo XMP a l'esquerra, text d'atribució a la dreta amb link clicable a <code>fcf.cat</code>.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P4 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">P4</div>
+        <div>
+          <div class="improvement-title">Mode ample (max-w-5xl) per a pantalles grans</div>
+          <div class="improvement-desc">Aprofitar l'espai en monitors 1440px+ amb un toggle al header</div>
+        </div>
+        <div class="badges">
+          <span class="badge low">Baixa</span>
+          <span class="badge time">⏱ 1.5h</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Estat <code>wideMode</code> persistit en localStorage. Toggle visible només a <code>lg:</code> screens al costat del botó de dark mode. Canvia <code>max-w-3xl</code> → <code>max-w-5xl</code> al contenidor principal.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+          <span class="file-chip">src/index.css</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- P5 -->
+    <div class="improvement">
+      <div class="improvement-header">
+        <div class="improvement-id">P5</div>
+        <div>
+          <div class="improvement-title">Regió aria-live per a lectors de pantalla</div>
+          <div class="improvement-desc">Accessibilitat: anunciar quan les dades han carregat</div>
+        </div>
+        <div class="badges">
+          <span class="badge medium">Mitja</span>
+          <span class="badge time">⏱ 20 min</span>
+        </div>
+      </div>
+      <div class="improvement-body">
+        <h4>Solució</h4>
+        <p>Afegir un div visualment ocult <code>class="sr-only" aria-live="polite" aria-atomic="true"</code> al top del <code>&lt;main&gt;</code>. El seu contingut canvia de "Carregant estadístiques..." a "N jugadores carregades per a [lliga]" quan arriben les dades.</p>
+        <h4>Fitxers afectats</h4>
+        <div class="file-list">
+          <span class="file-chip">src/App.tsx</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ═══════════════════════════════════════════════════
+       FULL DE RUTA
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="roadmap">
+    <div class="section-header">
+      <div class="section-icon violet">🗺️</div>
+      <div>
+        <div class="section-title">Full de Ruta — Ordre d'Implementació</div>
+        <div class="section-subtitle">Prioritzat per impacte/esforç, de menor a major complexitat</div>
+      </div>
+    </div>
+
+    <div class="roadmap">
+      <div class="roadmap-week">
+        <h3>
+          Setmana 1 — Quick Wins
+          <span class="hours">~5h</span>
+        </h3>
+        <p>Millores d'alta prioritat amb menys d'1h cadascuna. Impacte immediat i visible.</p>
+        <div class="roadmap-items">
+          <span class="roadmap-item high">N1 · Tabs scroll</span>
+          <span class="roadmap-item high">D1 · Col. enganxosa</span>
+          <span class="roadmap-item high">SC1 · Sync compacte</span>
+          <span class="roadmap-item high">H1 · Context bar</span>
+          <span class="roadmap-item high">P1 · CSS vars</span>
+          <span class="roadmap-item high">S1 · Cercador</span>
+        </div>
+      </div>
+
+      <div class="roadmap-week">
+        <h3>
+          Setmana 2 — Millores Mitges
+          <span class="hours">~10h</span>
+        </h3>
+        <p>Nous components i refactoritzacions 1–4h cadascuna.</p>
+        <div class="roadmap-items">
+          <span class="roadmap-item high">L1 · Skeleton table</span>
+          <span class="roadmap-item high">N2 · Segmented control</span>
+          <span class="roadmap-item medium">D4 · Filtre ràpid</span>
+          <span class="roadmap-item medium">S3 · Team pills</span>
+          <span class="roadmap-item high">R1 · Jerarquia top20</span>
+          <span class="roadmap-item medium">A1 · Files clicables</span>
+        </div>
+      </div>
+
+      <div class="roadmap-week">
+        <h3>
+          Setmana 3 — Poliment i Addicions
+          <span class="hours">~8h</span>
+        </h3>
+        <p>Detalls de qualitat i millores opcionals.</p>
+        <div class="roadmap-items">
+          <span class="roadmap-item medium">L3 · Micro-animació</span>
+          <span class="roadmap-item medium">R2 · Badge comptador</span>
+          <span class="roadmap-item medium">P2 · Empty state</span>
+          <span class="roadmap-item high">S2 · Resultats cerca</span>
+          <span class="roadmap-item low">R3 · Cards plegables</span>
+          <span class="roadmap-item low">P4 · Mode ample</span>
+          <span class="roadmap-item low">P3 · Footer</span>
+          <span class="roadmap-item medium">P5 · aria-live</span>
+          <span class="roadmap-item medium">D2 · Touch targets</span>
+          <span class="roadmap-item medium">D3 · Tooltips</span>
+          <span class="roadmap-item low">D5 · Dorsal badge</span>
+          <span class="roadmap-item medium">H2 · Header polish</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       NOUS COMPONENTS
+  ══════════════════════════════════════════════════════ -->
+  <div class="section" id="components">
+    <div class="section-header">
+      <div class="section-icon teal">📦</div>
+      <div>
+        <div class="section-title">Nous Components a Crear</div>
+        <div class="section-subtitle">Sense dependències npm noves — tot amb Tailwind + Lucide ja instal·lat</div>
+      </div>
+    </div>
+
+    <div class="new-components">
+      <div class="new-component-card">
+        <h3>SkeletonTable.tsx</h3>
+        <p>Dos exports: <code>SkeletonTable</code> (placeholder de StatsTable, 8–12 files) i <code>SkeletonTopTen</code> (6 cards skeleton en el mateix grid 1/2/3 col del TopTen). Usa <code>animate-pulse</code> de Tailwind.</p>
+        <div class="file-list" style="margin-top:10px;">
+          <span class="file-chip">src/components/SkeletonTable.tsx</span>
+        </div>
+      </div>
+      <div class="new-component-card">
+        <h3>formatDateRelative() a utils.ts</h3>
+        <p>Funció utilitària: converteix una data ISO en text relatiu "avui", "ahir", "fa N dies". Usada per <code>SyncStatusCard</code> compacte (SC1). Afegir-la a l'arxiu <code>utils.ts</code> existent.</p>
+        <div class="file-list" style="margin-top:10px;">
+          <span class="file-chip">src/lib/utils.ts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       NOTA FINAL
+  ══════════════════════════════════════════════════════ -->
+  <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-top: 40px; box-shadow: var(--shadow);">
+    <h2 style="font-size:16px; font-weight:800; margin-bottom:10px; color: var(--text);">💡 Principis d'Implementació</h2>
+    <ul style="font-size:13px; line-height:2; color: var(--muted); padding-left:20px;">
+      <li><strong>Zero dependències noves</strong> — tot usa Tailwind v4, Lucide React i APIs del navegador</li>
+      <li><strong>Backward compatible</strong> — cap canvi de estructura de dades ni de Supabase</li>
+      <li><strong>Dark mode first</strong> — cada canvi ha de funcionar en els dos modes</li>
+      <li><strong>Mobile first</strong> — provar a 375px de width com a primera validació</li>
+      <li><strong>Progressiu</strong> — cada millora és independent, es pot implementar en qualsevol ordre</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div style="background: #1a1f26; color: rgba(255,255,255,0.5); text-align:center; padding:20px; font-size:11px; margin-top:40px;">
+  FUTFEM APP · Pla de Disseny i Usabilitat · Generat el 27/05/2026 · XMP Football Analysis
+</div>
+
+</body>
+</html>

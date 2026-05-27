@@ -4,18 +4,26 @@
  * App pública (sin auth) para visualizar estadísticas de jugadoras de las ligas
  * femeninas de la FCF. Los datos se cargan desde Supabase con la clave anon.
  *
- * Flujo de datos:
- *   mount → cargar leagues → auto-select primera liga activa
- *   cambio de liga → derivar temporadas → auto-select primera temporada
- *   cambio de (liga, temporada) → cargar allStats + actas en paralelo
- *   cambio de equipo → filtrar allStats en memoria (sin llamada extra a BD)
- *   búsqueda → filtrar allStats en memoria (useMemo)
+ * Millores UX/UI implementades:
+ *  H1  — Context pill al header (lliga + temporada mentre es fa scroll)
+ *  H2  — Dark mode toggle com a chip pressable + wide mode toggle
+ *  N2  — View toggle com a segmented control
+ *  S1  — Cercador: badge de resultats + drecera teclat '/'
+ *  S2  — Resultats de cerca: millora visual dels grups
+ *  L1  — Skeleton loader per a StatsTable
+ *  L2  — Skeleton loader per a TopTen
+ *  A1  — AllTeamsOverview: files clicables per filtrar equip
+ *  P2  — Empty state amigable per a l'usuari final
+ *  P3  — Footer enriquit
+ *  P4  — Wide mode toggle (max-w-3xl ↔ max-w-5xl)
+ *  P5  — Regió aria-live per a screen readers
  */
 
-import { Moon, Search, Sun, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Maximize2, Minimize2, Moon, Search, Sun, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import LeagueSelector from './components/LeagueSelector';
 import SeasonSelector from './components/SeasonSelector';
+import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
 import StatsTable from './components/StatsTable';
 import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
@@ -39,6 +47,9 @@ function useDarkMode() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
     localStorage.setItem('futfem-theme', dark ? 'dark' : 'light');
+    // H2: actualitzar meta theme-color
+    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (meta) meta.content = dark ? '#121212' : '#ffffff';
   }, [dark]);
 
   return [dark, setDark] as const;
@@ -48,6 +59,15 @@ function useDarkMode() {
 
 export default function App() {
   const [dark, setDark] = useDarkMode();
+
+  // P4: Wide mode toggle
+  const [wideMode, setWideMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('futfem-wide') === 'true';
+  });
+  useEffect(() => {
+    localStorage.setItem('futfem-wide', wideMode ? 'true' : 'false');
+  }, [wideMode]);
 
   // ── Estado de ligas ─────────────────────────────────────────────────────────
   const [leagues, setLeagues]               = useState<League[]>([]);
@@ -71,6 +91,7 @@ export default function App() {
 
   // ── Búsqueda global ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // ── 1. Cargar ligas al montar ───────────────────────────────────────────────
 
@@ -139,7 +160,6 @@ export default function App() {
     const stats = statsData || [];
     const acts  = actasData  || [];
 
-    // Deduplicar equipos desde los stats (sin llamada extra a BD)
     const seen  = new Set<string>();
     const tList: TeamOption[] = [];
     for (const s of stats) {
@@ -179,11 +199,7 @@ export default function App() {
       s.player_fcf_name.toLowerCase().includes(q)
     );
 
-    // Agrupar por equipo
-    const grouped = new Map<
-      string,
-      { teamName: string; players: FcfStat[] }
-    >();
+    const grouped = new Map<string, { teamName: string; players: FcfStat[] }>();
     for (const s of matching) {
       if (!grouped.has(s.team_slug)) {
         grouped.set(s.team_slug, { teamName: s.team_name, players: [] });
@@ -196,46 +212,101 @@ export default function App() {
     );
   }, [searchQuery, allStats]);
 
+  // S1: Recompte de resultats de cerca
+  const searchResultsCount = searchResults?.reduce((acc, g) => acc + g.players.length, 0) ?? 0;
+
+  // S1: Drecera de teclat '/' per al cercador
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA' &&
+        view === 'stats'
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view]);
+
   // ── Liga seleccionada (objeto) ──────────────────────────────────────────────
 
   const selectedLeague = leagues.find(l => l.id === selectedLeagueId) ?? null;
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
+  const maxWidthClass = wideMode ? 'max-w-5xl' : 'max-w-3xl';
+
   return (
     <div
       className="min-h-screen"
       style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}
     >
+      {/* P5: Regió aria-live per a screen readers */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {loading
+          ? 'Carregant estadístiques...'
+          : allStats.length > 0
+          ? `${allStats.length} jugadores carregades per a ${selectedLeague?.name ?? ''}`
+          : ''
+        }
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
         className="sticky top-0 z-50 border-b border-[var(--card-border)]"
         style={{ background: 'var(--header-bg)' }}
       >
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-lg font-black tracking-tight text-brand">
+        <div className={cn('mx-auto px-4 h-14 flex items-center justify-between', maxWidthClass)}>
+          {/* Logo + H1: context pill */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-lg font-black tracking-tight text-brand shrink-0">
               FUTFEM
             </span>
-            <span className="text-lg font-black tracking-tight text-[var(--app-text)] opacity-40">
+            <span className="text-lg font-black tracking-tight text-[var(--app-text)] opacity-40 shrink-0">
               APP
             </span>
-            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1">
+            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1 shrink-0">
               FCF · Fútbol Femení
             </span>
+            {/* H1: context pill — visible mentre es fa scroll */}
+            {selectedLeague && selectedSeason && !loadingLeagues && (
+              <span className="hidden md:flex items-center text-[10px] font-semibold text-neutral-400 bg-neutral-100 dark:bg-white/10 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap shrink-0">
+                {selectedLeague.short_name} · {selectedSeason}
+              </span>
+            )}
           </div>
-          <button
-            onClick={() => setDark(d => !d)}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-[var(--app-text)] transition-colors"
-            aria-label="Cambiar tema"
-          >
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
+
+          {/* Controls de la dreta */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* P4: Wide mode toggle (visible només a lg+) */}
+            <button
+              onClick={() => setWideMode(w => !w)}
+              className="hidden lg:flex items-center justify-center bg-neutral-100 dark:bg-white/10 p-1.5 rounded-lg text-neutral-400 hover:text-[var(--app-text)] transition-colors"
+              title={wideMode ? 'Vista normal' : 'Vista ampliada'}
+              aria-label={wideMode ? 'Vista normal' : 'Vista ampliada'}
+            >
+              {wideMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+
+            {/* H2: Dark mode toggle com a chip pressable */}
+            <button
+              onClick={() => setDark(d => !d)}
+              className="bg-neutral-100 dark:bg-white/10 p-1.5 rounded-lg text-neutral-500 hover:text-[var(--app-text)] transition-colors"
+              aria-label="Canviar tema"
+              title="Mode clar/fosc"
+            >
+              {dark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ── Contenido principal ────────────────────────────────────────────── */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className={cn('mx-auto px-4 py-6', maxWidthClass)}>
 
         {/* Cargando ligas */}
         {loadingLeagues && (
@@ -274,7 +345,7 @@ export default function App() {
               />
             </div>
 
-            {/* Sync status */}
+            {/* Sync status — SC1: compacte */}
             {!loading && selectedLeague && (
               <SyncStatusCard
                 actas={actas}
@@ -283,9 +354,9 @@ export default function App() {
               />
             )}
 
-            {/* Toggle de vista */}
+            {/* N2: Toggle de vista com a segmented control */}
             {!loading && allStats.length > 0 && (
-              <div className="flex gap-1.5 mb-5">
+              <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1 gap-1 mb-5 w-fit">
                 {(
                   [
                     { id: 'stats',  label: 'Estadístiques' },
@@ -299,10 +370,10 @@ export default function App() {
                       setSearchQuery('');
                     }}
                     className={cn(
-                      'px-3.5 py-1.5 text-[12px] font-semibold rounded-full border transition-colors',
+                      'px-4 py-1.5 text-[12px] font-semibold rounded-lg transition-colors',
                       view === tab.id
-                        ? 'bg-brand text-white border-brand'
-                        : 'bg-[var(--card-bg)] text-neutral-500 border-[var(--card-border)] hover:border-brand hover:text-brand'
+                        ? 'bg-[var(--card-bg)] text-[var(--app-text)] shadow-sm'
+                        : 'text-neutral-400 dark:text-neutral-500 hover:text-[var(--app-text)]'
                     )}
                   >
                     {tab.label}
@@ -311,39 +382,46 @@ export default function App() {
               </div>
             )}
 
-            {/* Buscador global (solo en vista estadístiques) */}
+            {/* S1: Buscador global (solo en vista estadístiques) */}
             {view === 'stats' && (
-            <div className="relative mb-4">
-              <Search
-                size={13}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cercar jugadora…"
-                className="w-full pl-8 pr-8 py-2 text-[13px] bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-[var(--app-text)] placeholder-neutral-400 focus:outline-none focus:border-brand transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[var(--app-text)] transition-colors"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-            )}
-
-            {/* Loading stats */}
-            {loading && (
-              <div className="text-center py-16 text-neutral-400 text-sm animate-pulse">
-                Carregant estadístiques…
+              <div className="relative mb-4">
+                <Search
+                  size={13}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Cercar jugadora…"
+                  className={cn(
+                    'w-full pl-8 py-2 text-[13px] bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl text-[var(--app-text)] placeholder-neutral-400 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-colors',
+                    searchQuery && searchResultsCount > 0 ? 'pr-20' : searchQuery ? 'pr-8' : 'pr-4'
+                  )}
+                />
+                {/* S1: Badge de recompte de resultats */}
+                {searchQuery && searchResultsCount > 0 && (
+                  <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-bold bg-brand/10 text-brand px-1.5 py-0.5 rounded-full pointer-events-none">
+                    {searchResultsCount}
+                  </span>
+                )}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[var(--app-text)] transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Vista Top 10 */}
+            {/* L1/L2: Skeleton loader */}
+            {loading && view === 'stats'  && <SkeletonTable rows={10} />}
+            {loading && view === 'top10' && <SkeletonTopTen />}
+
+            {/* Vista Top 20 */}
             {!loading && view === 'top10' && selectedLeague && (
               <TopTen
                 allStats={allStats}
@@ -364,20 +442,23 @@ export default function App() {
                         <span className="font-bold">«{searchQuery}»</span>
                       </div>
                     ) : (
-                      <div className="space-y-6">
-                        <p className="text-[11px] text-neutral-500">
-                          {searchResults.reduce((acc, g) => acc + g.players.length, 0)} resultat
-                          {searchResults.reduce((acc, g) => acc + g.players.length, 0) !== 1 ? 's' : ''}{' '}
-                          en {searchResults.length} equip
-                          {searchResults.length !== 1 ? 's' : ''}
+                      // S2: millora visual dels grups de resultats
+                      <div className="space-y-8">
+                        <p className="text-[12px] text-neutral-500">
+                          <span className="text-brand font-bold">{searchResultsCount}</span>{' '}
+                          resultat{searchResultsCount !== 1 ? 's' : ''}{' '}
+                          en{' '}
+                          <span className="font-semibold">{searchResults.length}</span>{' '}
+                          equip{searchResults.length !== 1 ? 's' : ''}
                         </p>
                         {searchResults.map(group => (
                           <div key={group.teamName}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400">
+                            {/* S2: border-l accent + badge més gran */}
+                            <div className="flex items-center gap-2 mb-2 border-l-2 border-brand pl-2">
+                              <span className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400">
                                 {group.teamName}
                               </span>
-                              <span className="text-[10px] text-neutral-400">
+                              <span className="text-[11px] text-neutral-400">
                                 {group.players.length} jugadora
                                 {group.players.length !== 1 ? 's' : ''}
                               </span>
@@ -395,20 +476,22 @@ export default function App() {
                 {/* ── Vista normal (sin búsqueda) ─────────────────────────── */}
                 {searchResults === null && (
                   <>
-                    {/* Sin datos */}
+                    {/* P2: Empty state amigable per a l'usuari */}
                     {allStats.length === 0 ? (
-                      <div className="text-center py-16 text-neutral-500 text-sm space-y-2">
-                        <p>Sense dades per a la temporada {selectedSeason}</p>
-                        <p className="text-[11px] text-neutral-400">
-                          Executa el script:{' '}
-                          <code className="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-700 dark:text-neutral-300 font-mono text-[11px]">
-                            node scripts/sync-actas.js --league ... --season XXXX
-                          </code>
+                      <div className="text-center py-16 space-y-3">
+                        <div className="text-4xl">📭</div>
+                        <p className="text-[15px] font-semibold text-[var(--app-text)]">
+                          Sense estadístiques
+                        </p>
+                        <p className="text-[13px] text-neutral-400 max-w-[280px] mx-auto leading-relaxed">
+                          No hi ha dades per a{' '}
+                          {selectedLeague?.short_name ?? ''} · {selectedSeason}.{' '}
+                          Les estadístiques s'actualitzen cada dilluns.
                         </p>
                       </div>
                     ) : (
                       <>
-                        {/* Selector de equipo */}
+                        {/* Selector d'equip — S3: pills */}
                         <TeamSelector
                           teams={teams}
                           selected={selectedTeam}
@@ -419,7 +502,6 @@ export default function App() {
                         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
                           {selectedTeam ? (
                             <>
-                              {/* Cabecera del equipo seleccionado */}
                               <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
                                 <span className="text-[12px] font-bold text-[var(--app-text)]">
                                   {teams.find(t => t.slug === selectedTeam)?.name ?? selectedTeam}
@@ -437,8 +519,15 @@ export default function App() {
                               <StatsTable data={teamStats} />
                             </>
                           ) : (
-                            /* Vista resumen: todos los equipos */
-                            <AllTeamsOverview stats={allStats} teams={teams} />
+                            /* A1: AllTeamsOverview amb files clicables */
+                            <AllTeamsOverview
+                              stats={allStats}
+                              teams={teams}
+                              onSelect={slug => {
+                                setSelectedTeam(slug);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            />
                           )}
                         </div>
                       </>
@@ -451,44 +540,61 @@ export default function App() {
         )}
       </main>
 
-      {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="text-center py-8 space-y-4">
-        <p className="text-[11px] text-neutral-400">
-          Dades: FCF · Federació Catalana de Futbol · Fútbol Femení
-        </p>
-        <div className="flex justify-center">
-          {/* Logo mode clar */}
-          <img
-            src="/xmp-logo-light.svg"
-            alt="XMP Football Analysis"
-            className="h-16 dark:hidden"
-          />
-          {/* Logo mode fosc */}
-          <img
-            src="/xmp-logo-dark.png"
-            alt="XMP Football Analysis"
-            className="h-16 hidden dark:block"
-          />
+      {/* P3: Footer enriquit ────────────────────────────────────────────────── */}
+      <footer className="mt-12 border-t border-[var(--card-border)] py-8">
+        <div className={cn('mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6', maxWidthClass)}>
+          <div className="flex flex-col items-center sm:items-start gap-1.5">
+            <img
+              src="/xmp-logo-light.svg"
+              alt="XMP Football Analysis"
+              className="h-8 dark:hidden"
+            />
+            <img
+              src="/xmp-logo-dark.png"
+              alt="XMP Football Analysis"
+              className="h-8 hidden dark:block"
+            />
+            <p className="text-[10px] text-neutral-400">XMP Football Analysis</p>
+          </div>
+          <div className="text-center sm:text-right space-y-1">
+            <p className="text-[11px] text-neutral-400">
+              Dades:{' '}
+              <a
+                href="https://www.fcf.cat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand hover:underline underline-offset-2"
+              >
+                FCF
+              </a>{' '}
+              · Federació Catalana de Futbol
+            </p>
+            <p className="text-[11px] text-neutral-400">
+              Fútbol Femení{selectedSeason ? ` · Temporada ${selectedSeason}` : ''}
+            </p>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-// ─── Vista resumen cuando no hay equipo seleccionado ─────────────────────────
+// ─── A1: Vista resumen quan no hi ha equip seleccionat (files clicables) ──────
 
 function AllTeamsOverview({
   stats,
   teams,
+  onSelect,
 }: {
   stats: FcfStat[];
   teams: TeamOption[];
+  onSelect: (slug: string) => void;
 }) {
-  // Agregar por equipo
   const teamSummary = teams
     .map(t => {
       const ts = stats.filter(s => s.team_slug === t.slug);
       return {
+        slug: t.slug,
         name: t.name,
         players: ts.length,
         partidos: Math.max(...ts.map(s => s.partidos), 0),
@@ -519,26 +625,29 @@ function AllTeamsOverview({
             <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-400">
               TR
             </th>
+            {/* A1: columna de chevron */}
+            <th className="px-2 py-2 w-6" />
           </tr>
         </thead>
         <tbody>
           {teamSummary.map((t, i) => (
             <tr
               key={t.name}
+              onClick={() => onSelect(t.slug)}
               className={cn(
-                'border-b border-[var(--card-border)]',
+                'group border-b border-[var(--card-border)] cursor-pointer transition-colors hover:bg-brand/5',
                 i % 2 === 0 ? 'bg-transparent' : 'bg-neutral-50 dark:bg-white/[0.03]'
               )}
             >
-              <td className="px-3 py-2 font-medium text-[var(--app-text)] max-w-[180px]">
+              <td className="px-3 py-2.5 font-medium text-[var(--app-text)] max-w-[180px]">
                 <span className="block truncate" title={t.name}>
                   {t.name}
                 </span>
               </td>
-              <td className="px-3 py-2 text-right text-neutral-500">{t.players}</td>
+              <td className="px-3 py-2.5 text-right text-neutral-500">{t.players}</td>
               <td
                 className={cn(
-                  'px-3 py-2 text-right font-bold',
+                  'px-3 py-2.5 text-right font-bold',
                   t.goles > 0
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-neutral-400'
@@ -548,7 +657,7 @@ function AllTeamsOverview({
               </td>
               <td
                 className={cn(
-                  'px-3 py-2 text-right',
+                  'px-3 py-2.5 text-right',
                   t.amarillas > 0
                     ? 'text-amber-600 dark:text-amber-400'
                     : 'text-neutral-400'
@@ -558,7 +667,7 @@ function AllTeamsOverview({
               </td>
               <td
                 className={cn(
-                  'px-3 py-2 text-right',
+                  'px-3 py-2.5 text-right',
                   t.rojas > 0
                     ? 'text-red-600 dark:text-red-400 font-bold'
                     : 'text-neutral-400'
@@ -566,12 +675,16 @@ function AllTeamsOverview({
               >
                 {t.rojas}
               </td>
+              {/* A1: chevron visible en hover */}
+              <td className="px-2 py-2.5 text-right text-neutral-300 group-hover:text-brand transition-colors text-base leading-none">
+                ›
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
       <p className="px-3 py-2.5 text-[10px] text-neutral-400">
-        Selecciona un equip al desplegable de dalt per veure les jugadores.
+        Clica sobre un equip per veure les jugadores.
       </p>
     </div>
   );

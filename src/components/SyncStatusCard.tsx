@@ -1,11 +1,11 @@
 /**
- * SyncStatusCard.tsx
- * Tarjeta de estado del sync automático.
- * Adaptado de DatosSection.tsx (ATClub) — sin lógica de equipo propio.
+ * SyncStatusCard.tsx — SC1
+ * Indicador compacte d'una línia + acordió expandible per als detalls.
  */
 
-import { Calendar, Database, RefreshCw } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Calendar, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { cn, formatDateRelative } from '../lib/utils';
 import type { ActaProcesada } from '../types';
 
 interface SyncStatusCardProps {
@@ -15,10 +15,11 @@ interface SyncStatusCardProps {
 }
 
 export default function SyncStatusCard({ actas, season, leagueName }: SyncStatusCardProps) {
-  const lastSync = actas[0]?.processed_at;
+  const [expanded, setExpanded] = useState(false);
+
+  const lastSync   = actas[0]?.processed_at;
   const totalActas = actas.length;
 
-  // Equipos únicos que han aparecido en las actas procesadas
   const uniqueTeams = new Set<string>();
   for (const a of actas) {
     if (a.local_slug)    uniqueTeams.add(a.local_slug);
@@ -56,33 +57,49 @@ export default function SyncStatusCard({ actas, season, leagueName }: SyncStatus
     });
 
   return (
-    <div className="mb-4 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Database size={14} className="text-brand" />
-          <span className="text-[11px] font-black uppercase tracking-wider text-[var(--app-text)]">
-            Sync FCF · {season}
-          </span>
-        </div>
+    <div className="mb-4">
+      {/* ── Línia compacta ───────────────────────────────────── */}
+      <div className="flex items-center gap-2 text-[11px] text-neutral-400">
+        {/* Punt de color d'estat */}
         <span
           className={cn(
-            'text-[10px] font-bold px-2 py-0.5 rounded-full',
+            'w-1.5 h-1.5 rounded-full shrink-0',
             totalActas > 0
-              ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50'
-              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-[var(--card-border)]'
+              ? 'bg-emerald-400'
+              : 'bg-neutral-300 dark:bg-neutral-600'
           )}
-        >
-          {totalActas > 0 ? `${totalActas} actes · ${uniqueTeams.size} equips` : 'Sense dades'}
-        </span>
+        />
+
+        {totalActas > 0 ? (
+          <span>
+            <span className="font-semibold text-[var(--app-text)]">{totalActas}</span>{' '}
+            actes · {uniqueTeams.size} equips ·{' '}
+            {lastSync ? formatDateRelative(lastSync) : ''}
+          </span>
+        ) : (
+          <span>Sense dades per a la temporada {season}</span>
+        )}
+
+        {totalActas > 0 && (
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="ml-auto text-brand hover:underline underline-offset-2 font-semibold shrink-0 transition-colors"
+          >
+            {expanded ? 'amagar' : 'detalls'}
+          </button>
+        )}
       </div>
 
-      {totalActas > 0 ? (
-        <div className="space-y-1 text-[11px]">
+      {/* ── Panell expandit (acordió) ─────────────────────────── */}
+      {expanded && totalActas > 0 && (
+        <div className="mt-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-3 text-[11px] space-y-1 animate-fade-up">
           <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
             <RefreshCw size={11} />
             <span>
               Última sync:{' '}
-              <span className="text-[var(--app-text)] font-medium">{formatDate(lastSync!)}</span>
+              <span className="text-[var(--app-text)] font-medium">
+                {formatDate(lastSync!)}
+              </span>
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
@@ -112,10 +129,6 @@ export default function SyncStatusCard({ actas, season, leagueName }: SyncStatus
               Veure log
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="text-[11px] text-neutral-500">
-          ⏳ No hi ha dades per a la temporada {season}. Executa el script de sincronització.
         </div>
       )}
     </div>

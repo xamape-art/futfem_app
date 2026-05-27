@@ -17,8 +17,9 @@ export default function LeagueSelector({ leagues, selectedId, onChange }: League
   // Solo mostrar si hay más de una liga
   if (leagues.length <= 1) return null;
 
+  // N1: scroll horitzontal en lloc de flex-wrap
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
       {leagues.map(l => (
         <button
           key={l.id}

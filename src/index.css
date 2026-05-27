@@ -12,21 +12,26 @@
 
 @layer base {
   :root {
-    --app-bg:     #f8f9fa;
-    --app-text:   #1a1f26;
-    --card-bg:    #ffffff;
-    --card-border:#e2e8f0;
-    --header-bg:  #ffffff;
-    --input-bg:   #f1f5f9;
+    --app-bg:      #f8f9fa;
+    --app-text:    #1a1f26;
+    --card-bg:     #ffffff;
+    --card-border: #e2e8f0;
+    --header-bg:   #ffffff;
+    --input-bg:    #f1f5f9;
+    /* P1: nova variable de shadow */
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
   }
 
   .dark {
-    --app-bg:     #121212;
-    --app-text:   #ffffff;
-    --card-bg:    #1f1f1f;
-    --card-border:#333333;
-    --header-bg:  #121212;
-    --input-bg:   #1a1a1a;
+    --app-bg:      #121212;
+    --app-text:    #ffffff;
+    --card-bg:     #1f1f1f;
+    /* P1: border lleugerament més visible en dark mode */
+    --card-border: #2e2e2e;
+    --header-bg:   #121212;
+    --input-bg:    #1a1a1a;
+    /* P1: shadow més intensa en dark mode */
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
   }
 
   body {
@@ -36,7 +41,28 @@
   }
 }
 
-/* Scrollbar */
+/* ── Scrollbar global ────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }
+
+/* ── N1: Scrollbar ocult (tabs horitzontals) ─────────────────────────── */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ── D1: Ombra columna sticky de la taula ────────────────────────────── */
+.table-sticky-col {
+  box-shadow: 2px 0 6px -2px rgba(0,0,0,0.08);
+}
+.dark .table-sticky-col {
+  box-shadow: 2px 0 6px -2px rgba(0,0,0,0.45);
+}
+
+/* ── L3: Animació fade-up (arribada de dades) ────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.animate-fade-up {
+  animation: fade-up 0.25s ease-out both;
+}

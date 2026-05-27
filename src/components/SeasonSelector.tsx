@@ -20,12 +20,15 @@ export default function SeasonSelector({ fcfSeasons, selected, onChange }: Seaso
     .sort((a, b) => b.localeCompare(a))
     .map(fcfSeasonToApp);
 
+  // N3: role + aria-label/aria-pressed per a accessibilitat
   return (
-    <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1">
+    <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1" role="group" aria-label="Selector de temporada">
       {seasons.map(s => (
         <button
           key={s}
           onClick={() => onChange(s)}
+          aria-label={`Temporada ${s}`}
+          aria-pressed={selected === s}
           className={cn(
             'px-3 py-1 text-[11px] font-black rounded-md transition-colors',
             selected === s
