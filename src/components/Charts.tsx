@@ -265,7 +265,7 @@ function PlayerCombobox({
 
           {/* Filtre d'equips */}
           <div className="relative border-b border-[var(--card-border)]">
-            <div className="flex gap-1.5 overflow-x-auto px-2 py-1.5 scrollbar-none">
+            <div className="flex flex-wrap gap-1.5 px-2 py-2">
               <button
                 onClick={() => setTeamFilter('')}
                 className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 text-[10px] font-semibold rounded-full border transition-colors ${
@@ -291,8 +291,6 @@ function PlayerCombobox({
                 </button>
               ))}
             </div>
-            {/* Degradat per indicar scroll */}
-            <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[var(--card-bg)] to-transparent" />
           </div>
 
           {/* Llista de jugadores */}
