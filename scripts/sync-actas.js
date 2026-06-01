@@ -457,6 +457,26 @@ async function main() {
   console.log(`  Liga: "${league.name}" (id: ${league.id})`);
   console.log(`  Durada partit: ${MATCH_DURATION} min\n`);
 
+  // Si --force: esborrar stats i actes existents abans de reimportar
+  if (FORCE) {
+    info('--force: eliminant stats i actes existents per a aquesta lliga+temporada...');
+    const { error: e1 } = await supabase
+      .from('fcf_stats')
+      .delete()
+      .eq('league_id', league.id)
+      .eq('season', SEASON_APP);
+    if (e1) { err(`Error eliminant fcf_stats: ${e1.message}`); process.exit(1); }
+
+    const { error: e2 } = await supabase
+      .from('actas_procesadas')
+      .delete()
+      .eq('league_id', league.id)
+      .eq('season', SEASON_APP);
+    if (e2) { err(`Error eliminant actas_procesadas: ${e2.message}`); process.exit(1); }
+
+    ok('Dades eliminades. Reimportant des de zero...');
+  }
+
   // Obtener todas las actas del grupo
   const actaUrls = await fetchCalendar(FCF_SEASON, LEAGUE_PATH);
 
