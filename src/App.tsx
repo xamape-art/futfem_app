@@ -28,6 +28,7 @@ import StatsTable from './components/StatsTable';
 import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
 import TopTen from './components/TopTen';
+import Charts from './components/Charts';
 import { supabase } from './lib/supabase';
 import { cn, fcfSeasonToApp } from './lib/utils';
 import type { ActaProcesada, FcfStat, League, TeamOption } from './types';
@@ -88,7 +89,7 @@ export default function App() {
   const [loading, setLoading]           = useState(false);
 
   // ── Vista activa ────────────────────────────────────────────────────────────
-  const [view, setView] = useState<'stats' | 'top10'>('stats');
+  const [view, setView] = useState<'stats' | 'top10' | 'charts'>('stats');
 
   // ── Búsqueda global ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -385,6 +386,7 @@ export default function App() {
                   [
                     { id: 'stats',  label: 'Estadístiques' },
                     { id: 'top10', label: '🏆 Top 20'      },
+                    { id: 'charts', label: '📊 Gràfiques'  },
                   ] as const
                 ).map(tab => (
                   <button
@@ -448,6 +450,15 @@ export default function App() {
             {/* Vista Top 20 */}
             {!loading && view === 'top10' && displayLeague && (
               <TopTen
+                allStats={allStats}
+                season={selectedSeason}
+                leagueName={displayLeague.name}
+              />
+            )}
+
+            {/* Vista Gràfiques */}
+            {!loading && view === 'charts' && displayLeague && (
+              <Charts
                 allStats={allStats}
                 season={selectedSeason}
                 leagueName={displayLeague.name}
