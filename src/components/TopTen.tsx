@@ -25,6 +25,7 @@ interface Category {
   secondaryKey?: keyof FcfStat;
   secondaryLabel?: string;
   computedValue?: (s: FcfStat) => number;
+  formatValue?: (v: number) => string;
   sortAsc?: boolean;
   valueLabel?: string;
   extraFilter?: (s: FcfStat) => boolean;
@@ -41,17 +42,18 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'goles',
-    label: 'Gols/minut',
+    label: 'G/90 min',
     icon: '⚡',
     color: 'text-orange-500 dark:text-orange-400',
     bgColor: 'from-orange-500 to-orange-600',
-    emptyText: 'Cap gol marcat',
-    computedValue: (s) => Math.round(s.minutos / s.goles),
-    sortAsc: true,
-    valueLabel: 'min/gol',
+    emptyText: 'Cap jugadora amb ≥90 min i gols marcats',
+    computedValue: (s) => Math.round((s.goles / s.minutos) * 90 * 100) / 100,
+    formatValue: (v) => v.toFixed(2),
+    sortAsc: false,
+    valueLabel: 'G/90',
     secondaryKey: 'goles',
     secondaryLabel: 'gols',
-    extraFilter: (s) => s.minutos > 0,
+    extraFilter: (s) => s.minutos >= 90,
   },
   {
     key: 'minutos',
@@ -233,7 +235,7 @@ function CategoryCard({
                   {/* Valor principal + secundari / etiqueta */}
                   <div className="shrink-0 text-right">
                     <div className={cn('leading-tight', category.color, rankValueStyle(rank))}>
-                      {value}
+                      {category.formatValue ? category.formatValue(value) : value}
                     </div>
                     {category.valueLabel && (
                       <div className="text-[10px] text-neutral-400 leading-tight">
