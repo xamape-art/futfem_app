@@ -253,9 +253,20 @@ function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
         </RadarChart>
       </ResponsiveContainer>
 
-      <p className="text-[10px] text-neutral-400 mt-1 text-center">
-        Disciplina = menys targetes és millor · Tots els eixos: percentil respecte a la lliga
-      </p>
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+        {[
+          { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
+          { label: 'Goleig G/90',   desc: 'Gols per 90 minuts jugats' },
+          { label: 'Participació',  desc: 'Total de partits jugats a la lliga' },
+          { label: 'Consistència',  desc: 'Ratio de partits jugant de titular' },
+          { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
+        ].map(item => (
+          <div key={item.label} className="flex items-baseline gap-1.5">
+            <span className="text-[11px] font-semibold text-brand shrink-0">{item.label}:</span>
+            <span className="text-[11px] text-neutral-400">{item.desc}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
