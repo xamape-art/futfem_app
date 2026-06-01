@@ -130,11 +130,11 @@ function normalize(value: number, min: number, max: number): number {
 }
 
 const RADAR_AXES = [
-  { key: 'disponibilitat', label: 'Disponibilitat' },
-  { key: 'goleig',        label: 'Goleig G/90'    },
-  { key: 'participacio',  label: 'Participació'    },
-  { key: 'consistencia',  label: 'Consistència'    },
-  { key: 'disciplina',    label: 'Disciplina'      },
+  { key: 'disponibilitat', label: 'Disponibilitat', invert: false },
+  { key: 'goleig',        label: 'Goleig G/90',    invert: false },
+  { key: 'participacio',  label: 'Participació',   invert: false },
+  { key: 'consistencia',  label: 'Consistència',   invert: false },
+  { key: 'disciplina',    label: 'Disciplina',     invert: true  },
 ];
 
 function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
@@ -161,14 +161,14 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
       : 0,
   };
 
-  return RADAR_AXES.map(axis => ({
-    axis: axis.label,
-    value: normalize(
+  return RADAR_AXES.map(axis => {
+    const raw = normalize(
       playerVals[axis.key as keyof typeof playerVals],
       Math.min(...vals[axis.key as keyof typeof vals]),
       Math.max(...vals[axis.key as keyof typeof vals])
-    ),
-  }));
+    );
+    return { axis: axis.label, value: axis.invert ? 100 - raw : raw };
+  });
 }
 
 function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
