@@ -218,6 +218,8 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
           { label: 'Minuts',   value: player.minutos },
           { label: 'Gols',     value: player.goles },
           { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
+          { label: '🟨 TA',    value: player.amarillas },
+          { label: '🟥 TR',    value: player.rojas },
         ].map(item => (
           <div key={item.label} className="bg-neutral-100 dark:bg-white/10 rounded-lg px-2.5 py-1.5 text-center">
             <div className="text-[10px] text-neutral-400">{item.label}</div>
