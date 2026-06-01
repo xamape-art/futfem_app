@@ -41,8 +41,8 @@ export default function CompetitionSelector({
 
   return (
     <div className="mb-3 space-y-2">
-      {/* Fila de competicions */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {/* Fila de competicions — wrap per mostrar-les totes */}
+      <div className="flex flex-wrap gap-2">
         {competitions.map(c => (
           <button
             key={c.key}
