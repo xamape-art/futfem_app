@@ -24,7 +24,21 @@ interface Props {
 
 // ─── Scatter: Minuts vs Gols ──────────────────────────────────────────────────
 
+const TEAM_COLORS = [
+  '#7c3aed','#059669','#dc2626','#2563eb','#d97706',
+  '#db2777','#0891b2','#65a30d','#c2410c','#4338ca',
+  '#0d9488','#9333ea','#ea580c','#16a34a','#9f1239',
+  '#1d4ed8','#b45309','#0e7490','#6d28d9','#374151',
+];
+
 function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
+  const teamColorMap = useMemo(() => {
+    const teams = [...new Set(allStats.map(s => s.team_slug))].sort();
+    const map: Record<string, string> = {};
+    teams.forEach((slug, i) => { map[slug] = TEAM_COLORS[i % TEAM_COLORS.length]; });
+    return map;
+  }, [allStats]);
+
   const data = useMemo(() =>
     allStats
       .filter(s => s.minutos >= matchDuration && s.goles > 0)
@@ -35,9 +49,10 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
         team: s.team_name,
         partits: s.partidos,
         gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
+        color: teamColorMap[s.team_slug] ?? '#7c3aed',
         id: s.id,
       })),
-    [allStats, matchDuration]
+    [allStats, matchDuration, teamColorMap]
   );
 
   // Línia de referència G/matchDuration = 1.0
@@ -98,7 +113,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
               return (
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-2 shadow-lg text-[12px]">
                   <p className="font-bold text-[var(--app-text)] mb-1">{d.name}</p>
-                  <p className="text-neutral-400 truncate max-w-[180px]">{d.team}</p>
+                  <p className="truncate max-w-[180px] font-semibold" style={{ color: d.color }}>{d.team}</p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{d.y} gols</span>
                     <span className="text-blue-500 font-semibold">{d.x} min</span>
@@ -111,9 +126,10 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
           />
           <Scatter
             data={data}
-            fill="#7c3aed"
-            fillOpacity={0.7}
-            r={5}
+            shape={(props: any) => {
+              const { cx, cy, payload } = props;
+              return <circle cx={cx} cy={cy} r={5} fill={payload.color} fillOpacity={0.8} />;
+            }}
           />
         </ScatterChart>
       </ResponsiveContainer>
