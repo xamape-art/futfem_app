@@ -144,7 +144,7 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
     disponibilitat: withMinutes.map(s => s.partidos > 0 ? s.minutos / s.partidos : 0),
     goleig:         withMinutes.map(s => s.minutos >= 90 ? (s.goles / s.minutos) * 90 : 0),
     participacio:   withMinutes.map(s => s.partidos),
-    consistencia:   withMinutes.map(s => s.partidos > 0 ? s.titular / s.partidos : 0),
+    consistencia:   withMinutes.map(s => s.partidos > 0 ? Math.min(s.minutos / (s.partidos * 90), 1) : 0),
     disciplina:     withMinutes.map(s => {
       const pen = s.amarillas * 1 + s.rojas * 3;
       return s.partidos > 0 ? pen / s.partidos : 0;
@@ -155,7 +155,7 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
     disponibilitat: player.partidos > 0 ? player.minutos / player.partidos : 0,
     goleig:         player.minutos >= 90 ? (player.goles / player.minutos) * 90 : 0,
     participacio:   player.partidos,
-    consistencia:   player.partidos > 0 ? player.titular / player.partidos : 0,
+    consistencia:   player.partidos > 0 ? Math.min(player.minutos / (player.partidos * 90), 1) : 0,
     disciplina:     player.partidos > 0
       ? (player.amarillas * 1 + player.rojas * 3) / player.partidos
       : 0,
@@ -258,7 +258,7 @@ function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
           { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
           { label: 'Goleig G/90',   desc: 'Gols per 90 minuts jugats' },
           { label: 'Participació',  desc: 'Total de partits jugats a la lliga' },
-          { label: 'Consistència',  desc: 'Ratio de partits jugant de titular' },
+          { label: 'Consistència',  desc: 'Minuts jugats sobre el total disponible (partits × 90)' },
           { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
         ].map(item => (
           <div key={item.label} className="flex items-baseline gap-1.5">
