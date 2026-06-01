@@ -88,7 +88,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
             segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
             stroke="#d1d5db"
             strokeDasharray="4 3"
-            label={{ value: '1 G/90', position: 'insideTopRight', fontSize: 10, fill: '#9ca3af' }}
+            label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 10, fill: '#9ca3af' }}
           />
           <Tooltip
             cursor={{ strokeDasharray: '3 3' }}
@@ -102,7 +102,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{d.y} gols</span>
                     <span className="text-blue-500 font-semibold">{d.x} min</span>
-                    <span className="text-orange-500 font-semibold">{d.g90} G/90</span>
+                    <span className="text-orange-500 font-semibold">{d.gx} G/{matchDuration}</span>
                   </div>
                   <p className="text-neutral-400 mt-0.5">{d.partits} partits</p>
                 </div>
@@ -130,7 +130,7 @@ function normalize(value: number, min: number, max: number): number {
 
 const RADAR_AXES = [
   { key: 'disponibilitat', label: 'Disponibilitat', invert: false },
-  { key: 'goleig',        label: 'Goleig G/90',    invert: false },
+  { key: 'goleig',        label: 'Goleig',         invert: false },
   { key: 'participacio',  label: 'Participació',   invert: false },
   { key: 'consistencia',  label: 'Consistència',   invert: false },
   { key: 'disciplina',    label: 'Disciplina',     invert: true  },
@@ -217,7 +217,7 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
           { label: 'Partits',  value: player.partidos },
           { label: 'Minuts',   value: player.minutos },
           { label: 'Gols',     value: player.goles },
-          { label: 'G/90',     value: player.minutos >= 90 ? ((player.goles / player.minutos) * 90).toFixed(2) : '—' },
+          { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
         ].map(item => (
           <div key={item.label} className="bg-neutral-100 dark:bg-white/10 rounded-lg px-2.5 py-1.5 text-center">
             <div className="text-[10px] text-neutral-400">{item.label}</div>
@@ -258,9 +258,9 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
         {[
           { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
-          { label: 'Goleig G/90',   desc: 'Gols per 90 minuts jugats' },
+          { label: 'Goleig',        desc: `Gols per ${matchDuration} minuts jugats (G/${matchDuration})` },
           { label: 'Participació',  desc: 'Total de partits jugats a la lliga' },
-          { label: 'Consistència',  desc: 'Minuts jugats sobre el total disponible (partits × 90)' },
+          { label: 'Consistència',  desc: `Minuts jugats sobre el total disponible (partits × ${matchDuration})` },
           { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
         ].map(item => (
           <div key={item.label} className="flex items-baseline gap-1.5">
