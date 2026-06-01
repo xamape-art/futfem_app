@@ -9,6 +9,8 @@ export interface League {
   active: boolean;
   sort_order: number;
   created_at: string;
+  competition_key: string | null;   // agrupa grups d'una mateixa competició
+  competition_name: string | null;  // nom visible de la competició
 }
 
 export interface FcfStat {

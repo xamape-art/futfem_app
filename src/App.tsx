@@ -21,7 +21,7 @@
 
 import { Maximize2, Minimize2, Moon, Search, Sun, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import LeagueSelector from './components/LeagueSelector';
+import CompetitionSelector from './components/CompetitionSelector';
 import SeasonSelector from './components/SeasonSelector';
 import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
 import StatsTable from './components/StatsTable';
@@ -70,9 +70,10 @@ export default function App() {
   }, [wideMode]);
 
   // ── Estado de ligas ─────────────────────────────────────────────────────────
-  const [leagues, setLeagues]               = useState<League[]>([]);
-  const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
-  const [loadingLeagues, setLoadingLeagues] = useState(true);
+  const [leagues, setLeagues]                             = useState<League[]>([]);
+  const [selectedCompetitionKey, setSelectedCompetitionKey] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId]             = useState<string | null>(null);
+  const [loadingLeagues, setLoadingLeagues]               = useState(true);
 
   // ── Temporada activa ────────────────────────────────────────────────────────
   const [selectedSeason, setSelectedSeason] = useState<string>('');
@@ -105,35 +106,41 @@ export default function App() {
         const rows = data || [];
         setLeagues(rows);
         if (rows.length > 0) {
-          setSelectedLeagueId(rows[0].id);
+          setSelectedCompetitionKey(rows[0].competition_key ?? rows[0].id);
+          setSelectedGroupId(null);
         }
         setLoadingLeagues(false);
       });
   }, []);
 
-  // ── 2. Al cambiar liga: derivar temporadas ──────────────────────────────────
+  // ── 2. Al cambiar competición: derivar temporadas ───────────────────────────
 
   useEffect(() => {
-    if (!selectedLeagueId) return;
-    const league = leagues.find(l => l.id === selectedLeagueId);
-    if (!league) return;
+    if (!selectedCompetitionKey || leagues.length === 0) return;
+    const cLeagues = leagues.filter(l => (l.competition_key ?? l.id) === selectedCompetitionKey);
+    if (cLeagues.length === 0) return;
 
-    const fcfSeasons = [...league.fcf_seasons].sort((a, b) => b.localeCompare(a));
+    const allSeasons = new Set<string>();
+    cLeagues.forEach(l => l.fcf_seasons.forEach(s => allSeasons.add(s)));
+    const fcfSeasons = [...allSeasons].sort((a, b) => b.localeCompare(a));
     const appSeasons = fcfSeasons.map(fcfSeasonToApp);
     setAvailableFcfSeasons(fcfSeasons);
     setSelectedSeason(appSeasons[0] ?? '');
     setSelectedTeam(null);
     setSearchQuery('');
-  }, [selectedLeagueId, leagues]);
+  }, [selectedCompetitionKey, leagues]);
 
-  // ── 3. Al cambiar (liga, temporada): cargar datos ───────────────────────────
+  // ── 3. Al cambiar (competición, grup, temporada): cargar datos ──────────────
 
   useEffect(() => {
-    if (!selectedLeagueId || !selectedSeason) return;
-    loadData(selectedLeagueId, selectedSeason);
-  }, [selectedLeagueId, selectedSeason]);
+    if (!selectedCompetitionKey || !selectedSeason || leagues.length === 0) return;
+    const cLeagues = leagues.filter(l => (l.competition_key ?? l.id) === selectedCompetitionKey);
+    const ids = selectedGroupId ? [selectedGroupId] : cLeagues.map(l => l.id);
+    if (ids.length === 0) return;
+    loadData(ids, selectedSeason);
+  }, [selectedCompetitionKey, selectedGroupId, selectedSeason, leagues]);
 
-  async function loadData(leagueId: string, season: string) {
+  async function loadData(leagueIds: string[], season: string) {
     setLoading(true);
     setView('stats');
     setAllStats([]);
@@ -146,13 +153,13 @@ export default function App() {
       supabase
         .from('fcf_stats')
         .select('*')
-        .eq('league_id', leagueId)
+        .in('league_id', leagueIds)
         .eq('season', season)
         .order('team_name', { ascending: true }),
       supabase
         .from('actas_procesadas')
         .select('*')
-        .eq('league_id', leagueId)
+        .in('league_id', leagueIds)
         .eq('season', season)
         .order('processed_at', { ascending: false }),
     ]);
@@ -232,9 +239,20 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view]);
 
-  // ── Liga seleccionada (objeto) ──────────────────────────────────────────────
+  // ── Lliga/competició per a display ─────────────────────────────────────────
 
-  const selectedLeague = leagues.find(l => l.id === selectedLeagueId) ?? null;
+  const displayLeague = useMemo(() => {
+    if (!selectedCompetitionKey) return null;
+    if (selectedGroupId) return leagues.find(l => l.id === selectedGroupId) ?? null;
+    const cLeagues = leagues.filter(l => (l.competition_key ?? l.id) === selectedCompetitionKey);
+    if (cLeagues.length === 0) return null;
+    const first = cLeagues[0];
+    return {
+      ...first,
+      name:       first.competition_name ?? first.name,
+      short_name: first.competition_name ?? first.short_name,
+    };
+  }, [selectedCompetitionKey, selectedGroupId, leagues]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -250,7 +268,7 @@ export default function App() {
         {loading
           ? 'Carregant estadístiques...'
           : allStats.length > 0
-          ? `${allStats.length} jugadores carregades per a ${selectedLeague?.name ?? ''}`
+          ? `${allStats.length} jugadores carregades per a ${displayLeague?.name ?? ''}`
           : ''
         }
       </div>
@@ -273,9 +291,9 @@ export default function App() {
               FCF · Fútbol Femení
             </span>
             {/* H1: context pill — visible mentre es fa scroll */}
-            {selectedLeague && selectedSeason && !loadingLeagues && (
+            {displayLeague && selectedSeason && !loadingLeagues && (
               <span className="hidden md:flex items-center text-[10px] font-semibold text-neutral-400 bg-neutral-100 dark:bg-white/10 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap shrink-0">
-                {selectedLeague.short_name} · {selectedSeason}
+                {displayLeague.short_name} · {selectedSeason}
               </span>
             )}
           </div>
@@ -325,16 +343,22 @@ export default function App() {
         {/* Contenido principal */}
         {!loadingLeagues && leagues.length > 0 && (
           <>
-            {/* Liga + Temporada */}
-            <div className="flex flex-wrap items-center gap-3 mb-5">
-              <LeagueSelector
-                leagues={leagues}
-                selectedId={selectedLeagueId}
-                onChange={id => {
-                  setSelectedLeagueId(id);
-                  setSearchQuery('');
-                }}
-              />
+            {/* Competició + Grup + Temporada */}
+            <CompetitionSelector
+              leagues={leagues}
+              selectedCompetitionKey={selectedCompetitionKey}
+              selectedGroupId={selectedGroupId}
+              onCompetitionChange={key => {
+                setSelectedCompetitionKey(key);
+                setSelectedGroupId(null);
+                setSearchQuery('');
+              }}
+              onGroupChange={id => {
+                setSelectedGroupId(id);
+                setSearchQuery('');
+              }}
+            />
+            <div className="mb-5">
               <SeasonSelector
                 fcfSeasons={availableFcfSeasons}
                 selected={selectedSeason}
@@ -346,11 +370,11 @@ export default function App() {
             </div>
 
             {/* Sync status — SC1: compacte */}
-            {!loading && selectedLeague && (
+            {!loading && displayLeague && (
               <SyncStatusCard
                 actas={actas}
                 season={selectedSeason}
-                leagueName={selectedLeague.name}
+                leagueName={displayLeague.name}
               />
             )}
 
@@ -422,11 +446,11 @@ export default function App() {
             {loading && view === 'top10' && <SkeletonTopTen />}
 
             {/* Vista Top 20 */}
-            {!loading && view === 'top10' && selectedLeague && (
+            {!loading && view === 'top10' && displayLeague && (
               <TopTen
                 allStats={allStats}
                 season={selectedSeason}
-                leagueName={selectedLeague.name}
+                leagueName={displayLeague.name}
               />
             )}
 
@@ -485,7 +509,7 @@ export default function App() {
                         </p>
                         <p className="text-[13px] text-neutral-400 max-w-[280px] mx-auto leading-relaxed">
                           No hi ha dades per a{' '}
-                          {selectedLeague?.short_name ?? ''} · {selectedSeason}.{' '}
+                          {displayLeague?.short_name ?? ''} · {selectedSeason}.{' '}
                           Les estadístiques s'actualitzen cada dilluns.
                         </p>
                       </div>
