@@ -264,30 +264,35 @@ function PlayerCombobox({
           </div>
 
           {/* Filtre d'equips */}
-          <div className="flex gap-1.5 overflow-x-auto px-2 py-1.5 border-b border-[var(--card-border)] scrollbar-none">
-            <button
-              onClick={() => setTeamFilter('')}
-              className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 text-[10px] font-semibold rounded-full border transition-colors ${
-                !teamFilter
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-[var(--card-bg)] text-neutral-400 border-[var(--card-border)] hover:border-brand hover:text-brand'
-              }`}
-            >
-              Tots
-            </button>
-            {teams.map(t => (
+          <div className="relative border-b border-[var(--card-border)]">
+            <div className="flex gap-1.5 overflow-x-auto px-2 py-1.5 scrollbar-none">
               <button
-                key={t.slug}
-                onClick={() => setTeamFilter(t.slug === teamFilter ? '' : t.slug)}
+                onClick={() => setTeamFilter('')}
                 className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 text-[10px] font-semibold rounded-full border transition-colors ${
-                  teamFilter === t.slug
+                  !teamFilter
                     ? 'bg-brand text-white border-brand'
                     : 'bg-[var(--card-bg)] text-neutral-400 border-[var(--card-border)] hover:border-brand hover:text-brand'
                 }`}
               >
-                {t.name}
+                Tots
               </button>
-            ))}
+              {teams.map(t => (
+                <button
+                  key={t.slug}
+                  onClick={() => setTeamFilter(t.slug === teamFilter ? '' : t.slug)}
+                  title={t.name}
+                  className={`shrink-0 max-w-[110px] truncate px-2.5 py-0.5 text-[10px] font-semibold rounded-full border transition-colors ${
+                    teamFilter === t.slug
+                      ? 'bg-brand text-white border-brand'
+                      : 'bg-[var(--card-bg)] text-neutral-400 border-[var(--card-border)] hover:border-brand hover:text-brand'
+                  }`}
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+            {/* Degradat per indicar scroll */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-[var(--card-bg)] to-transparent" />
           </div>
 
           {/* Llista de jugadores */}
