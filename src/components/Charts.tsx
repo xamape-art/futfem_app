@@ -202,7 +202,7 @@ function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
         >
           {players.map(p => (
             <option key={p.id} value={p.id}>
-              {formatPlayerName(p.player_fcf_name)}
+              {formatPlayerName(p.player_fcf_name)} — {p.team_name}
             </option>
           ))}
         </select>
