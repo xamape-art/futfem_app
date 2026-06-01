@@ -11,6 +11,7 @@ export interface League {
   created_at: string;
   competition_key: string | null;   // agrupa grups d'una mateixa competició
   competition_name: string | null;  // nom visible de la competició
+  match_duration: number;           // durada del partit en minuts (80 o 90)
 }
 
 export interface FcfStat {

@@ -31,7 +31,8 @@ interface Category {
   extraFilter?: (s: FcfStat) => boolean;
 }
 
-const CATEGORIES: Category[] = [
+function buildCategories(matchDuration: number): Category[] {
+  return [
   {
     key: 'goles',
     label: 'Golejadores',
@@ -42,18 +43,18 @@ const CATEGORIES: Category[] = [
   },
   {
     key: 'goles',
-    label: 'G/90 min',
+    label: `G/${matchDuration} min`,
     icon: '⚡',
     color: 'text-orange-500 dark:text-orange-400',
     bgColor: 'from-orange-500 to-orange-600',
-    emptyText: 'Cap jugadora amb ≥90 min i gols marcats',
-    computedValue: (s) => Math.round((s.goles / s.minutos) * 90 * 100) / 100,
+    emptyText: `Cap jugadora amb ≥${matchDuration} min i gols marcats`,
+    computedValue: (s) => Math.round((s.goles / s.minutos) * matchDuration * 100) / 100,
     formatValue: (v) => v.toFixed(2),
     sortAsc: false,
-    valueLabel: 'G/90',
+    valueLabel: `G/${matchDuration}`,
     secondaryKey: 'goles',
     secondaryLabel: 'gols',
-    extraFilter: (s) => s.minutos >= 90,
+    extraFilter: (s) => s.minutos >= matchDuration,
   },
   {
     key: 'minutos',
@@ -89,7 +90,8 @@ const CATEGORIES: Category[] = [
     bgColor: 'from-red-500 to-red-700',
     emptyText: 'Cap targeta vermella',
   },
-];
+  ];
+}
 
 // ─── Medalles per al podi ─────────────────────────────────────────────────────
 
@@ -282,9 +284,10 @@ interface TopTenProps {
   allStats: FcfStat[];
   season: string;
   leagueName: string;
+  matchDuration: number;
 }
 
-export default function TopTen({ allStats, season, leagueName }: TopTenProps) {
+export default function TopTen({ allStats, season, leagueName, matchDuration }: TopTenProps) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-400 text-sm">
@@ -303,7 +306,7 @@ export default function TopTen({ allStats, season, leagueName }: TopTenProps) {
 
       {/* L3: fade-up al grid de cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-up">
-        {CATEGORIES.map((cat, i) => (
+        {buildCategories(matchDuration).map((cat, i) => (
           <CategoryCard key={`${cat.key}-${i}`} category={cat} data={allStats} />
         ))}
       </div>

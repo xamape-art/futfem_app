@@ -240,6 +240,14 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view]);
 
+  // ── Durada del partit per a la competició seleccionada ─────────────────────
+
+  const matchDuration = useMemo(() => {
+    if (!selectedCompetitionKey) return 90;
+    const cLeagues = leagues.filter(l => (l.competition_key ?? l.id) === selectedCompetitionKey);
+    return cLeagues[0]?.match_duration ?? 90;
+  }, [selectedCompetitionKey, leagues]);
+
   // ── Lliga/competició per a display ─────────────────────────────────────────
 
   const displayLeague = useMemo(() => {
@@ -453,6 +461,7 @@ export default function App() {
                 allStats={allStats}
                 season={selectedSeason}
                 leagueName={displayLeague.name}
+                matchDuration={matchDuration}
               />
             )}
 
@@ -462,6 +471,7 @@ export default function App() {
                 allStats={allStats}
                 season={selectedSeason}
                 leagueName={displayLeague.name}
+                matchDuration={matchDuration}
               />
             )}
 

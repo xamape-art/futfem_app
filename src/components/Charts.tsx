@@ -19,36 +19,35 @@ interface Props {
   allStats: FcfStat[];
   season: string;
   leagueName: string;
+  matchDuration: number;
 }
 
 // ─── Scatter: Minuts vs Gols ──────────────────────────────────────────────────
 
-const MIN_MINUTS = 90;
-
-function ScatterMinutsGols({ allStats }: { allStats: FcfStat[] }) {
+function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
   const data = useMemo(() =>
     allStats
-      .filter(s => s.minutos >= MIN_MINUTS && s.goles > 0)
+      .filter(s => s.minutos >= matchDuration && s.goles > 0)
       .map(s => ({
         x: s.minutos,
         y: s.goles,
         name: formatPlayerName(s.player_fcf_name),
         team: s.team_name,
         partits: s.partidos,
-        g90: ((s.goles / s.minutos) * 90).toFixed(2),
+        gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
         id: s.id,
       })),
-    [allStats]
+    [allStats, matchDuration]
   );
 
-  // Línia de referència G/90 = 1.0: y = x/90
+  // Línia de referència G/matchDuration = 1.0
   const maxMin = Math.max(...data.map(d => d.x), 200);
-  const refY = Math.round(maxMin / 90);
+  const refY = Math.round(maxMin / matchDuration);
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-neutral-400 text-sm">
-        Sense jugadores amb ≥{MIN_MINUTS} min i gols marcats
+        Sense jugadores amb ≥{matchDuration} min i gols marcats
       </div>
     );
   }
@@ -59,7 +58,7 @@ function ScatterMinutsGols({ allStats }: { allStats: FcfStat[] }) {
         <div>
           <h3 className="text-[13px] font-bold text-[var(--app-text)]">Minuts jugats vs Gols</h3>
           <p className="text-[11px] text-neutral-400 mt-0.5">
-            Cada punt és una jugadora (≥{MIN_MINUTS} min) · La línia diagonal = 1 gol cada 90 min
+            Cada punt és una jugadora (≥{matchDuration} min) · La línia diagonal = 1 gol cada {matchDuration} min
           </p>
         </div>
         <span className="text-[11px] text-neutral-400 shrink-0">{data.length} jugadores</span>
@@ -137,25 +136,14 @@ const RADAR_AXES = [
   { key: 'disciplina',    label: 'Disciplina',     invert: true  },
 ];
 
-function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
-  const withMinutes = allStats.filter(s => s.partidos > 0);
-
-  const vals = {
-    disponibilitat: withMinutes.map(s => s.partidos > 0 ? s.minutos / s.partidos : 0),
-    goleig:         withMinutes.map(s => s.minutos >= 90 ? (s.goles / s.minutos) * 90 : 0),
-    participacio:   withMinutes.map(s => s.partidos),
-    consistencia:   withMinutes.map(s => s.partidos > 0 ? Math.min(s.minutos / (s.partidos * 90), 1) : 0),
-    disciplina:     withMinutes.map(s => {
-      const pen = s.amarillas * 1 + s.rojas * 3;
-      return s.partidos > 0 ? pen / s.partidos : 0;
-    }),
-  };
+function buildRadarData(player: FcfStat, allStats: FcfStat[], matchDuration: number) {
+  const vals = buildRadarValues(allStats, matchDuration);
 
   const playerVals = {
     disponibilitat: player.partidos > 0 ? player.minutos / player.partidos : 0,
-    goleig:         player.minutos >= 90 ? (player.goles / player.minutos) * 90 : 0,
+    goleig:         player.minutos >= matchDuration ? (player.goles / player.minutos) * matchDuration : 0,
     participacio:   player.partidos,
-    consistencia:   player.partidos > 0 ? Math.min(player.minutos / (player.partidos * 90), 1) : 0,
+    consistencia:   player.partidos > 0 ? Math.min(player.minutos / (player.partidos * matchDuration), 1) : 0,
     disciplina:     player.partidos > 0
       ? (player.amarillas * 1 + player.rojas * 3) / player.partidos
       : 0,
@@ -171,7 +159,21 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[]) {
   });
 }
 
-function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
+function buildRadarValues(allStats: FcfStat[], matchDuration: number) {
+  const withMinutes = allStats.filter(s => s.partidos > 0);
+  return {
+    disponibilitat: withMinutes.map(s => s.partidos > 0 ? s.minutos / s.partidos : 0),
+    goleig:         withMinutes.map(s => s.minutos >= matchDuration ? (s.goles / s.minutos) * matchDuration : 0),
+    participacio:   withMinutes.map(s => s.partidos),
+    consistencia:   withMinutes.map(s => s.partidos > 0 ? Math.min(s.minutos / (s.partidos * matchDuration), 1) : 0),
+    disciplina:     withMinutes.map(s => {
+      const pen = s.amarillas * 1 + s.rojas * 3;
+      return s.partidos > 0 ? pen / s.partidos : 0;
+    }),
+  };
+}
+
+function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
   const players = useMemo(() =>
     [...allStats]
       .filter(s => s.partidos > 0)
@@ -184,7 +186,7 @@ function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
 
   if (!player) return null;
 
-  const radarData = buildRadarData(player, allStats);
+  const radarData = buildRadarData(player, allStats, matchDuration);
 
   return (
     <div>
@@ -273,7 +275,7 @@ function RadarJugadora({ allStats }: { allStats: FcfStat[] }) {
 
 // ─── Component principal ──────────────────────────────────────────────────────
 
-export default function Charts({ allStats, season, leagueName }: Props) {
+export default function Charts({ allStats, season, leagueName, matchDuration }: Props) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-400 text-sm">
@@ -291,11 +293,11 @@ export default function Charts({ allStats, season, leagueName }: Props) {
       </p>
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <ScatterMinutsGols allStats={allStats} />
+        <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
       </div>
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <RadarJugadora allStats={allStats} />
+        <RadarJugadora allStats={allStats} matchDuration={matchDuration} />
       </div>
     </div>
   );

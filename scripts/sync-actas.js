@@ -115,7 +115,7 @@ function err(msg)  { console.log(`  ❌ ${msg}`); }
 async function resolveLeague(groupPath) {
   const { data, error } = await supabase
     .from('leagues')
-    .select('id, name, group_path')
+    .select('id, name, group_path, match_duration')
     .eq('group_path', groupPath)
     .single();
 
@@ -238,7 +238,7 @@ function parseGolsTable($, table) {
   return goals;
 }
 
-async function parseActa(url) {
+async function parseActa(url, matchDuration = 90) {
   const res = await safeFetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} para ${url}`);
   const html = await res.text();
@@ -318,7 +318,7 @@ async function parseActa(url) {
     const result = {};
     for (const p of titulars) {
       const sub    = subsMap[p.name];
-      const minutos = sub?.role === 'surt' ? sub.minute : 90;
+      const minutos = sub?.role === 'surt' ? sub.minute : matchDuration;
       const card   = cardsMap[p.name] || { groga: 0, roja: 0 };
       result[p.name] = {
         dorsal: p.dorsal, partidos: 1, titular: 1, suplente: 0,
@@ -328,7 +328,7 @@ async function parseActa(url) {
     for (const p of suplents) {
       const sub     = subsMap[p.name];
       const entered = sub?.role === 'entra';
-      const minutos = entered ? (90 - sub.minute) : 0;
+      const minutos = entered ? (matchDuration - sub.minute) : 0;
       const card    = cardsMap[p.name] || { groga: 0, roja: 0 };
       result[p.name] = {
         dorsal: p.dorsal, partidos: entered ? 1 : 0, titular: 0, suplente: 1,
@@ -453,7 +453,9 @@ async function main() {
 
   // Resolver league_id desde Supabase
   const league = await resolveLeague(LEAGUE_PATH);
-  console.log(`  Liga: "${league.name}" (id: ${league.id})\n`);
+  const MATCH_DURATION = league.match_duration || 90;
+  console.log(`  Liga: "${league.name}" (id: ${league.id})`);
+  console.log(`  Durada partit: ${MATCH_DURATION} min\n`);
 
   // Obtener todas las actas del grupo
   const actaUrls = await fetchCalendar(FCF_SEASON, LEAGUE_PATH);
@@ -478,7 +480,7 @@ async function main() {
     }
 
     try {
-      const result = await parseActa(url);
+      const result = await parseActa(url, MATCH_DURATION);
 
       log(`Jornada ${result.jornada ?? '?'} · ${result.localName} vs ${result.visitantName}`);
       log(`Local: ${Object.keys(result.localStats).length} jug · Visitant: ${Object.keys(result.visitantStats).length} jug`);
