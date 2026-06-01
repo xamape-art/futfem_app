@@ -128,6 +128,14 @@ function normalize(value: number, min: number, max: number): number {
   return Math.round(((value - min) / (max - min)) * 100);
 }
 
+// Percentil p (0-100) d'un array per evitar que outliers distorsionin l'escala
+function percentile(arr: number[], p: number): number {
+  if (arr.length === 0) return 0;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const idx = Math.floor((sorted.length - 1) * p / 100);
+  return sorted[idx];
+}
+
 const RADAR_AXES = [
   { key: 'disponibilitat', label: 'Disponibilitat', invert: false },
   { key: 'goleig',        label: 'Goleig',         invert: false },
@@ -150,11 +158,14 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[], matchDuration: num
   };
 
   return RADAR_AXES.map(axis => {
-    const raw = normalize(
+    const allVals = vals[axis.key as keyof typeof vals];
+    const min = percentile(allVals, 5);   // ignora el 5% inferior
+    const max = percentile(allVals, 95);  // ignora el 5% superior (outliers)
+    const raw = Math.min(normalize(
       playerVals[axis.key as keyof typeof playerVals],
-      Math.min(...vals[axis.key as keyof typeof vals]),
-      Math.max(...vals[axis.key as keyof typeof vals])
-    );
+      min,
+      max
+    ), 100);
     return { axis: axis.label, value: axis.invert ? 100 - raw : raw };
   });
 }
