@@ -681,7 +681,7 @@ function AllTeamsOverview({
               onClick={() => onSelect(t.slug)}
               className={cn(
                 'group border-b border-[var(--card-border)] cursor-pointer transition-colors hover:bg-brand/5',
-                i % 2 === 0 ? 'bg-transparent' : 'bg-neutral-50 dark:bg-white/[0.03]'
+                i % 2 === 0 ? 'bg-transparent' : 'bg-neutral-50 dark:bg-[#272727]'
               )}
             >
               <td className="px-3 py-2.5 font-medium text-[var(--app-text)] max-w-[180px]">

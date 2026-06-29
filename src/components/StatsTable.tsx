@@ -181,7 +181,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                   key={s.id}
                   className={cn(
                     'group border-b border-[var(--card-border)] transition-colors hover:bg-neutral-100 dark:hover:bg-white/5',
-                    isOdd ? 'bg-neutral-50 dark:bg-white/[0.03]' : 'bg-transparent'
+                    isOdd ? 'bg-neutral-50 dark:bg-[#272727]' : 'bg-transparent'
                   )}
                 >
                   {/* D1: primera columna sticky amb bg explícit + group-hover */}
@@ -190,7 +190,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                       'px-2 py-2.5 text-left font-medium text-[var(--app-text)] max-w-[160px]',
                       'sticky left-0 z-10 table-sticky-col transition-colors',
                       isOdd
-                        ? 'bg-neutral-50 dark:bg-[#222222] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
+                        ? 'bg-neutral-50 dark:bg-[#272727] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
                         : 'bg-[var(--card-bg)] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
                     )}
                   >
