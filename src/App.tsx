@@ -287,19 +287,19 @@ export default function App() {
         className="sticky top-0 z-50 border-b border-[var(--card-border)]"
         style={{ background: 'var(--header-bg)' }}
       >
-        <div className={cn('mx-auto px-4 h-16 flex items-center justify-between', maxWidthClass)}>
+        <div className={cn('mx-auto px-4 h-20 flex items-center justify-between', maxWidthClass)}>
           {/* Logo + H1: context pill */}
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Logo FemStats (Montserrat, SVG) — canvia segons el tema */}
             <img
               src="/lockup_analytics.svg"
               alt="FemStats"
-              className="h-14 w-auto shrink-0 dark:hidden"
+              className="h-16 w-auto shrink-0 dark:hidden"
             />
             <img
               src="/lockup_analytics_dark.svg"
               alt="FemStats"
-              className="h-14 w-auto shrink-0 hidden dark:block"
+              className="h-16 w-auto shrink-0 hidden dark:block"
             />
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1 shrink-0">
               FCF · Fútbol Femení
