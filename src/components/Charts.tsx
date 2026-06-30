@@ -49,7 +49,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
         team: s.team_name,
         partits: s.partidos,
         gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
-        color: teamColorMap[s.team_slug] ?? '#7c3aed',
+        color: teamColorMap[s.team_slug] ?? '#1A3A5C',
         id: s.id,
       })),
     [allStats, matchDuration, teamColorMap]
@@ -402,8 +402,8 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
           />
           <Radar
             dataKey="value"
-            stroke="#7c3aed"
-            fill="#7c3aed"
+            stroke="var(--color-brand)"
+            fill="var(--color-brand)"
             fillOpacity={0.25}
             strokeWidth={2}
           />

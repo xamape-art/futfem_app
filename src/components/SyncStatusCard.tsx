@@ -83,7 +83,7 @@ export default function SyncStatusCard({ actas, season, leagueName }: SyncStatus
         {totalActas > 0 && (
           <button
             onClick={() => setExpanded(e => !e)}
-            className="ml-auto text-brand hover:underline underline-offset-2 font-semibold shrink-0 transition-colors"
+            className="ml-auto text-accent hover:underline underline-offset-2 font-semibold shrink-0 transition-colors"
           >
             {expanded ? 'amagar' : 'detalls'}
           </button>
@@ -114,7 +114,7 @@ export default function SyncStatusCard({ actas, season, leagueName }: SyncStatus
           <div className="text-neutral-400 dark:text-neutral-500">
             {leagueName} ·{' '}
             <button
-              className="text-brand hover:underline underline-offset-2"
+              className="text-accent hover:underline underline-offset-2"
               onClick={() => {
                 const log = actas
                   .slice(0, 10)

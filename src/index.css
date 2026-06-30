@@ -7,10 +7,12 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Color de acento principal — violeta FCF */
-  --color-brand:       #7c3aed;
-  --color-brand-dark:  #5b21b6;
-  --color-brand-light: #ede9fe;
+  /* Color de marca XMP — azul profundo (primario) */
+  --color-brand:       #1A3A5C;
+  --color-brand-dark:  #15314D;   /* hover del primario */
+  --color-brand-light: #E8EEF4;   /* tinte claro del primario */
+  /* Acento — naranja terracota (enlaces, "FICHA →", micro-acentos) */
+  --color-accent:      #D67D2E;
 }
 
 @layer base {
@@ -35,6 +37,8 @@
     --input-bg:    #1a1a1a;
     /* P1: shadow més intensa en dark mode */
     --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+    /* Primari més clar perquè conservi contrast sobre fons fosc */
+    --color-brand: #4A7BA8;
   }
 
   body {
@@ -47,7 +51,8 @@
 /* ── Scrollbar global ────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: #1A3A5C; border-radius: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: #4A7BA8; }
 
 /* ── N1: Scrollbar ocult (tabs horitzontals) ─────────────────────────── */
 .scrollbar-none { scrollbar-width: none; }

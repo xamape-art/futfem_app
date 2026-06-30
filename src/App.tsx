@@ -290,12 +290,17 @@ export default function App() {
         <div className={cn('mx-auto px-4 h-14 flex items-center justify-between', maxWidthClass)}>
           {/* Logo + H1: context pill */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-lg font-black tracking-tight text-brand shrink-0">
-              FUTFEM
-            </span>
-            <span className="text-lg font-black tracking-tight text-[var(--app-text)] opacity-40 shrink-0">
-              APP
-            </span>
+            {/* Logo FemStats (Montserrat, SVG) — canvia segons el tema */}
+            <img
+              src="/lockup_analytics.svg"
+              alt="FemStats"
+              className="h-9 w-auto shrink-0 dark:hidden"
+            />
+            <img
+              src="/lockup_analytics_dark.svg"
+              alt="FemStats"
+              className="h-9 w-auto shrink-0 hidden dark:block"
+            />
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1 shrink-0">
               FCF · Fútbol Femení
             </span>
@@ -608,7 +613,7 @@ export default function App() {
                 href="https://www.fcf.cat"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand hover:underline underline-offset-2"
+                className="text-accent hover:underline underline-offset-2"
               >
                 FCF
               </a>{' '}
@@ -721,7 +726,7 @@ function AllTeamsOverview({
                 {t.rojas}
               </td>
               {/* A1: chevron visible en hover */}
-              <td className="px-2 py-2.5 text-right text-neutral-300 group-hover:text-brand transition-colors text-base leading-none">
+              <td className="px-2 py-2.5 text-right text-neutral-300 group-hover:text-accent transition-colors text-base leading-none">
                 ›
               </td>
             </tr>

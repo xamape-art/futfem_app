@@ -260,7 +260,7 @@ function CategoryCard({
           {top20.length > INITIAL_SHOW && (
             <button
               onClick={() => setShowAll(s => !s)}
-              className="w-full px-4 py-2 text-[11px] font-semibold text-brand border-t border-[var(--card-border)] hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-colors text-left"
+              className="w-full px-4 py-2 text-[11px] font-semibold text-accent border-t border-[var(--card-border)] hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-colors text-left"
             >
               {showAll
                 ? '↑ Mostrar menys'
