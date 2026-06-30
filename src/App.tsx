@@ -294,12 +294,12 @@ export default function App() {
             <img
               src="/lockup_analytics.svg"
               alt="FemStats"
-              className="h-9 w-auto shrink-0 dark:hidden"
+              className="h-12 w-auto shrink-0 dark:hidden"
             />
             <img
               src="/lockup_analytics_dark.svg"
               alt="FemStats"
-              className="h-9 w-auto shrink-0 hidden dark:block"
+              className="h-12 w-auto shrink-0 hidden dark:block"
             />
             <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1 shrink-0">
               FCF · Fútbol Femení
