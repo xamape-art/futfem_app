@@ -301,9 +301,6 @@ export default function App() {
               alt="FemStats"
               className="h-16 w-auto shrink-0 hidden dark:block"
             />
-            <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-neutral-400 font-semibold ml-1 shrink-0">
-              FCF · Fútbol Femení
-            </span>
             {/* H1: context pill — visible mentre es fa scroll */}
             {displayLeague && selectedSeason && !loadingLeagues && (
               <span className="hidden md:flex items-center text-[10px] font-semibold text-neutral-400 bg-neutral-100 dark:bg-white/10 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap shrink-0">
