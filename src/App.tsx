@@ -604,7 +604,7 @@ export default function App() {
               alt="XMP Football Analysis"
               className="h-8 hidden dark:block"
             />
-            <p className="text-[10px] text-neutral-400">© XMP Football Analysis</p>
+            <p className="text-[10px] text-neutral-400">© {new Date().getFullYear()} XMP Football Analysis</p>
           </div>
           <div className="text-center sm:text-right space-y-1">
             <p className="text-[11px] text-neutral-400">
