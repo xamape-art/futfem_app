@@ -616,9 +616,6 @@ export default function App() {
               </a>{' '}
               · Federació Catalana de Futbol
             </p>
-            <p className="text-[11px] text-neutral-400">
-              Fútbol Femení{selectedSeason ? ` · Temporada ${selectedSeason}` : ''}
-            </p>
           </div>
         </div>
       </footer>
