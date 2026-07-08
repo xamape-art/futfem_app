@@ -12,7 +12,7 @@ import {
   YAxis,
   ReferenceLine,
 } from 'recharts';
-import { formatPlayerName } from '../lib/utils';
+import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat } from '../types';
 
 interface Props {
@@ -71,12 +71,12 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-[13px] font-bold text-[var(--app-text)]">Minuts jugats vs Gols</h3>
-          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+          <h3 className="text-[16px] font-bold text-[var(--app-text)]">Minuts jugats vs Gols</h3>
+          <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
             Cada punt és una jugadora (≥{matchDuration} min) · La línia diagonal = 1 gol cada {matchDuration} min
           </p>
         </div>
-        <span className="text-[11px] text-neutral-500 dark:text-neutral-400 shrink-0">{data.length} jugadores</span>
+        <span className="text-[12.5px] font-semibold text-neutral-500 dark:text-neutral-400 shrink-0">{data.length} jugadores</span>
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
@@ -84,8 +84,8 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
             type="number"
             dataKey="x"
             name="Minuts"
-            label={{ value: 'Minuts jugats', position: 'insideBottom', offset: -10, fontSize: 11, fill: '#6b7280' }}
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            label={{ value: 'Minuts jugats', position: 'insideBottom', offset: -10, fontSize: 13, fill: '#6b7280' }}
+            tick={{ fontSize: 12.5, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
           />
@@ -93,8 +93,8 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
             type="number"
             dataKey="y"
             name="Gols"
-            label={{ value: 'Gols', angle: -90, position: 'insideLeft', offset: 10, fontSize: 11, fill: '#6b7280' }}
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            label={{ value: 'Gols', angle: -90, position: 'insideLeft', offset: 10, fontSize: 13, fill: '#6b7280' }}
+            tick={{ fontSize: 12.5, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
           />
@@ -103,7 +103,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
             segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
             stroke="#d1d5db"
             strokeDasharray="4 3"
-            label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 10, fill: '#6b7280' }}
+            label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 12, fill: '#6b7280' }}
           />
           <Tooltip
             cursor={{ strokeDasharray: '3 3' }}
@@ -253,11 +253,11 @@ function PlayerCombobox({
   }, [players, query, teamFilter]);
 
   return (
-    <div ref={ref} className="relative w-full max-w-[280px] shrink-0">
+    <div ref={ref} className="relative w-full max-w-[340px] shrink-0">
       {/* Input */}
       <button
         onClick={() => { setOpen(o => !o); setQuery(''); }}
-        className="w-full flex items-center justify-between gap-2 text-[12px] bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-[var(--app-text)] hover:border-brand transition-colors text-left"
+        className="w-full flex items-center justify-between gap-2 text-[13px] bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-[var(--app-text)] hover:border-brand transition-colors text-left"
       >
         <span className="truncate">
           {selected ? `${formatPlayerName(selected.player_fcf_name)} — ${selected.team_name}` : 'Selecciona jugadora'}
@@ -363,8 +363,8 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
     <div>
       <div className="flex items-start justify-between mb-3 gap-4">
         <div>
-          <h3 className="text-[13px] font-bold text-[var(--app-text)]">Perfil de jugadora</h3>
-          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+          <h3 className="text-[16px] font-bold text-[var(--app-text)]">Perfil de jugadora</h3>
+          <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
             Valors normalitzats (0–100) respecte a tota la lliga
           </p>
         </div>
@@ -376,29 +376,39 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
       </div>
 
       {/* Info de la jugadora seleccionada */}
-      <div className="flex flex-wrap gap-3 mb-3">
-        {[
-          { label: 'Equip',    value: player.team_name },
-          { label: 'Partits',  value: player.partidos },
-          { label: 'Minuts',   value: player.minutos },
-          { label: 'Gols',     value: player.goles },
-          { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
-          { label: '🟨 TA',    value: player.amarillas },
-          { label: '🟥 TR',    value: player.rojas },
-        ].map(item => (
-          <div key={item.label} className="bg-neutral-100 dark:bg-white/10 rounded-lg px-2.5 py-1.5 text-center">
-            <div className="text-[10px] text-neutral-500 dark:text-neutral-400">{item.label}</div>
-            <div className="text-[12px] font-bold text-[var(--app-text)] truncate max-w-[120px]">{item.value}</div>
+      <div className="flex flex-wrap gap-2.5 mb-4">
+        {(
+          [
+            { label: 'Equip',    value: player.team_name, wide: true },
+            { label: 'Partits',  value: player.partidos },
+            { label: 'Minuts',   value: player.minutos },
+            { label: 'Gols',     value: player.goles },
+            { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
+            { label: '🟨 TA',    value: player.amarillas },
+            { label: '🟥 TR',    value: player.rojas },
+          ] as { label: string; value: string | number; wide?: boolean }[]
+        ).map(item => (
+          <div
+            key={item.label}
+            className={cn(
+              'bg-neutral-100 dark:bg-white/10 rounded-lg px-3 py-2',
+              item.wide ? 'text-left flex-1 min-w-[150px] max-w-[300px]' : 'text-center'
+            )}
+          >
+            <div className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">{item.label}</div>
+            <div className={cn('text-[14px] font-bold text-[var(--app-text)]', item.wide && 'truncate')}>
+              {item.value}
+            </div>
           </div>
         ))}
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-          <PolarGrid stroke="var(--card-border)" />
+      <ResponsiveContainer width="100%" height={330}>
+        <RadarChart data={radarData} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+          <PolarGrid stroke="#94a3b8" strokeOpacity={0.55} strokeWidth={1.25} />
           <PolarAngleAxis
             dataKey="axis"
-            tick={{ fontSize: 11, fill: '#6b7280' }}
+            tick={{ fontSize: 13, fontWeight: 600, fill: '#64748b' }}
           />
           <Radar
             dataKey="value"
@@ -422,7 +432,7 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
         </RadarChart>
       </ResponsiveContainer>
 
-      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
         {[
           { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
           { label: 'Definició',     desc: `Gols per ${matchDuration} minuts jugats (G/${matchDuration})` },
@@ -431,8 +441,8 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
           { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
         ].map(item => (
           <div key={item.label} className="flex items-baseline gap-1.5">
-            <span className="text-[11px] font-semibold text-brand shrink-0">{item.label}:</span>
-            <span className="text-[11px] text-neutral-500 dark:text-neutral-400">{item.desc}</span>
+            <span className="text-[12.5px] font-bold text-brand shrink-0">{item.label}:</span>
+            <span className="text-[12.5px] text-neutral-500 dark:text-neutral-400">{item.desc}</span>
           </div>
         ))}
       </div>
@@ -453,7 +463,7 @@ export default function Charts({ allStats, season, leagueName, matchDuration }: 
 
   return (
     <div className="space-y-6">
-      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+      <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400">
         Anàlisi visual · {leagueName} · {season} ·{' '}
         {new Set(allStats.map(s => s.team_slug)).size} equips ·{' '}
         {allStats.length} jugadores

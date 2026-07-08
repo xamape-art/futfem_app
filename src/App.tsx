@@ -439,7 +439,7 @@ export default function App() {
 
             {/* N2: Toggle de vista com a segmented control */}
             {!loading && allStats.length > 0 && (
-              <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1 gap-1 mb-5 w-fit">
+              <div className="inline-flex items-center bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-xl p-1 gap-1 mb-6">
                 {(
                   [
                     { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
@@ -448,6 +448,7 @@ export default function App() {
                   ] as const
                 ).map(tab => {
                   const TabIcon = tab.icon;
+                  const active = view === tab.id;
                   return (
                     <button
                       key={tab.id}
@@ -456,13 +457,13 @@ export default function App() {
                         setSearchQuery('');
                       }}
                       className={cn(
-                        'flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-bold rounded-lg transition-colors',
-                        view === tab.id
-                          ? 'bg-[var(--card-bg)] text-[var(--app-text)] shadow-sm'
-                          : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)]'
+                        'flex items-center gap-2 px-5 py-2.5 text-[13.5px] font-bold rounded-lg transition-all',
+                        active
+                          ? 'bg-[var(--card-bg)] text-brand dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)] hover:bg-white/60 dark:hover:bg-white/5'
                       )}
                     >
-                      <TabIcon size={14} strokeWidth={2.5} />
+                      <TabIcon size={15} strokeWidth={2.5} />
                       {tab.label}
                     </button>
                   );
