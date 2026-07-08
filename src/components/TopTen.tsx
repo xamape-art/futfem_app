@@ -9,7 +9,7 @@
  *  L3 — Animació fade-up al grid
  */
 
-import { ArrowRightLeft, ChevronDown, ChevronUp, Clock, Goal, RectangleVertical, Zap, type LucideIcon } from 'lucide-react';
+import { ArrowRightLeft, ChevronDown, ChevronUp, Clock, Goal, RectangleVertical, Star, Target, Zap, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat } from '../types';
@@ -34,9 +34,8 @@ interface Category {
   extraFilter?: (s: FcfStat) => boolean;
 }
 
-function buildCategories(matchDuration: number): Category[] {
-  return [
-  {
+function buildCategories(matchDuration: number, minutesReliable: boolean): Category[] {
+  const golejadores: Category = {
     key: 'goles',
     label: 'Golejadores',
     icon: Goal,
@@ -44,8 +43,10 @@ function buildCategories(matchDuration: number): Category[] {
     iconColor: 'text-emerald-600',
     bgColor: 'from-emerald-400 to-emerald-600',
     emptyText: 'Cap gol marcat',
-  },
-  {
+  };
+
+  // Cards dependents de minuts (només fiables a Tercera Federació)
+  const gPer90: Category = {
     key: 'goles',
     label: `G/${matchDuration} min`,
     icon: Zap,
@@ -60,8 +61,8 @@ function buildCategories(matchDuration: number): Category[] {
     secondaryKey: 'goles',
     secondaryLabel: 'gols',
     extraFilter: (s) => s.minutos >= matchDuration,
-  },
-  {
+  };
+  const mesMinuts: Category = {
     key: 'minutos',
     label: 'Més minuts/titular',
     icon: Clock,
@@ -71,8 +72,38 @@ function buildCategories(matchDuration: number): Category[] {
     emptyText: 'Sense minuts',
     secondaryKey: 'titular',
     secondaryLabel: 'tit.',
-  },
-  {
+  };
+
+  // Substituts fiables quan no hi ha minuts (basats en partits/titularitats)
+  const golsPerPartit: Category = {
+    key: 'goles',
+    label: 'Gols per partit',
+    icon: Target,
+    color: 'text-orange-500 dark:text-orange-400',
+    iconColor: 'text-orange-600',
+    bgColor: 'from-orange-400 to-orange-600',
+    emptyText: 'Cap gol marcat',
+    computedValue: (s) => (s.partidos > 0 ? Math.round((s.goles / s.partidos) * 100) / 100 : 0),
+    formatValue: (v) => v.toFixed(2),
+    sortAsc: false,
+    valueLabel: 'G/partit',
+    secondaryKey: 'goles',
+    secondaryLabel: 'gols',
+    extraFilter: (s) => s.partidos > 0,
+  };
+  const mesTitularitats: Category = {
+    key: 'titular',
+    label: 'Més titularitats',
+    icon: Star,
+    color: 'text-blue-600 dark:text-blue-400',
+    iconColor: 'text-blue-600',
+    bgColor: 'from-blue-400 to-blue-600',
+    emptyText: 'Sense titularitats',
+    secondaryKey: 'suplente',
+    secondaryLabel: 'supl.',
+  };
+
+  const suplencies: Category = {
     key: 'suplente',
     label: 'Més suplències',
     icon: ArrowRightLeft,
@@ -80,8 +111,8 @@ function buildCategories(matchDuration: number): Category[] {
     iconColor: 'text-amber-600',
     bgColor: 'from-amber-400 to-amber-600',
     emptyText: 'Sense suplències',
-  },
-  {
+  };
+  const grogues: Category = {
     key: 'amarillas',
     label: 'Targetes grogues',
     icon: RectangleVertical,
@@ -90,8 +121,8 @@ function buildCategories(matchDuration: number): Category[] {
     bgColor: 'from-yellow-400 to-yellow-600',
     fillIcon: true,
     emptyText: 'Cap targeta groga',
-  },
-  {
+  };
+  const vermelles: Category = {
     key: 'rojas',
     label: 'Targetes vermelles',
     icon: RectangleVertical,
@@ -100,8 +131,11 @@ function buildCategories(matchDuration: number): Category[] {
     bgColor: 'from-red-400 to-red-600',
     fillIcon: true,
     emptyText: 'Cap targeta vermella',
-  },
-  ];
+  };
+
+  return minutesReliable
+    ? [golejadores, gPer90, mesMinuts, suplencies, grogues, vermelles]
+    : [golejadores, golsPerPartit, mesTitularitats, suplencies, grogues, vermelles];
 }
 
 // ─── Badge de posició metàl·lic (or / plata / bronze) ─────────────────────────
@@ -329,9 +363,10 @@ interface TopTenProps {
   season: string;
   leagueName: string;
   matchDuration: number;
+  minutesReliable: boolean;
 }
 
-export default function TopTen({ allStats, season, leagueName, matchDuration }: TopTenProps) {
+export default function TopTen({ allStats, season, leagueName, matchDuration, minutesReliable }: TopTenProps) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-400 text-sm">
@@ -350,7 +385,7 @@ export default function TopTen({ allStats, season, leagueName, matchDuration }: 
 
       {/* L3: fade-up al grid de cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-up">
-        {buildCategories(matchDuration).map((cat, i) => (
+        {buildCategories(matchDuration, minutesReliable).map((cat, i) => (
           <CategoryCard key={`${cat.key}-${i}`} category={cat} data={allStats} />
         ))}
       </div>

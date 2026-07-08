@@ -35,7 +35,13 @@ type QuickFilter = 'all' | 'scorers' | 'yellow' | 'red';
 
 // ─── Component principal ──────────────────────────────────────────────────────
 
-export default function StatsTable({ data }: { data: FcfStat[] }) {
+export default function StatsTable({
+  data,
+  showMinutes = true,
+}: {
+  data: FcfStat[];
+  showMinutes?: boolean;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>('partidos');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
@@ -73,7 +79,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
   const SortIcon = ({ col }: { col: SortKey }) => {
     // Columna inactiva: glif ⇅ clarament visible → indica que és ordenable
     if (sortKey !== col) {
-      return <ChevronsUpDown size={13} className="inline ml-0.5 text-neutral-400 dark:text-neutral-500" />;
+      return <ChevronsUpDown size={13} className="inline ml-0.5 text-neutral-500 dark:text-neutral-400" />;
     }
     // Columna activa: direcció d'ordenació en color d'accent (taronja)
     return sortDir === 'desc'
@@ -97,7 +103,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
       title={COLUMN_TOOLTIPS[col]}
       className={cn(
         // D2: py-2 → py-2 (th no canvia massa, el canvi important és als td)
-        'px-2 py-2 text-[11px] font-black uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-[var(--app-text)]',
+        'px-2 py-2 text-[12px] font-black uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-[var(--app-text)]',
         right ? 'text-right' : 'text-left',
         sortKey === col
           ? 'text-[var(--app-text)]'
@@ -166,7 +172,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
 
       {/* ── Taula ──────────────────────────────────────────── */}
       <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[13px] border-collapse">
           <thead>
             <tr className="border-b border-[var(--card-border)]">
               {/* D1: primera columna sticky */}
@@ -174,7 +180,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
               <Th col="partidos"  label="PJ"  />
               <Th col="titular"   label="TIT" />
               <Th col="suplente"  label="SUP" />
-              <Th col="minutos"   label="MIN" />
+              {showMinutes && <Th col="minutos" label="MIN" />}
               <Th col="goles"     label="G"   />
               <Th col="amarillas" label="TA"  />
               <Th col="rojas"     label="TR"  />
@@ -197,7 +203,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                   {/* D1: primera columna sticky amb bg explícit + group-hover */}
                   <td
                     className={cn(
-                      'px-2 py-2.5 text-left font-medium text-[var(--app-text)] max-w-[160px]',
+                      'px-2 py-2.5 text-left font-semibold text-[var(--app-text)] max-w-[160px]',
                       'sticky left-0 z-10 table-sticky-col transition-colors',
                       isOdd
                         ? 'bg-neutral-50 dark:bg-[#272727] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
@@ -209,31 +215,33 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                     </span>
                     {/* D5: Dorsal com a badge estilitzat */}
                     {s.dorsal && (
-                      <span className="inline-block text-[9px] font-black px-1 mt-0.5 rounded bg-neutral-100 dark:bg-white/10 text-neutral-400 dark:text-neutral-500 tabular-nums leading-tight">
+                      <span className="inline-block text-[9px] font-black px-1 mt-0.5 rounded bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 tabular-nums leading-tight">
                         {s.dorsal}
                       </span>
                     )}
                   </td>
 
                   {/* D2: py-2 → py-2.5 a totes les cel·les de dades */}
-                  <td className="px-2 py-2.5 text-right text-neutral-700 dark:text-neutral-300">
+                  <td className="px-2 py-2.5 text-right text-neutral-800 dark:text-neutral-200">
                     {s.partidos}
                   </td>
-                  <td className="px-2 py-2.5 text-right text-neutral-700 dark:text-neutral-300">
+                  <td className="px-2 py-2.5 text-right text-neutral-800 dark:text-neutral-200">
                     {s.titular}
                   </td>
-                  <td className="px-2 py-2.5 text-right text-neutral-700 dark:text-neutral-300">
+                  <td className="px-2 py-2.5 text-right text-neutral-800 dark:text-neutral-200">
                     {s.suplente}
                   </td>
-                  <td className="px-2 py-2.5 text-right text-neutral-500 dark:text-neutral-400">
-                    {s.minutos}
-                  </td>
+                  {showMinutes && (
+                    <td className="px-2 py-2.5 text-right text-neutral-700 dark:text-neutral-300">
+                      {s.minutos}
+                    </td>
+                  )}
                   <td
                     className={cn(
                       'px-2 py-2.5 text-right font-bold',
                       s.goles > 0
                         ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-neutral-400 dark:text-neutral-500'
+                        : 'text-neutral-500 dark:text-neutral-400'
                     )}
                   >
                     {s.goles}
@@ -243,7 +251,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                       'px-2 py-2.5 text-right',
                       s.amarillas > 0
                         ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-neutral-400 dark:text-neutral-500'
+                        : 'text-neutral-500 dark:text-neutral-400'
                     )}
                   >
                     {s.amarillas}
@@ -253,7 +261,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                       'px-2 py-2.5 text-right',
                       s.rojas > 0
                         ? 'text-red-600 dark:text-red-400 font-bold'
-                        : 'text-neutral-400 dark:text-neutral-500'
+                        : 'text-neutral-500 dark:text-neutral-400'
                     )}
                   >
                     {s.rojas}

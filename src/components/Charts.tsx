@@ -20,6 +20,7 @@ interface Props {
   season: string;
   leagueName: string;
   matchDuration: number;
+  minutesReliable: boolean;
 }
 
 // ─── Scatter: Minuts vs Gols ──────────────────────────────────────────────────
@@ -31,7 +32,7 @@ const TEAM_COLORS = [
   '#1d4ed8','#b45309','#0e7490','#6d28d9','#374151',
 ];
 
-function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
+function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allStats: FcfStat[]; matchDuration: number; minutesReliable: boolean }) {
   const teamColorMap = useMemo(() => {
     const teams = [...new Set(allStats.map(s => s.team_slug))].sort();
     const map: Record<string, string> = {};
@@ -41,28 +42,35 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
 
   const data = useMemo(() =>
     allStats
-      .filter(s => s.minutos >= matchDuration && s.goles > 0)
+      .filter(s => (minutesReliable ? s.minutos >= matchDuration : s.partidos > 0) && s.goles > 0)
       .map(s => ({
-        x: s.minutos,
+        x: minutesReliable ? s.minutos : s.partidos,
         y: s.goles,
         name: formatPlayerName(s.player_fcf_name),
         team: s.team_name,
         partits: s.partidos,
-        gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
+        minutos: s.minutos,
+        gx: s.minutos > 0 ? ((s.goles / s.minutos) * matchDuration).toFixed(2) : '—',
         color: teamColorMap[s.team_slug] ?? '#1A3A5C',
         id: s.id,
       })),
-    [allStats, matchDuration, teamColorMap]
+    [allStats, matchDuration, minutesReliable, teamColorMap]
   );
 
-  // Línia de referència G/matchDuration = 1.0
+  // Línia de referència (només en mode fiable): G/matchDuration = 1.0
   const maxMin = Math.max(...data.map(d => d.x), 200);
   const refY = Math.round(maxMin / matchDuration);
+
+  const title = minutesReliable ? 'Minuts jugats vs Gols' : 'Partits jugats vs Gols';
+  const subtitle = minutesReliable
+    ? `Cada punt és una jugadora (≥${matchDuration} min) · La línia diagonal = 1 gol cada ${matchDuration} min`
+    : 'Cada punt és una jugadora · relació entre partits jugats i gols marcats';
+  const xLabel = minutesReliable ? 'Minuts jugats' : 'Partits jugats';
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-neutral-500 dark:text-neutral-400 text-sm">
-        Sense jugadores amb ≥{matchDuration} min i gols marcats
+        {minutesReliable ? `Sense jugadores amb ≥${matchDuration} min i gols marcats` : 'Sense golejadores'}
       </div>
     );
   }
@@ -71,9 +79,9 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-[16px] font-bold text-[var(--app-text)]">Minuts jugats vs Gols</h3>
+          <h3 className="text-[16px] font-bold text-[var(--app-text)]">{title}</h3>
           <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
-            Cada punt és una jugadora (≥{matchDuration} min) · La línia diagonal = 1 gol cada {matchDuration} min
+            {subtitle}
           </p>
         </div>
         <span className="text-[12.5px] font-semibold text-neutral-500 dark:text-neutral-400 shrink-0">{data.length} jugadores</span>
@@ -83,8 +91,8 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
           <XAxis
             type="number"
             dataKey="x"
-            name="Minuts"
-            label={{ value: 'Minuts jugats', position: 'insideBottom', offset: -10, fontSize: 13, fill: '#6b7280' }}
+            name={xLabel}
+            label={{ value: xLabel, position: 'insideBottom', offset: -10, fontSize: 13, fill: '#6b7280' }}
             tick={{ fontSize: 12.5, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
@@ -98,13 +106,15 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
             tickLine={false}
             axisLine={false}
           />
-          {/* Línia de referència G/90 = 1.0 */}
-          <ReferenceLine
-            segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
-            stroke="#d1d5db"
-            strokeDasharray="4 3"
-            label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 12, fill: '#6b7280' }}
-          />
+          {/* Línia de referència G/90 = 1.0 (només amb minuts fiables) */}
+          {minutesReliable && (
+            <ReferenceLine
+              segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
+              stroke="#d1d5db"
+              strokeDasharray="4 3"
+              label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 12, fill: '#6b7280' }}
+            />
+          )}
           <Tooltip
             cursor={{ strokeDasharray: '3 3' }}
             content={({ payload }) => {
@@ -116,10 +126,18 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
                   <p className="truncate max-w-[180px] font-semibold" style={{ color: d.color }}>{d.team}</p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{d.y} gols</span>
-                    <span className="text-blue-500 font-semibold">{d.x} min</span>
-                    <span className="text-orange-500 font-semibold">{d.gx} G/{matchDuration}</span>
+                    {minutesReliable ? (
+                      <>
+                        <span className="text-blue-500 font-semibold">{d.minutos} min</span>
+                        <span className="text-orange-500 font-semibold">{d.gx} G/{matchDuration}</span>
+                      </>
+                    ) : (
+                      <span className="text-blue-500 font-semibold">{d.partits} partits</span>
+                    )}
                   </div>
-                  <p className="text-neutral-500 dark:text-neutral-400 mt-0.5">{d.partits} partits</p>
+                  {minutesReliable && (
+                    <p className="text-neutral-500 dark:text-neutral-400 mt-0.5">{d.partits} partits</p>
+                  )}
                 </div>
               );
             }}
@@ -154,7 +172,8 @@ function percentileRank(allVals: number[], value: number): number {
   return Math.round(((below + equal / 2) / n) * 100);
 }
 
-const RADAR_AXES = [
+// Eixos amb minuts fiables (Tercera Federació)
+const RADAR_AXES_FULL = [
   { key: 'disponibilitat', label: 'Disponibilitat', invert: false },
   { key: 'goleig',        label: 'Definició',      invert: false },
   { key: 'participacio',  label: 'Participació',   invert: false },
@@ -162,38 +181,62 @@ const RADAR_AXES = [
   { key: 'disciplina',    label: 'Disciplina',     invert: true  },
 ];
 
-function buildRadarData(player: FcfStat, allStats: FcfStat[], matchDuration: number) {
-  const vals = buildRadarValues(allStats, matchDuration);
+// Eixos només amb dades verificables (sense minuts): titularitats, gols/partit…
+const RADAR_AXES_BASIC = [
+  { key: 'participacio', label: 'Participació', invert: false },
+  { key: 'titularitat',  label: 'Titularitat',  invert: false },
+  { key: 'golejadora',   label: 'Definició',    invert: false },
+  { key: 'disciplina',   label: 'Disciplina',   invert: true  },
+];
 
+function buildRadarData(player: FcfStat, allStats: FcfStat[], matchDuration: number, minutesReliable: boolean) {
+  if (minutesReliable) {
+    const vals = buildRadarValuesFull(allStats, matchDuration);
+    const playerVals = {
+      disponibilitat: player.partidos > 0 ? player.minutos / player.partidos : 0,
+      goleig:         player.minutos >= matchDuration ? (player.goles / player.minutos) * matchDuration : 0,
+      participacio:   player.partidos,
+      consistencia:   player.partidos > 0 ? Math.min(player.minutos / (player.partidos * matchDuration), 1) : 0,
+      disciplina:     player.partidos > 0 ? (player.amarillas + player.rojas * 3) / player.partidos : 0,
+    };
+    return RADAR_AXES_FULL.map(axis => {
+      const rank = percentileRank(vals[axis.key as keyof typeof vals], playerVals[axis.key as keyof typeof playerVals]);
+      return { axis: axis.label, value: axis.invert ? 100 - rank : rank };
+    });
+  }
+
+  const vals = buildRadarValuesBasic(allStats);
+  const app = player.titular + player.suplente; // convocatòries
   const playerVals = {
-    disponibilitat: player.partidos > 0 ? player.minutos / player.partidos : 0,
-    goleig:         player.minutos >= matchDuration ? (player.goles / player.minutos) * matchDuration : 0,
-    participacio:   player.partidos,
-    consistencia:   player.partidos > 0 ? Math.min(player.minutos / (player.partidos * matchDuration), 1) : 0,
-    disciplina:     player.partidos > 0
-      ? (player.amarillas * 1 + player.rojas * 3) / player.partidos
-      : 0,
+    participacio: app,
+    titularitat:  app > 0 ? player.titular / app : 0,
+    golejadora:   player.partidos > 0 ? player.goles / player.partidos : 0,
+    disciplina:   app > 0 ? (player.amarillas + player.rojas * 3) / app : 0,
   };
-
-  return RADAR_AXES.map(axis => {
-    const allVals = vals[axis.key as keyof typeof vals];
-    const rank = percentileRank(allVals, playerVals[axis.key as keyof typeof playerVals]);
-    // Disciplina s'inverteix: menys targetes = millor posició
+  return RADAR_AXES_BASIC.map(axis => {
+    const rank = percentileRank(vals[axis.key as keyof typeof vals], playerVals[axis.key as keyof typeof playerVals]);
     return { axis: axis.label, value: axis.invert ? 100 - rank : rank };
   });
 }
 
-function buildRadarValues(allStats: FcfStat[], matchDuration: number) {
-  const withMinutes = allStats.filter(s => s.partidos > 0);
+function buildRadarValuesFull(allStats: FcfStat[], matchDuration: number) {
+  const rows = allStats.filter(s => s.partidos > 0);
   return {
-    disponibilitat: withMinutes.map(s => s.partidos > 0 ? s.minutos / s.partidos : 0),
-    goleig:         withMinutes.map(s => s.minutos >= matchDuration ? (s.goles / s.minutos) * matchDuration : 0),
-    participacio:   withMinutes.map(s => s.partidos),
-    consistencia:   withMinutes.map(s => s.partidos > 0 ? Math.min(s.minutos / (s.partidos * matchDuration), 1) : 0),
-    disciplina:     withMinutes.map(s => {
-      const pen = s.amarillas * 1 + s.rojas * 3;
-      return s.partidos > 0 ? pen / s.partidos : 0;
-    }),
+    disponibilitat: rows.map(s => s.partidos > 0 ? s.minutos / s.partidos : 0),
+    goleig:         rows.map(s => s.minutos >= matchDuration ? (s.goles / s.minutos) * matchDuration : 0),
+    participacio:   rows.map(s => s.partidos),
+    consistencia:   rows.map(s => s.partidos > 0 ? Math.min(s.minutos / (s.partidos * matchDuration), 1) : 0),
+    disciplina:     rows.map(s => s.partidos > 0 ? (s.amarillas + s.rojas * 3) / s.partidos : 0),
+  };
+}
+
+function buildRadarValuesBasic(allStats: FcfStat[]) {
+  const rows = allStats.filter(s => (s.titular + s.suplente) > 0);
+  return {
+    participacio: rows.map(s => s.titular + s.suplente),
+    titularitat:  rows.map(s => { const a = s.titular + s.suplente; return a > 0 ? s.titular / a : 0; }),
+    golejadora:   rows.map(s => s.partidos > 0 ? s.goles / s.partidos : 0),
+    disciplina:   rows.map(s => { const a = s.titular + s.suplente; return a > 0 ? (s.amarillas + s.rojas * 3) / a : 0; }),
   };
 }
 
@@ -341,11 +384,11 @@ function PlayerCombobox({
 
 // ─── Radar de jugadora ────────────────────────────────────────────────────────
 
-function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
+function RadarJugadora({ allStats, matchDuration, minutesReliable }: { allStats: FcfStat[]; matchDuration: number; minutesReliable: boolean }) {
   const players = useMemo(() =>
     [...allStats]
-      .filter(s => s.partidos > 0)
-      .sort((a, b) => b.goles - a.goles || b.minutos - a.minutos),
+      .filter(s => (s.titular + s.suplente) > 0)
+      .sort((a, b) => b.goles - a.goles || b.titular - a.titular),
     [allStats]
   );
 
@@ -354,7 +397,7 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
 
   if (!player) return null;
 
-  const radarData = buildRadarData(player, allStats, matchDuration);
+  const radarData = buildRadarData(player, allStats, matchDuration, minutesReliable);
 
   return (
     <div>
@@ -375,15 +418,25 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
       {/* Info de la jugadora seleccionada */}
       <div className="flex flex-wrap gap-2.5 mb-4">
         {(
-          [
-            { label: 'Equip',    value: player.team_name, wide: true },
-            { label: 'Partits',  value: player.partidos },
-            { label: 'Minuts',   value: player.minutos },
-            { label: 'Gols',     value: player.goles },
-            { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
-            { label: '🟨 TA',    value: player.amarillas },
-            { label: '🟥 TR',    value: player.rojas },
-          ] as { label: string; value: string | number; wide?: boolean }[]
+          (minutesReliable
+            ? [
+                { label: 'Equip',    value: player.team_name, wide: true },
+                { label: 'Partits',  value: player.partidos },
+                { label: 'Minuts',   value: player.minutos },
+                { label: 'Gols',     value: player.goles },
+                { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
+                { label: '🟨 TA',    value: player.amarillas },
+                { label: '🟥 TR',    value: player.rojas },
+              ]
+            : [
+                { label: 'Equip',    value: player.team_name, wide: true },
+                { label: 'Titular',  value: player.titular },
+                { label: 'Suplent',  value: player.suplente },
+                { label: 'Gols',     value: player.goles },
+                { label: 'G/partit', value: player.partidos > 0 ? (player.goles / player.partidos).toFixed(2) : '—' },
+                { label: '🟨 TA',    value: player.amarillas },
+                { label: '🟥 TR',    value: player.rojas },
+              ]) as { label: string; value: string | number; wide?: boolean }[]
         ).map(item => (
           <div
             key={item.label}
@@ -431,13 +484,21 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
       </ResponsiveContainer>
 
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-        {[
-          { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
-          { label: 'Definició',     desc: `Gols per ${matchDuration} minuts jugats (G/${matchDuration})` },
-          { label: 'Participació',  desc: 'Total de partits jugats a la lliga' },
-          { label: 'Consistència',  desc: `Minuts jugats sobre el total disponible (partits × ${matchDuration})` },
-          { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
-        ].map(item => (
+        {(minutesReliable
+          ? [
+              { label: 'Disponibilitat', desc: 'Minuts per partit jugat' },
+              { label: 'Definició',     desc: `Gols per ${matchDuration} minuts jugats (G/${matchDuration})` },
+              { label: 'Participació',  desc: 'Total de partits jugats a la lliga' },
+              { label: 'Consistència',  desc: `Minuts jugats sobre el total disponible (partits × ${matchDuration})` },
+              { label: 'Disciplina',    desc: 'Menys targetes = valor més alt' },
+            ]
+          : [
+              { label: 'Participació', desc: 'Convocatòries (titular + suplent)' },
+              { label: 'Titularitat',  desc: 'Proporció de partits com a titular' },
+              { label: 'Definició',    desc: 'Gols per partit jugat (titular)' },
+              { label: 'Disciplina',   desc: 'Menys targetes = valor més alt' },
+            ]
+        ).map(item => (
           <div key={item.label} className="flex items-baseline gap-1.5">
             <span className="text-[12.5px] font-bold text-brand shrink-0">{item.label}:</span>
             <span className="text-[12.5px] text-neutral-500 dark:text-neutral-400">{item.desc}</span>
@@ -450,7 +511,7 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
 
 // ─── Component principal ──────────────────────────────────────────────────────
 
-export default function Charts({ allStats, season, leagueName, matchDuration }: Props) {
+export default function Charts({ allStats, season, leagueName, matchDuration, minutesReliable }: Props) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-500 dark:text-neutral-400 text-sm">
@@ -468,11 +529,11 @@ export default function Charts({ allStats, season, leagueName, matchDuration }: 
       </p>
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
+        <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
       </div>
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <RadarJugadora allStats={allStats} matchDuration={matchDuration} />
+        <RadarJugadora allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
       </div>
     </div>
   );

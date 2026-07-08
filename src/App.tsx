@@ -19,7 +19,7 @@
  *  P5  — Regió aria-live per a screen readers
  */
 
-import { BarChart3, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
+import { BarChart3, Info, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
@@ -299,6 +299,19 @@ export default function App() {
     return cLeagues[0]?.match_duration ?? 90;
   }, [selectedCompetitionKey, leagues]);
 
+  // Fiabilitat dels minuts: la FCF només publica el minut dels canvis a Tercera
+  // Federació. A la resta de categories, titulars = partit sencer i suplents = 0,
+  // així que els minuts (i el G/90) no són reals. Ho detectem des de les dades
+  // carregades perquè s'auto-ajusti a lligues futures.
+  const minutesReliable = useMemo(() => {
+    if (allStats.length === 0) return true;
+    const subsWithMin = allStats.filter(s => s.suplente > 0 && s.titular === 0 && s.minutos > 0).length;
+    const partialStarters = allStats.filter(
+      s => s.titular > 0 && s.minutos > 0 && s.minutos < matchDuration
+    ).length;
+    return subsWithMin + partialStarters >= 5;
+  }, [allStats, matchDuration]);
+
   // ── Lliga/competició per a display ─────────────────────────────────────────
 
   const displayLeague = useMemo(() => {
@@ -451,6 +464,18 @@ export default function App() {
               <StatTiles stats={allStats} actas={actas} teamsCount={teams.length} />
             )}
 
+            {/* Avís: minuts no fiables en aquesta categoria */}
+            {!loading && allStats.length > 0 && !minutesReliable && (
+              <div className="flex items-start gap-2 mb-5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 text-[12px] text-amber-800 dark:text-amber-300 leading-snug">
+                <Info size={15} className="shrink-0 mt-0.5" />
+                <span>
+                  En aquesta categoria la FCF no publica el minut dels canvis. Es
+                  mostren només les dades verificables (titularitats, gols i
+                  targetes); els <b>minuts</b> i el <b>G/{matchDuration}</b> no es mostren.
+                </span>
+              </div>
+            )}
+
             {/* N2: Toggle de vista com a segmented control */}
             {!loading && allStats.length > 0 && (
               <div className="inline-flex items-center bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-xl p-1 gap-1 mb-6">
@@ -531,6 +556,7 @@ export default function App() {
                 season={selectedSeason}
                 leagueName={displayLeague.name}
                 matchDuration={matchDuration}
+                minutesReliable={minutesReliable}
               />
             )}
 
@@ -541,6 +567,7 @@ export default function App() {
                 season={selectedSeason}
                 leagueName={displayLeague.name}
                 matchDuration={matchDuration}
+                minutesReliable={minutesReliable}
               />
             )}
 
@@ -578,7 +605,7 @@ export default function App() {
                               </span>
                             </div>
                             <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
-                              <StatsTable data={group.players} />
+                              <StatsTable data={group.players} showMinutes={minutesReliable} />
                             </div>
                           </div>
                         ))}
@@ -645,7 +672,7 @@ export default function App() {
                                   partits
                                 </span>
                               </div>
-                              <StatsTable data={teamStats} />
+                              <StatsTable data={teamStats} showMinutes={minutesReliable} />
                             </>
                           ) : (
                             /* A1: AllTeamsOverview amb files clicables */
