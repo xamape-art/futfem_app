@@ -1,5 +1,5 @@
 {
-  "name": "futfem-app",
+  "name": "femstats",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",

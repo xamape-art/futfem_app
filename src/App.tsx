@@ -20,6 +20,7 @@
  */
 
 import { Maximize2, Minimize2, Moon, Search, Sun, X } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
 import SeasonSelector from './components/SeasonSelector';
@@ -619,6 +620,8 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <Analytics />
     </div>
   );
 }
