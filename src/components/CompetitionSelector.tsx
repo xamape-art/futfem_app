@@ -14,6 +14,19 @@ function groupLabel(league: League): string {
   return m ? `Gr.${m[1]}` : league.short_name;
 }
 
+// Prop 5: categoritzar competicions per família (Sènior / Base) per poder-les
+// agrupar i fer el selector més escanejable.
+type Category = 'senior' | 'base';
+
+function categoryOf(name: string): Category {
+  return /cadet|juvenil|infantil|alev|benjam/i.test(name) ? 'base' : 'senior';
+}
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  senior: 'Sènior',
+  base: 'Base',
+};
+
 export default function CompetitionSelector({
   leagues,
   selectedCompetitionKey,
@@ -39,23 +52,49 @@ export default function CompetitionSelector({
     .filter(l => (l.competition_key ?? l.id) === selectedCompetitionKey)
     .sort((a, b) => a.sort_order - b.sort_order);
 
+  // Prop 5: agrupar competicions per categoria, preservant l'ordre original
+  const categorized: { cat: Category; items: typeof competitions }[] = [];
+  for (const c of competitions) {
+    const cat = categoryOf(c.name);
+    let bucket = categorized.find(b => b.cat === cat);
+    if (!bucket) {
+      bucket = { cat, items: [] };
+      categorized.push(bucket);
+    }
+    bucket.items.push(c);
+  }
+  // Ordre fix: Sènior primer, després Base
+  categorized.sort((a, b) => (a.cat === 'senior' ? -1 : 1) - (b.cat === 'senior' ? -1 : 1));
+  const showCategoryLabels = categorized.length > 1;
+
   return (
-    <div className="mb-3 space-y-2">
-      {/* Fila de competicions — wrap per mostrar-les totes */}
-      <div className="flex flex-wrap gap-2">
-        {competitions.map(c => (
-          <button
-            key={c.key}
-            onClick={() => onCompetitionChange(c.key)}
-            className={cn(
-              'shrink-0 whitespace-nowrap px-4 py-1.5 text-[12px] font-semibold rounded-full border transition-colors',
-              selectedCompetitionKey === c.key
-                ? 'bg-brand text-white border-brand'
-                : 'bg-[var(--card-bg)] text-neutral-500 dark:text-neutral-400 border-[var(--card-border)] hover:border-brand hover:text-brand'
+    <div className="mb-4 space-y-3">
+      {/* Fila de competicions — agrupades per categoria (Prop 5) */}
+      <div className="space-y-2.5">
+        {categorized.map(bucket => (
+          <div key={bucket.cat}>
+            {showCategoryLabels && (
+              <div className="text-[10px] font-black uppercase tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1.5 pl-0.5">
+                {CATEGORY_LABEL[bucket.cat]}
+              </div>
             )}
-          >
-            {c.name}
-          </button>
+            <div className="flex flex-wrap gap-2">
+              {bucket.items.map(c => (
+                <button
+                  key={c.key}
+                  onClick={() => onCompetitionChange(c.key)}
+                  className={cn(
+                    'shrink-0 whitespace-nowrap px-4 py-2 text-[12.5px] font-semibold rounded-full border transition-colors',
+                    selectedCompetitionKey === c.key
+                      ? 'bg-brand text-white border-brand shadow-sm'
+                      : 'bg-[var(--card-bg)] text-neutral-600 dark:text-neutral-300 border-[var(--card-border)] hover:border-brand hover:text-brand'
+                  )}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 

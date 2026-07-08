@@ -1,0 +1,429 @@
+<meta charset="utf-8">
+<title>FemStats · Pla de Millora UX/UI 2026</title>
+<style>
+  :root{
+    --navy:#1A3A5C; --navy-2:#25537f; --orange:#D67D2E; --orange-soft:#fbeadb;
+    --ink:#1c2530; --muted:#64748b; --line:#e5e9f0; --bg:#f6f8fb; --card:#ffffff;
+    --green:#0f9d6b; --green-soft:#e5f5ee; --amber:#c98a12; --amber-soft:#fbf1dc;
+    --red:#d64545; --red-soft:#fbe6e6;
+    --shadow:0 1px 2px rgba(16,32,60,.04),0 8px 24px rgba(16,32,60,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;font-size:15px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 22px}
+
+  /* Header */
+  header{background:linear-gradient(135deg,var(--navy) 0%,#0f2740 100%);color:#fff;
+    padding:52px 0 44px}
+  header .wrap{display:block}
+  .logo{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .logo .mark{width:40px;height:40px;border-radius:11px;background:#fff;
+    display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:9px}
+  .logo .mark i{width:5px;border-radius:2px;display:block}
+  .logo .mark i:nth-child(1){height:11px;background:var(--navy)}
+  .logo .mark i:nth-child(2){height:19px;background:var(--orange)}
+  .logo .mark i:nth-child(3){height:15px;background:var(--navy-2)}
+  .logo b{font-size:19px;font-weight:800;letter-spacing:-.3px}
+  .logo span{font-size:10px;letter-spacing:3px;color:#9db6d1;display:block;margin-top:-4px}
+  header h1{font-size:34px;line-height:1.15;margin:0 0 12px;font-weight:800;letter-spacing:-.6px}
+  header h1 em{color:var(--orange);font-style:normal}
+  header p{font-size:16px;color:#c3d4e6;margin:0;max-width:620px}
+  .meta{display:flex;gap:20px;margin-top:26px;flex-wrap:wrap;font-size:13px;color:#9db6d1}
+  .meta b{color:#fff;font-weight:600}
+
+  /* Sections */
+  section{padding:44px 0}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+  h2{font-size:25px;font-weight:800;letter-spacing:-.4px;margin:0 0 8px}
+  .lead{color:var(--muted);font-size:15.5px;margin:0 0 26px;max-width:640px}
+
+  /* Diagnóstico cards */
+  .diag{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.diag{grid-template-columns:1fr}}
+  .diag .d{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 18px 16px;box-shadow:var(--shadow)}
+  .diag .d .ic{font-size:22px;margin-bottom:8px;display:block}
+  .diag .d h4{margin:0 0 4px;font-size:15px;font-weight:700}
+  .diag .d p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+
+  /* Proposal */
+  .prop{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .prop-head{display:flex;align-items:center;gap:14px;padding:18px 22px;
+    border-bottom:1px solid var(--line)}
+  .num{flex-shrink:0;width:34px;height:34px;border-radius:10px;background:var(--navy);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+  .prop-head h3{margin:0;font-size:17.5px;font-weight:750;flex:1;letter-spacing:-.2px}
+  .tags{display:flex;gap:6px;flex-shrink:0}
+  .tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+  .t-impact{background:var(--green-soft);color:var(--green)}
+  .t-effort{background:var(--orange-soft);color:var(--orange)}
+  .t-quick{background:#e8eefb;color:#3155b0}
+  .prop-body{padding:18px 22px 22px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:640px){.row{grid-template-columns:1fr;gap:14px}}
+  .block h5{margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:1px;
+    text-transform:uppercase;color:var(--muted)}
+  .block.prob h5{color:var(--red)}
+  .block.sol h5{color:var(--green)}
+  .block p{margin:0 0 8px;font-size:14px;line-height:1.55}
+  .block ul{margin:6px 0 0;padding-left:18px}
+  .block li{font-size:13.5px;margin-bottom:5px;line-height:1.45}
+  code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:12.5px;
+    font-family:"SF Mono",Consolas,monospace;color:var(--navy)}
+
+  /* Mockups */
+  .mock{margin-top:16px;border:1px dashed var(--line);border-radius:12px;
+    background:var(--bg);padding:16px}
+  .mock .cap{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  .before-after{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.before-after{grid-template-columns:1fr}}
+  .ba-col .ba-lbl{font-size:11px;font-weight:800;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px}
+  .ba-col.b .ba-lbl{color:var(--red)}
+  .ba-col.a .ba-lbl{color:var(--green)}
+  .frame{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:120px}
+
+  /* mock pills */
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;
+    border:1px solid var(--line);color:var(--muted);margin:0 4px 6px 0;background:#fff}
+  .pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .pill.dim{opacity:.45;text-decoration:line-through}
+  .pill.dot::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--green);margin-right:6px;vertical-align:middle}
+  .seasonbtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+    padding:5px 12px;border-radius:8px;margin-right:6px;background:#eef2f7;color:var(--muted)}
+  .seasonbtn.on{background:var(--navy);color:#fff}
+  .seasonbtn .badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:10px}
+  .seasonbtn .badge.no{background:#fde2e2;color:var(--red)}
+  .seasonbtn.on .badge.ok{background:rgba(255,255,255,.25);color:#fff}
+
+  /* CTA empty state mock */
+  .empty-mock{text-align:center;padding:18px 12px}
+  .empty-mock .em{font-size:30px;margin-bottom:8px}
+  .empty-mock .t{font-weight:700;font-size:14px;margin-bottom:3px}
+  .empty-mock .s{font-size:12px;color:var(--muted);margin-bottom:12px}
+  .cta{display:inline-block;background:var(--orange);color:#fff;font-weight:700;font-size:12.5px;
+    padding:8px 16px;border-radius:9px}
+
+  /* stat tiles mock */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .tiles .tile{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+  .tiles .tile .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1}
+  .tiles .tile .k{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+  .tiles .tile.g .v{color:var(--green)}
+
+  /* Roadmap */
+  .phase{display:flex;gap:16px;margin-bottom:8px}
+  .phase .bar{display:flex;flex-direction:column;align-items:center}
+  .phase .dot{width:14px;height:14px;border-radius:50%;background:var(--orange);
+    border:3px solid var(--orange-soft);flex-shrink:0;margin-top:4px}
+  .phase .line{width:2px;flex:1;background:var(--line);margin:4px 0}
+  .phase:last-child .line{display:none}
+  .phase .content{padding-bottom:22px}
+  .phase h4{margin:0 0 3px;font-size:16px;font-weight:750}
+  .phase .when{font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px}
+  .phase p{margin:6px 0 0;font-size:13.5px;color:var(--muted)}
+  .phase .items{margin:8px 0 0;padding:0;list-style:none}
+  .phase .items li{font-size:13px;padding:3px 0 3px 22px;position:relative}
+  .phase .items li::before{content:"→";position:absolute;left:2px;color:var(--orange);font-weight:700}
+
+  .callout{background:var(--orange-soft);border:1px solid #f0d4b6;border-radius:14px;
+    padding:18px 22px;margin-top:8px}
+  .callout b{color:#a85a17}
+  footer{padding:34px 0;text-align:center;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);margin-top:20px}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="logo">
+      <div class="mark"><i></i><i></i><i></i></div>
+      <div><b>FemStats</b><span>ANALYTICS</span></div>
+    </div>
+    <h1>Pla de millora <em>UX / UI</em><br>de la pantalla d'inici</h1>
+    <p>Propostes per fer l'app més clara, visual i intuïtiva — resolent la sensació de pantalla «buida i sosa» i el problema de la temporada 26-27 sense dades.</p>
+    <div class="meta">
+      <span>Projecte: <b>FemStats</b></span>
+      <span>Data: <b>08/07/2026</b></span>
+      <span>Estat: <b>Proposta — pendent d'aprovació</b></span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">1 · Diagnòstic</span>
+    <h2>Què falla ara mateix</h2>
+    <p class="lead">Analitzant la captura d'entrada a l'app, aquests són els quatre problemes concrets que expliquen la sensació de «sosa, poc visible i poc intuïtiva».</p>
+    <div class="diag">
+      <div class="d">
+        <span class="ic">🗓️</span>
+        <h4>Entra en una temporada buida</h4>
+        <p>Per defecte carrega <code>26-27</code>, que encara no té dades. La primera impressió és una pantalla buida amb «Sense estadístiques». Hauria d'entrar directament a <code>25-26</code>, que sí en té.</p>
+      </div>
+      <div class="d">
+        <span class="ic">🎨</span>
+        <h4>Tot gris, sense jerarquia</h4>
+        <p>Text de 10-12px, gris sobre gris, sense color ni accents. Res crida l'atenció ni guia l'ull. Visualment «pla»: no es distingeix què és important.</p>
+      </div>
+      <div class="d">
+        <span class="ic">🧭</span>
+        <h4>No et diu què fer</h4>
+        <p>L'estat buit és un carreró sense sortida: informa que no hi ha dades però no ofereix cap acció. L'usuari no sap que a l'altra temporada sí que n'hi ha.</p>
+      </div>
+      <div class="d">
+        <span class="ic">📊</span>
+        <h4>Zero context de valor</h4>
+        <p>Ni tan sols quan hi ha dades es veu un resum ràpid (nº de jugadores, gols, equips…). Vas directe a una taula densa sense cap «titular» que doni context.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <span class="eyebrow">2 · Propostes</span>
+    <h2>Les 6 millores proposades</h2>
+    <p class="lead">Ordenades per prioritat. Les tres primeres són «quick wins»: alt impacte i poc esforç. Cada una indica el problema que resol i com quedaria.</p>
+
+    <!-- PROP 1 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">1</div>
+        <h3>Entrar a la temporada amb dades (no a la buida)</h3>
+        <div class="tags"><span class="tag t-quick">Quick win</span><span class="tag t-impact">Impacte alt</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>El codi selecciona sempre la temporada <b>més recent</b> (<code>26-27</code>), encara que estigui buida. Primera impressió = pantalla morta.</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <p>Seleccionar per defecte la <b>temporada més recent que tingui dades</b>. La 26-27 segueix accessible, però marcada visualment com a «pròxima / sense dades».</p>
+            <ul>
+              <li>Consulta lleugera per saber quines temporades tenen files</li>
+              <li>Badge <code>· sense dades</code> a les temporades buides</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mock">
+          <div class="cap">◍ Selector de temporada</div>
+          <div class="before-after">
+            <div class="ba-col b"><div class="ba-lbl">Ara</div><div class="frame">
+              <span class="seasonbtn on">26-27</span><span class="seasonbtn">25-26</span>
+              <div style="font-size:11px;color:var(--muted);margin-top:10px">● Sense dades per a la temporada 26-27</div>
+            </div></div>
+            <div class="ba-col a"><div class="ba-lbl">Proposta</div><div class="frame">
+              <span class="seasonbtn">26-27 <span class="badge no">buida</span></span><span class="seasonbtn on">25-26 <span class="badge ok">actual</span></span>
+              <div style="font-size:11px;color:var(--green);margin-top:10px;font-weight:600">✓ Entra directe on hi ha dades</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROP 2 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">2</div>
+        <h3>Estat buit útil, amb acció</h3>
+        <div class="tags"><span class="tag t-quick">Quick win</span><span class="tag t-impact">Impacte alt</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>Quan una temporada no té dades, la bústia 📭 i el text no ofereixen sortida. L'usuari queda encallat.</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <p>Convertir l'estat buit en una guia: botó directe a la temporada que sí que té dades i missatge clar de quan s'actualitza.</p>
+          </div>
+        </div>
+        <div class="mock">
+          <div class="cap">◍ Estat sense dades</div>
+          <div class="frame empty-mock">
+            <div class="em">📭</div>
+            <div class="t">Encara no hi ha dades per a 26-27</div>
+            <div class="s">La temporada comença aviat. Mentrestant, consulta la temporada anterior:</div>
+            <span class="cta">Veure 25-26 →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROP 3 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">3</div>
+        <h3>Resum ràpid (stat tiles) a dalt</h3>
+        <div class="tags"><span class="tag t-quick">Quick win</span><span class="tag t-impact">Impacte alt</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>Es passa d'un header buit a una taula densa. No hi ha cap «titular» visual que doni context ni valor immediat.</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <p>Una fila de 4 targetes-resum a sobre de la taula: total jugadores, equips, gols i partits de la competició/temporada. Color i xifres grans → visibilitat instantània.</p>
+          </div>
+        </div>
+        <div class="mock">
+          <div class="cap">◍ Fila de resum</div>
+          <div class="frame">
+            <div class="tiles">
+              <div class="tile"><div class="v">248</div><div class="k">Jugadores</div></div>
+              <div class="tile"><div class="v">16</div><div class="k">Equips</div></div>
+              <div class="tile g"><div class="v">312</div><div class="k">Gols</div></div>
+              <div class="tile"><div class="v">120</div><div class="k">Partits</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROP 4 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">4</div>
+        <h3>Jerarquia visual i llegibilitat</h3>
+        <div class="tags"><span class="tag t-effort">Esforç mitjà</span><span class="tag t-impact">Impacte alt</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>Tipografia massa petita (10-12px), gris sobre gris, contrast baix. «Tot pesa igual» → res destaca.</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <ul>
+              <li>Pujar mides base: cos 13-14px, capçaleres 15-16px</li>
+              <li>Més contrast de text (menys gris clar sobre fons clar)</li>
+              <li>Accents de color de marca (navy + taronja) als elements actius</li>
+              <li>Separadors i espaiat més generós entre blocs</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROP 5 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">5</div>
+        <h3>Selector de competició més clar</h3>
+        <div class="tags"><span class="tag t-effort">Esforç mitjà</span><span class="tag t-impact">Impacte mitjà</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>8 pills gairebé idèntiques en dues files: un «mur» difícil d'escanejar. No es distingeix categoria (sènior / juvenil / cadet / infantil).</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <p>Agrupar per categoria amb petites etiquetes, o afegir icona/color per família. Estat actiu més marcat amb el navy de marca.</p>
+          </div>
+        </div>
+        <div class="mock">
+          <div class="cap">◍ Pills de competició</div>
+          <div class="frame">
+            <div style="font-size:9.5px;font-weight:800;color:var(--muted);letter-spacing:1px;margin-bottom:6px">SÈNIOR</div>
+            <span class="pill on">Tercera Federació</span><span class="pill">1ª Div Femenina</span><span class="pill">Preferent Femenina</span>
+            <div style="font-size:9.5px;font-weight:800;color:var(--muted);letter-spacing:1px;margin:8px 0 6px">BASE</div>
+            <span class="pill">1ª Div Cadet</span><span class="pill">Preferent Juvenil</span><span class="pill">1ª Div Juvenil</span><span class="pill">Preferent Infantil</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROP 6 -->
+    <div class="prop">
+      <div class="prop-head">
+        <div class="num">6</div>
+        <h3>Microdetalls de polidesa</h3>
+        <div class="tags"><span class="tag t-effort">Esforç baix</span><span class="tag t-impact">Impacte mitjà</span></div>
+      </div>
+      <div class="prop-body">
+        <div class="row">
+          <div class="block prob">
+            <h5>Problema</h5>
+            <p>Petits detalls que resten sensació de producte acabat: transicions abruptes, cercador sempre visible fins i tot sense dades, etc.</p>
+          </div>
+          <div class="block sol">
+            <h5>Solució</h5>
+            <ul>
+              <li>Amagar el cercador quan no hi ha dades</li>
+              <li>Transicions suaus en canviar de competició/temporada</li>
+              <li>Estat de càrrega (skeleton) més visible</li>
+              <li>Última actualització de dades ben visible</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">3 · Full de ruta</span>
+    <h2>En quin ordre ho faríem</h2>
+    <p class="lead">Proposta d'execució en tres fases per veure resultats de seguida sense arriscar l'estabilitat.</p>
+
+    <div class="phase">
+      <div class="bar"><div class="dot"></div><div class="line"></div></div>
+      <div class="content">
+        <div class="when">Fase 1 · Quick wins</div>
+        <h4>Arreglar l'entrada (mig dia de feina)</h4>
+        <p>El que més molesta ara, amb canvis petits i segurs:</p>
+        <ul class="items">
+          <li>Propostes 1, 2 i 3: temporada per defecte amb dades + estat buit amb acció + stat tiles</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="bar"><div class="dot"></div><div class="line"></div></div>
+      <div class="content">
+        <div class="when">Fase 2 · Aspecte</div>
+        <h4>Pujar el llistó visual (1 dia)</h4>
+        <p>La feina de «que deixi de semblar sosa»:</p>
+        <ul class="items">
+          <li>Proposta 4: tipografia, contrast i accents de marca</li>
+          <li>Proposta 5: selector de competició agrupat</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="bar"><div class="dot"></div><div class="line"></div></div>
+      <div class="content">
+        <div class="when">Fase 3 · Polidesa</div>
+        <h4>Rematar detalls (mig dia)</h4>
+        <ul class="items">
+          <li>Proposta 6: microinteraccions i detalls d'acabat</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Nota important:</b> tot això és <b>només frontend</b> (React + Tailwind). No toca la base de dades, ni l'scraping, ni la sincronització de la FCF. Zero risc per a les dades — només millora com es veuen i s'utilitzen.
+    </div>
+  </div>
+</section>
+
+<footer>
+  FemStats Analytics · Pla de Millora UX/UI · 08/07/2026 · XMP Football Analysis<br>
+  Document de proposta — cap canvi aplicat encara.
+</footer>

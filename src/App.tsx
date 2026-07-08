@@ -26,6 +26,7 @@ import CompetitionSelector from './components/CompetitionSelector';
 import SeasonSelector from './components/SeasonSelector';
 import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
 import StatsTable from './components/StatsTable';
+import StatTiles from './components/StatTiles';
 import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
 import TopTen from './components/TopTen';
@@ -80,6 +81,8 @@ export default function App() {
   // ── Temporada activa ────────────────────────────────────────────────────────
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [availableFcfSeasons, setAvailableFcfSeasons] = useState<string[]>([]);
+  // Prop 1: temporades (format app) que realment tenen dades a fcf_stats
+  const [seasonsWithData, setSeasonsWithData] = useState<Set<string>>(new Set());
 
   // ── Datos ───────────────────────────────────────────────────────────────────
   const [allStats, setAllStats]         = useState<FcfStat[]>([]);
@@ -127,9 +130,39 @@ export default function App() {
     const fcfSeasons = [...allSeasons].sort((a, b) => b.localeCompare(a));
     const appSeasons = fcfSeasons.map(fcfSeasonToApp);
     setAvailableFcfSeasons(fcfSeasons);
-    setSelectedSeason(appSeasons[0] ?? '');
     setSelectedTeam(null);
     setSearchQuery('');
+    // Netegem la selecció mentre esbrinem quina temporada té dades (evita
+    // carregar dades d'una temporada equivocada i el flaix d'estat buit).
+    setSelectedSeason('');
+
+    // Prop 1: consultem quines temporades tenen dades i seleccionem per defecte
+    // la més recent amb dades (no la 26-27 buida). Comptador HEAD → sense
+    // transferència de files, 2-3 consultes ràpides.
+    let cancelled = false;
+    const ids = cLeagues.map(l => l.id);
+    (async () => {
+      const checks = await Promise.all(
+        appSeasons.map(async appS => {
+          const { count } = await supabase
+            .from('fcf_stats')
+            .select('id', { count: 'exact', head: true })
+            .in('league_id', ids)
+            .eq('season', appS);
+          return { appS, has: (count ?? 0) > 0 };
+        })
+      );
+      if (cancelled) return;
+      const withData = new Set(checks.filter(c => c.has).map(c => c.appS));
+      setSeasonsWithData(withData);
+      // Temporada més recent amb dades; si cap en té, la més recent disponible.
+      const best = appSeasons.find(s => withData.has(s)) ?? appSeasons[0] ?? '';
+      setSelectedSeason(best);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCompetitionKey, leagues]);
 
   // ── 3. Al cambiar (competición, grup, temporada): cargar datos ──────────────
@@ -241,6 +274,14 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view]);
 
+  // Prop 2: temporada més recent amb dades (per al CTA de l'estat buit)
+  const newestSeasonWithData = useMemo(() => {
+    const appSeasons = [...availableFcfSeasons]
+      .sort((a, b) => b.localeCompare(a))
+      .map(fcfSeasonToApp);
+    return appSeasons.find(s => seasonsWithData.has(s)) ?? null;
+  }, [availableFcfSeasons, seasonsWithData]);
+
   // ── Durada del partit per a la competició seleccionada ─────────────────────
 
   const matchDuration = useMemo(() => {
@@ -304,7 +345,7 @@ export default function App() {
             />
             {/* H1: context pill — visible mentre es fa scroll */}
             {displayLeague && selectedSeason && !loadingLeagues && (
-              <span className="hidden md:flex items-center text-[10px] font-semibold text-neutral-400 bg-neutral-100 dark:bg-white/10 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap shrink-0">
+              <span className="hidden md:flex items-center text-[11px] font-bold text-neutral-500 dark:text-neutral-300 bg-neutral-100 dark:bg-white/10 px-2.5 py-1 rounded-full ml-1 whitespace-nowrap shrink-0">
                 {displayLeague.short_name} · {selectedSeason}
               </span>
             )}
@@ -374,6 +415,7 @@ export default function App() {
               <SeasonSelector
                 fcfSeasons={availableFcfSeasons}
                 selected={selectedSeason}
+                seasonsWithData={seasonsWithData}
                 onChange={s => {
                   setSelectedSeason(s);
                   setSearchQuery('');
@@ -388,6 +430,11 @@ export default function App() {
                 season={selectedSeason}
                 leagueName={displayLeague.name}
               />
+            )}
+
+            {/* Prop 3: Resum ràpid (stat tiles) */}
+            {!loading && allStats.length > 0 && (
+              <StatTiles stats={allStats} actas={actas} teamsCount={teams.length} />
             )}
 
             {/* N2: Toggle de vista com a segmented control */}
@@ -407,10 +454,10 @@ export default function App() {
                       setSearchQuery('');
                     }}
                     className={cn(
-                      'px-4 py-1.5 text-[12px] font-semibold rounded-lg transition-colors',
+                      'px-4 py-2 text-[12.5px] font-bold rounded-lg transition-colors',
                       view === tab.id
                         ? 'bg-[var(--card-bg)] text-[var(--app-text)] shadow-sm'
-                        : 'text-neutral-400 dark:text-neutral-500 hover:text-[var(--app-text)]'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)]'
                     )}
                   >
                     {tab.label}
@@ -419,8 +466,8 @@ export default function App() {
               </div>
             )}
 
-            {/* S1: Buscador global (solo en vista estadístiques) */}
-            {view === 'stats' && (
+            {/* S1: Buscador global (només en vista estadístiques i amb dades) */}
+            {view === 'stats' && !loading && allStats.length > 0 && (
               <div className="relative mb-4">
                 <Search
                   size={13}
@@ -526,16 +573,31 @@ export default function App() {
                   <>
                     {/* P2: Empty state amigable per a l'usuari */}
                     {allStats.length === 0 ? (
-                      <div className="text-center py-16 space-y-3">
-                        <div className="text-4xl">📭</div>
-                        <p className="text-[15px] font-semibold text-[var(--app-text)]">
-                          Sense estadístiques
-                        </p>
-                        <p className="text-[13px] text-neutral-400 max-w-[280px] mx-auto leading-relaxed">
-                          No hi ha dades per a{' '}
-                          {displayLeague?.short_name ?? ''} · {selectedSeason}.{' '}
-                          Les estadístiques s'actualitzen cada dilluns.
-                        </p>
+                      // Prop 2: estat buit útil, amb acció cap a la temporada amb dades
+                      <div className="text-center py-16 space-y-4">
+                        <div className="text-5xl">📭</div>
+                        <div className="space-y-1.5">
+                          <p className="text-[16px] font-bold text-[var(--app-text)]">
+                            Encara no hi ha dades per a {selectedSeason}
+                          </p>
+                          <p className="text-[13.5px] text-neutral-500 dark:text-neutral-400 max-w-[320px] mx-auto leading-relaxed">
+                            {displayLeague?.short_name ?? ''} · {selectedSeason}.{' '}
+                            Les estadístiques s'actualitzen cada dilluns.
+                          </p>
+                        </div>
+                        {/* CTA cap a la temporada més recent amb dades */}
+                        {newestSeasonWithData && newestSeasonWithData !== selectedSeason && (
+                          <button
+                            onClick={() => {
+                              setSelectedSeason(newestSeasonWithData);
+                              setSearchQuery('');
+                            }}
+                            className="inline-flex items-center gap-1.5 bg-accent text-white font-bold text-[13px] px-5 py-2.5 rounded-xl shadow-sm hover:brightness-95 active:scale-[.98] transition"
+                          >
+                            Veure la temporada {newestSeasonWithData}
+                            <span aria-hidden="true">→</span>
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <>
