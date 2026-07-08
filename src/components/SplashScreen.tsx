@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { fetchAllPaginated, supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
 interface Totals {
@@ -13,23 +13,6 @@ interface Totals {
   teams: number;
   goals: number;
   matches: number;
-}
-
-// Supabase/PostgREST limita a 1000 files per consulta: paginem amb range()
-// per recollir TOTES les files i que els totals siguin exactes.
-async function fetchAllRows<T>(table: string, columns: string): Promise<T[]> {
-  const pageSize = 1000;
-  const all: T[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from(table)
-      .select(columns)
-      .range(from, from + pageSize - 1);
-    if (error || !data || data.length === 0) break;
-    all.push(...(data as T[]));
-    if (data.length < pageSize) break;
-  }
-  return all;
 }
 
 // Comptador animat 0 → target (ease-out cubic)
@@ -98,8 +81,12 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
     let cancelled = false;
     (async () => {
       const [stats, actas] = await Promise.all([
-        fetchAllRows<{ goles: number | null; team_slug: string }>('fcf_stats', 'goles, team_slug'),
-        fetchAllRows<{ acta_url: string }>('actas_procesadas', 'acta_url'),
+        fetchAllPaginated<{ goles: number | null; team_slug: string }>((from, to) =>
+          supabase.from('fcf_stats').select('goles, team_slug').range(from, to)
+        ),
+        fetchAllPaginated<{ acta_url: string }>((from, to) =>
+          supabase.from('actas_procesadas').select('acta_url').range(from, to)
+        ),
       ]);
       if (cancelled) return;
       const goals = stats.reduce((sum, r) => sum + (r.goles ?? 0), 0);

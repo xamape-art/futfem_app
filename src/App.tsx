@@ -32,7 +32,7 @@ import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
 import TopTen from './components/TopTen';
 import Charts from './components/Charts';
-import { supabase } from './lib/supabase';
+import { fetchAllPaginated, supabase } from './lib/supabase';
 import { cn, fcfSeasonToApp } from './lib/utils';
 import type { ActaProcesada, FcfStat, League, TeamOption } from './types';
 
@@ -188,23 +188,28 @@ export default function App() {
     setActas([]);
     setSelectedTeam(null);
 
-    const [{ data: statsData }, { data: actasData }] = await Promise.all([
-      supabase
-        .from('fcf_stats')
-        .select('*')
-        .in('league_id', leagueIds)
-        .eq('season', season)
-        .order('team_name', { ascending: true }),
-      supabase
-        .from('actas_procesadas')
-        .select('*')
-        .in('league_id', leagueIds)
-        .eq('season', season)
-        .order('processed_at', { ascending: false }),
+    // Paginat: superem el límit de 1000 files de PostgREST perquè les lligues
+    // grans (p. ex. 1ª Div Femenina) carreguin TOTES les jugadores.
+    const [stats, acts] = await Promise.all([
+      fetchAllPaginated<FcfStat>((from, to) =>
+        supabase
+          .from('fcf_stats')
+          .select('*')
+          .in('league_id', leagueIds)
+          .eq('season', season)
+          .order('team_name', { ascending: true })
+          .range(from, to)
+      ),
+      fetchAllPaginated<ActaProcesada>((from, to) =>
+        supabase
+          .from('actas_procesadas')
+          .select('*')
+          .in('league_id', leagueIds)
+          .eq('season', season)
+          .order('processed_at', { ascending: false })
+          .range(from, to)
+      ),
     ]);
-
-    const stats = statsData || [];
-    const acts  = actasData  || [];
 
     const seen  = new Set<string>();
     const tList: TeamOption[] = [];
