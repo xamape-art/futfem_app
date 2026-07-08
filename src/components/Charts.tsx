@@ -32,7 +32,7 @@ const TEAM_COLORS = [
   '#1d4ed8','#b45309','#0e7490','#6d28d9','#374151',
 ];
 
-function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allStats: FcfStat[]; matchDuration: number; minutesReliable: boolean }) {
+function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; matchDuration: number }) {
   const teamColorMap = useMemo(() => {
     const teams = [...new Set(allStats.map(s => s.team_slug))].sort();
     const map: Record<string, string> = {};
@@ -42,35 +42,28 @@ function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allSt
 
   const data = useMemo(() =>
     allStats
-      .filter(s => (minutesReliable ? s.minutos >= matchDuration : s.partidos > 0) && s.goles > 0)
+      .filter(s => s.minutos >= matchDuration && s.goles > 0)
       .map(s => ({
-        x: minutesReliable ? s.minutos : s.partidos,
+        x: s.minutos,
         y: s.goles,
         name: formatPlayerName(s.player_fcf_name),
         team: s.team_name,
         partits: s.partidos,
-        minutos: s.minutos,
-        gx: s.minutos > 0 ? ((s.goles / s.minutos) * matchDuration).toFixed(2) : '—',
+        gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
         color: teamColorMap[s.team_slug] ?? '#1A3A5C',
         id: s.id,
       })),
-    [allStats, matchDuration, minutesReliable, teamColorMap]
+    [allStats, matchDuration, teamColorMap]
   );
 
-  // Línia de referència (només en mode fiable): G/matchDuration = 1.0
+  // Línia de referència G/matchDuration = 1.0
   const maxMin = Math.max(...data.map(d => d.x), 200);
   const refY = Math.round(maxMin / matchDuration);
-
-  const title = minutesReliable ? 'Minuts jugats vs Gols' : 'Partits jugats vs Gols';
-  const subtitle = minutesReliable
-    ? `Cada punt és una jugadora (≥${matchDuration} min) · La línia diagonal = 1 gol cada ${matchDuration} min`
-    : 'Cada punt és una jugadora · relació entre partits jugats i gols marcats';
-  const xLabel = minutesReliable ? 'Minuts jugats' : 'Partits jugats';
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-neutral-500 dark:text-neutral-400 text-sm">
-        {minutesReliable ? `Sense jugadores amb ≥${matchDuration} min i gols marcats` : 'Sense golejadores'}
+        Sense jugadores amb ≥{matchDuration} min i gols marcats
       </div>
     );
   }
@@ -79,9 +72,9 @@ function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allSt
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-[16px] font-bold text-[var(--app-text)]">{title}</h3>
+          <h3 className="text-[16px] font-bold text-[var(--app-text)]">Minuts jugats vs Gols</h3>
           <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
-            {subtitle}
+            Cada punt és una jugadora (≥{matchDuration} min) · La línia diagonal = 1 gol cada {matchDuration} min
           </p>
         </div>
         <span className="text-[12.5px] font-semibold text-neutral-500 dark:text-neutral-400 shrink-0">{data.length} jugadores</span>
@@ -91,8 +84,8 @@ function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allSt
           <XAxis
             type="number"
             dataKey="x"
-            name={xLabel}
-            label={{ value: xLabel, position: 'insideBottom', offset: -10, fontSize: 13, fill: '#6b7280' }}
+            name="Minuts"
+            label={{ value: 'Minuts jugats', position: 'insideBottom', offset: -10, fontSize: 13, fill: '#6b7280' }}
             tick={{ fontSize: 12.5, fill: '#6b7280' }}
             tickLine={false}
             axisLine={false}
@@ -106,15 +99,13 @@ function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allSt
             tickLine={false}
             axisLine={false}
           />
-          {/* Línia de referència G/90 = 1.0 (només amb minuts fiables) */}
-          {minutesReliable && (
-            <ReferenceLine
-              segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
-              stroke="#d1d5db"
-              strokeDasharray="4 3"
-              label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 12, fill: '#6b7280' }}
-            />
-          )}
+          {/* Línia de referència G/90 = 1.0 */}
+          <ReferenceLine
+            segment={[{ x: 0, y: 0 }, { x: maxMin, y: refY }]}
+            stroke="#d1d5db"
+            strokeDasharray="4 3"
+            label={{ value: `1 G/${matchDuration}`, position: 'insideTopRight', fontSize: 12, fill: '#6b7280' }}
+          />
           <Tooltip
             cursor={{ strokeDasharray: '3 3' }}
             content={({ payload }) => {
@@ -126,18 +117,10 @@ function ScatterMinutsGols({ allStats, matchDuration, minutesReliable }: { allSt
                   <p className="truncate max-w-[180px] font-semibold" style={{ color: d.color }}>{d.team}</p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{d.y} gols</span>
-                    {minutesReliable ? (
-                      <>
-                        <span className="text-blue-500 font-semibold">{d.minutos} min</span>
-                        <span className="text-orange-500 font-semibold">{d.gx} G/{matchDuration}</span>
-                      </>
-                    ) : (
-                      <span className="text-blue-500 font-semibold">{d.partits} partits</span>
-                    )}
+                    <span className="text-blue-500 font-semibold">{d.x} min</span>
+                    <span className="text-orange-500 font-semibold">{d.gx} G/{matchDuration}</span>
                   </div>
-                  {minutesReliable && (
-                    <p className="text-neutral-500 dark:text-neutral-400 mt-0.5">{d.partits} partits</p>
-                  )}
+                  <p className="text-neutral-500 dark:text-neutral-400 mt-0.5">{d.partits} partits</p>
                 </div>
               );
             }}
@@ -528,9 +511,12 @@ export default function Charts({ allStats, season, leagueName, matchDuration, mi
         {allStats.length} jugadores
       </p>
 
-      <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
-      </div>
+      {/* El scatter minuts/gols només té sentit amb minuts reals (Tercera Federació) */}
+      {minutesReliable && (
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+          <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
+        </div>
+      )}
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
         <RadarJugadora allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
