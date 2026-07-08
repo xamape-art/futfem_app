@@ -338,9 +338,11 @@ export default function App() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
-        className="sticky top-0 z-50 border-b border-[var(--card-border)]"
+        className="sticky top-0 z-50 border-b border-[var(--card-border)] relative"
         style={{ background: 'var(--header-bg)' }}
       >
+        {/* Accent de marca: fina línia taronja a la base de la capçalera */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent/70 to-transparent pointer-events-none" />
         <div className={cn('mx-auto px-4 h-20 flex items-center justify-between', maxWidthClass)}>
           {/* Logo + H1: context pill */}
           <div className="flex items-center gap-2.5 min-w-0">

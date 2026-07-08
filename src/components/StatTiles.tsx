@@ -23,7 +23,7 @@ function Tile({
   accent?: boolean;
 }) {
   return (
-    <div className="flex-1 min-w-0 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-3 text-center">
+    <div className="flex-1 min-w-0 bg-[var(--card-bg)] border border-[var(--card-border)] border-t-2 border-t-accent/60 rounded-xl px-3 py-3 text-center">
       <div
         className={
           accent

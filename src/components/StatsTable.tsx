@@ -75,10 +75,10 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
     if (sortKey !== col) {
       return <ChevronsUpDown size={13} className="inline ml-0.5 text-neutral-400 dark:text-neutral-500" />;
     }
-    // Columna activa: direcció d'ordenació en color de marca
+    // Columna activa: direcció d'ordenació en color d'accent (taronja)
     return sortDir === 'desc'
-      ? <ChevronDown size={13} className="inline ml-0.5 text-brand" strokeWidth={2.5} />
-      : <ChevronUp   size={13} className="inline ml-0.5 text-brand" strokeWidth={2.5} />;
+      ? <ChevronDown size={13} className="inline ml-0.5 text-accent" strokeWidth={2.5} />
+      : <ChevronUp   size={13} className="inline ml-0.5 text-accent" strokeWidth={2.5} />;
   };
 
   // D1 + D3: Th amb sticky opcional i title tooltip
@@ -149,7 +149,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
                     ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400'
                     : f.key === 'red'
                     ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-700 dark:text-red-400'
-                    : 'bg-brand/10 dark:bg-brand/20 border-brand/30 text-brand'
+                    : 'bg-accent/10 dark:bg-accent/20 border-accent/30 text-accent'
                   : 'bg-[var(--input-bg)] border-transparent text-neutral-400 hover:border-[var(--card-border)] hover:text-neutral-600 dark:hover:text-neutral-300'
               )}
             >
