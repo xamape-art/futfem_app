@@ -13,12 +13,12 @@ const supabase = createClient(
 
 const league = {
   name:           'Preferent Femení Infantil - Grup 1',
-  short_name:     'Pref. Inf. Gr.1',
+  short_name:     'Preferent Infantil Gr.1',
   group_path:     'futbol-femeni/preferent-femeni-infantil/grup-1',
   fcf_seasons:    ['2526', '2627'],
   active:         true,
   sort_order:     9,
-  match_duration: 70,  // Infantil F11: 2×35 min
+  match_duration: 68,  // Femení Infantil F7: 4×17 min = 68'
 };
 
 console.log('\n🔵 Inserint lliga a Supabase…');
