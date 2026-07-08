@@ -139,17 +139,19 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
 
 // ─── Radar: Perfil de jugadora ────────────────────────────────────────────────
 
-function normalize(value: number, min: number, max: number): number {
-  if (max === min) return 50;
-  return Math.round(((value - min) / (max - min)) * 100);
-}
-
-// Percentil p (0-100) d'un array per evitar que outliers distorsionin l'escala
-function percentile(arr: number[], p: number): number {
-  if (arr.length === 0) return 0;
-  const sorted = [...arr].sort((a, b) => a - b);
-  const idx = Math.floor((sorted.length - 1) * p / 100);
-  return sorted[idx];
+// Rang percentil (0-100): quin % de la lliga té un valor inferior a `value`.
+// Amb midrank per als empats. Monòton i sense saturació: 0.87 i 1.36 G/90
+// donen valors diferents segons la seva posició real dins la distribució.
+function percentileRank(allVals: number[], value: number): number {
+  const n = allVals.length;
+  if (n === 0) return 50;
+  let below = 0;
+  let equal = 0;
+  for (const v of allVals) {
+    if (v < value) below++;
+    else if (v === value) equal++;
+  }
+  return Math.round(((below + equal / 2) / n) * 100);
 }
 
 const RADAR_AXES = [
@@ -175,14 +177,9 @@ function buildRadarData(player: FcfStat, allStats: FcfStat[], matchDuration: num
 
   return RADAR_AXES.map(axis => {
     const allVals = vals[axis.key as keyof typeof vals];
-    const min = percentile(allVals, 5);   // ignora el 5% inferior
-    const max = percentile(allVals, 95);  // ignora el 5% superior (outliers)
-    const raw = Math.min(normalize(
-      playerVals[axis.key as keyof typeof playerVals],
-      min,
-      max
-    ), 100);
-    return { axis: axis.label, value: axis.invert ? 100 - raw : raw };
+    const rank = percentileRank(allVals, playerVals[axis.key as keyof typeof playerVals]);
+    // Disciplina s'inverteix: menys targetes = millor posició
+    return { axis: axis.label, value: axis.invert ? 100 - rank : rank };
   });
 }
 
@@ -365,7 +362,7 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
         <div>
           <h3 className="text-[16px] font-bold text-[var(--app-text)]">Perfil de jugadora</h3>
           <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
-            Valors normalitzats (0–100) respecte a tota la lliga
+            Percentil respecte a tota la lliga · 100 = millor que ningú
           </p>
         </div>
         <PlayerCombobox
@@ -424,7 +421,8 @@ function RadarJugadora({ allStats, matchDuration }: { allStats: FcfStat[]; match
               return (
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-2 shadow-lg text-[12px]">
                   <p className="font-bold text-[var(--app-text)]">{d.payload.axis}</p>
-                  <p className="text-brand font-semibold">{d.value} / 100</p>
+                  <p className="text-brand font-semibold">Percentil {d.value}</p>
+                  <p className="text-neutral-500 dark:text-neutral-400 text-[11px]">Millor que el {d.value}% de la lliga</p>
                 </div>
               );
             }}
