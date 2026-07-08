@@ -19,7 +19,7 @@
  *  P5  — Regió aria-live per a screen readers
  */
 
-import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Maximize2, Minimize2, MousePointerClick, Moon, Search, Sun, Trophy, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
@@ -869,9 +869,16 @@ function AllTeamsOverview({
           ))}
         </tbody>
       </table>
-      <p className="px-3 py-2.5 text-[10px] text-neutral-500 dark:text-neutral-400">
-        Clica una columna per ordenar · clica un equip per veure les jugadores.
-      </p>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-3 py-3 mt-1 border-t border-[var(--card-border)] text-[12.5px] font-semibold text-neutral-600 dark:text-neutral-300">
+        <span className="flex items-center gap-1.5">
+          <ChevronsUpDown size={15} className="text-accent" strokeWidth={2.5} />
+          Clica una columna per ordenar
+        </span>
+        <span className="flex items-center gap-1.5">
+          <MousePointerClick size={15} className="text-accent" strokeWidth={2.5} />
+          Clica un equip per veure les jugadores
+        </span>
+      </div>
     </div>
   );
 }

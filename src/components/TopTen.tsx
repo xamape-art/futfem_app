@@ -40,8 +40,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Golejadores',
     icon: Goal,
     color: 'text-emerald-600 dark:text-emerald-400',
-    iconColor: 'text-emerald-600',
-    bgColor: 'from-emerald-400 to-emerald-600',
+    iconColor: 'text-emerald-700',
+    bgColor: '#2F6A54', // verd bosc apagat
     emptyText: 'Cap gol marcat',
   };
 
@@ -51,8 +51,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: `G/${matchDuration} min`,
     icon: Zap,
     color: 'text-orange-500 dark:text-orange-400',
-    iconColor: 'text-orange-600',
-    bgColor: 'from-orange-400 to-orange-600',
+    iconColor: 'text-orange-700',
+    bgColor: '#B05A42', // terracota
     emptyText: `Cap jugadora amb ≥${matchDuration} min i gols marcats`,
     computedValue: (s) => Math.round((s.goles / s.minutos) * matchDuration * 100) / 100,
     formatValue: (v) => v.toFixed(2),
@@ -67,8 +67,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Més minuts/titular',
     icon: Clock,
     color: 'text-blue-600 dark:text-blue-400',
-    iconColor: 'text-blue-600',
-    bgColor: 'from-blue-400 to-blue-600',
+    iconColor: 'text-blue-700',
+    bgColor: '#3E5C7E', // blau pissarra
     emptyText: 'Sense minuts',
     secondaryKey: 'titular',
     secondaryLabel: 'tit.',
@@ -80,8 +80,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Gols per partit',
     icon: Target,
     color: 'text-orange-500 dark:text-orange-400',
-    iconColor: 'text-orange-600',
-    bgColor: 'from-orange-400 to-orange-600',
+    iconColor: 'text-orange-700',
+    bgColor: '#B05A42', // terracota
     emptyText: 'Cap gol marcat',
     computedValue: (s) => (s.partidos > 0 ? Math.round((s.goles / s.partidos) * 100) / 100 : 0),
     formatValue: (v) => v.toFixed(2),
@@ -96,8 +96,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Més titularitats',
     icon: Star,
     color: 'text-blue-600 dark:text-blue-400',
-    iconColor: 'text-blue-600',
-    bgColor: 'from-blue-400 to-blue-600',
+    iconColor: 'text-blue-700',
+    bgColor: '#3E5C7E', // blau pissarra
     emptyText: 'Sense titularitats',
     secondaryKey: 'suplente',
     secondaryLabel: 'supl.',
@@ -108,8 +108,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Més suplències',
     icon: ArrowRightLeft,
     color: 'text-amber-600 dark:text-amber-400',
-    iconColor: 'text-amber-600',
-    bgColor: 'from-amber-400 to-amber-600',
+    iconColor: 'text-amber-700',
+    bgColor: '#98703B', // ocre / bronze
     emptyText: 'Sense suplències',
   };
   const grogues: Category = {
@@ -117,8 +117,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Targetes grogues',
     icon: RectangleVertical,
     color: 'text-yellow-600 dark:text-yellow-400',
-    iconColor: 'text-yellow-500',
-    bgColor: 'from-yellow-400 to-yellow-600',
+    iconColor: 'text-yellow-600',
+    bgColor: '#AD8A24', // or apagat
     fillIcon: true,
     emptyText: 'Cap targeta groga',
   };
@@ -127,8 +127,8 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
     label: 'Targetes vermelles',
     icon: RectangleVertical,
     color: 'text-red-600 dark:text-red-400',
-    iconColor: 'text-red-600',
-    bgColor: 'from-red-400 to-red-600',
+    iconColor: 'text-red-700',
+    bgColor: '#A0464A', // bordeus apagat
     fillIcon: true,
     emptyText: 'Cap targeta vermella',
   };
@@ -234,8 +234,11 @@ function CategoryCard({
 
   return (
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-      {/* ── R2: Header amb icona en badge blanc + comptador ─── */}
-      <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2.5', category.bgColor)}>
+      {/* ── R2: Header sòlid apagat + icona en badge blanc + comptador ─── */}
+      <div
+        className="px-4 py-3 flex items-center gap-2.5"
+        style={{ background: category.bgColor }}
+      >
         <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white shadow-sm shrink-0">
           <Icon
             size={16}
@@ -244,12 +247,12 @@ function CategoryCard({
             fill={category.fillIcon ? 'currentColor' : 'none'}
           />
         </span>
-        <span className="flex-1 min-w-0 truncate text-white font-black text-xs uppercase tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.28)]">
+        <span className="flex-1 min-w-0 truncate text-white font-bold text-xs uppercase tracking-wide">
           {category.label}
         </span>
         {/* R2: badge amb el total de jugadores al rànquing */}
         {top20.length > 0 && (
-          <span className="shrink-0 ml-1 bg-black/25 text-white text-[10px] font-bold px-2 py-0.5 rounded-full [text-shadow:0_1px_1px_rgba(0,0,0,0.2)]">
+          <span className="shrink-0 ml-1 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             {top20.length}
           </span>
         )}
