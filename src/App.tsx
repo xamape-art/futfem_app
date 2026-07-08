@@ -25,6 +25,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
 import SeasonSelector from './components/SeasonSelector';
 import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
+import SplashScreen from './components/SplashScreen';
 import StatsTable from './components/StatsTable';
 import StatTiles from './components/StatTiles';
 import SyncStatusCard from './components/SyncStatusCard';
@@ -62,6 +63,9 @@ function useDarkMode() {
 
 export default function App() {
   const [dark, setDark] = useDarkMode();
+
+  // Splash d'intro (logo + totals globals) que es fon cap a l'app
+  const [showSplash, setShowSplash] = useState(true);
 
   // P4: Wide mode toggle
   const [wideMode, setWideMode] = useState(() => {
@@ -314,6 +318,9 @@ export default function App() {
       className="min-h-screen"
       style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}
     >
+      {/* Intro splash amb totals globals */}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
       {/* P5: Regió aria-live per a screen readers */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {loading
