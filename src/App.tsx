@@ -558,7 +558,7 @@ export default function App() {
 
             {/* N2: Toggle de vista com a segmented control */}
             {!loading && allStats.length > 0 && (
-              <div className="inline-flex items-center bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-xl p-1 gap-1 mb-6">
+              <div className="flex items-stretch bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-2xl p-1.5 gap-1.5 mb-6">
                 {(
                   [
                     { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
@@ -576,14 +576,14 @@ export default function App() {
                         setSearchQuery('');
                       }}
                       className={cn(
-                        'flex items-center gap-2 px-5 py-2.5 text-[13.5px] font-bold rounded-lg transition-all',
+                        'flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 sm:py-3 text-[13px] sm:text-[14px] font-bold rounded-xl transition-all',
                         active
-                          ? 'bg-[var(--card-bg)] text-brand dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10'
-                          : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)] hover:bg-white/60 dark:hover:bg-white/5'
+                          ? 'bg-brand text-white shadow-md'
+                          : 'text-neutral-500 dark:text-neutral-300 hover:text-[var(--app-text)] hover:bg-white/70 dark:hover:bg-white/5'
                       )}
                     >
-                      <TabIcon size={15} strokeWidth={2.5} />
-                      {tab.label}
+                      <TabIcon size={16} strokeWidth={2.5} className="shrink-0" />
+                      <span className="truncate">{tab.label}</span>
                     </button>
                   );
                 })}
