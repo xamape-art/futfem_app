@@ -97,7 +97,7 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
         right ? 'text-right' : 'text-left',
         sortKey === col
           ? 'text-[var(--app-text)]'
-          : 'text-neutral-400 dark:text-neutral-500',
+          : 'text-neutral-500 dark:text-neutral-400',
         // D1: sticky per a la primera columna
         sticky && 'sticky left-0 z-20 bg-[var(--card-bg)] table-sticky-col'
       )}

@@ -19,7 +19,7 @@
  *  P5  — Regió aria-live per a screen readers
  */
 
-import { Maximize2, Minimize2, Moon, Search, Sun, X } from 'lucide-react';
+import { BarChart3, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
@@ -381,14 +381,14 @@ export default function App() {
 
         {/* Cargando ligas */}
         {loadingLeagues && (
-          <div className="text-center py-20 text-neutral-400 text-sm animate-pulse">
+          <div className="text-center py-20 text-neutral-500 dark:text-neutral-400 text-sm animate-pulse">
             Carregant lligues…
           </div>
         )}
 
         {/* Sin ligas activas */}
         {!loadingLeagues && leagues.length === 0 && (
-          <div className="text-center py-20 text-neutral-400 text-sm">
+          <div className="text-center py-20 text-neutral-500 dark:text-neutral-400 text-sm">
             No hi ha lligues configurades. Executa el SQL d'inicialització a Supabase.
           </div>
         )}
@@ -442,27 +442,31 @@ export default function App() {
               <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-xl p-1 gap-1 mb-5 w-fit">
                 {(
                   [
-                    { id: 'stats',  label: 'Estadístiques' },
-                    { id: 'top10', label: '🏆 Top 20'      },
-                    { id: 'charts', label: '📊 Gràfiques'  },
+                    { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
+                    { id: 'top10', label: 'Top 20',        icon: Trophy     },
+                    { id: 'charts', label: 'Gràfiques',     icon: BarChart3  },
                   ] as const
-                ).map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setView(tab.id);
-                      setSearchQuery('');
-                    }}
-                    className={cn(
-                      'px-4 py-2 text-[12.5px] font-bold rounded-lg transition-colors',
-                      view === tab.id
-                        ? 'bg-[var(--card-bg)] text-[var(--app-text)] shadow-sm'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)]'
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                ).map(tab => {
+                  const TabIcon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setView(tab.id);
+                        setSearchQuery('');
+                      }}
+                      className={cn(
+                        'flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-bold rounded-lg transition-colors',
+                        view === tab.id
+                          ? 'bg-[var(--card-bg)] text-[var(--app-text)] shadow-sm'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-[var(--app-text)]'
+                      )}
+                    >
+                      <TabIcon size={14} strokeWidth={2.5} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -532,7 +536,7 @@ export default function App() {
                 {searchResults !== null && (
                   <div className="mb-4">
                     {searchResults.length === 0 ? (
-                      <div className="text-center py-10 text-neutral-400 text-sm">
+                      <div className="text-center py-10 text-neutral-500 dark:text-neutral-400 text-sm">
                         Sense resultats per a{' '}
                         <span className="font-bold">«{searchQuery}»</span>
                       </div>
@@ -553,7 +557,7 @@ export default function App() {
                               <span className="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400">
                                 {group.teamName}
                               </span>
-                              <span className="text-[11px] text-neutral-400">
+                              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                                 {group.players.length} jugadora
                                 {group.players.length !== 1 ? 's' : ''}
                               </span>
@@ -616,7 +620,7 @@ export default function App() {
                                 <span className="text-[12px] font-bold text-[var(--app-text)]">
                                   {teams.find(t => t.slug === selectedTeam)?.name ?? selectedTeam}
                                 </span>
-                                <span className="text-[11px] text-neutral-400">
+                                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                                   {teamStats.length} jugadores ·{' '}
                                   {actas.filter(
                                     a =>
@@ -664,10 +668,10 @@ export default function App() {
               alt="XMP Football Analysis"
               className="h-8 hidden dark:block"
             />
-            <p className="text-[10px] text-neutral-400">© {new Date().getFullYear()} XMP Football Analysis</p>
+            <p className="text-[10px] text-neutral-500 dark:text-neutral-400">© {new Date().getFullYear()} XMP Football Analysis</p>
           </div>
           <div className="text-center sm:text-right space-y-1">
-            <p className="text-[11px] text-neutral-400">
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
               Dades:{' '}
               <a
                 href="https://www.fcf.cat"
@@ -719,19 +723,19 @@ function AllTeamsOverview({
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className="border-b border-[var(--card-border)]">
-            <th className="px-3 py-2 text-left text-[11px] font-black uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-2 text-left text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Equip
             </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Jug.
             </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               G
             </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               TA
             </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-400">
+            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               TR
             </th>
             {/* A1: columna de chevron */}
@@ -792,7 +796,7 @@ function AllTeamsOverview({
           ))}
         </tbody>
       </table>
-      <p className="px-3 py-2.5 text-[10px] text-neutral-400">
+      <p className="px-3 py-2.5 text-[10px] text-neutral-500 dark:text-neutral-400">
         Clica sobre un equip per veure les jugadores.
       </p>
     </div>

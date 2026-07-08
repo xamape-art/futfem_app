@@ -33,7 +33,7 @@ function Tile({
       >
         {value.toLocaleString('ca-ES')}
       </div>
-      <div className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+      <div className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
         {label}
       </div>
     </div>

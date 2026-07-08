@@ -9,6 +9,7 @@
  *  L3 — Animació fade-up al grid
  */
 
+import { ArrowRightLeft, Clock, Goal, RectangleVertical, Zap, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat } from '../types';
@@ -18,7 +19,7 @@ import type { FcfStat } from '../types';
 interface Category {
   key: keyof FcfStat;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   emptyText: string;
@@ -36,7 +37,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'goles',
     label: 'Golejadores',
-    icon: '⚽',
+    icon: Goal,
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'from-emerald-500 to-emerald-700',
     emptyText: 'Cap gol marcat',
@@ -44,7 +45,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'goles',
     label: `G/${matchDuration} min`,
-    icon: '⚡',
+    icon: Zap,
     color: 'text-orange-500 dark:text-orange-400',
     bgColor: 'from-orange-500 to-orange-600',
     emptyText: `Cap jugadora amb ≥${matchDuration} min i gols marcats`,
@@ -59,7 +60,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'minutos',
     label: 'Més minuts/titular',
-    icon: '⏱️',
+    icon: Clock,
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'from-blue-500 to-blue-700',
     emptyText: 'Sense minuts',
@@ -69,7 +70,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'suplente',
     label: 'Més suplències',
-    icon: '🟡',
+    icon: ArrowRightLeft,
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'from-amber-500 to-amber-600',
     emptyText: 'Sense suplències',
@@ -77,7 +78,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'amarillas',
     label: 'Targetes grogues',
-    icon: '🟨',
+    icon: RectangleVertical,
     color: 'text-yellow-600 dark:text-yellow-400',
     bgColor: 'from-yellow-500 to-yellow-600',
     emptyText: 'Cap targeta groga',
@@ -85,7 +86,7 @@ function buildCategories(matchDuration: number): Category[] {
   {
     key: 'rojas',
     label: 'Targetes vermelles',
-    icon: '🟥',
+    icon: RectangleVertical,
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'from-red-500 to-red-700',
     emptyText: 'Cap targeta vermella',
@@ -93,17 +94,33 @@ function buildCategories(matchDuration: number): Category[] {
   ];
 }
 
-// ─── Medalles per al podi ─────────────────────────────────────────────────────
+// ─── Badge de posició metàl·lic (or / plata / bronze) ─────────────────────────
 
-const MEDALS = ['🥇', '🥈', '🥉'];
-
-// R1: Estil de la posició per rang
-const rankNumStyle = (rank: number) => {
-  if (rank === 1) return 'text-yellow-500 font-black text-base';
-  if (rank === 2) return 'text-gray-400 font-black text-sm';
-  if (rank === 3) return 'text-amber-600 font-black text-sm';
-  return 'text-neutral-400 font-bold text-xs';
+const PODIUM_STYLE: Record<number, string> = {
+  1: 'bg-gradient-to-br from-yellow-200 via-amber-400 to-yellow-600 text-amber-950 ring-white/50',
+  2: 'bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 text-slate-800 ring-white/50',
+  3: 'bg-gradient-to-br from-orange-200 via-amber-500 to-amber-800 text-white ring-white/40',
 };
+
+function RankBadge({ rank }: { rank: number }) {
+  if (rank > 3) {
+    return (
+      <div className="w-6 h-6 flex items-center justify-center rounded-full bg-neutral-100 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 text-[11px] font-bold shrink-0 tabular-nums">
+        {rank}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={cn(
+        'w-6 h-6 flex items-center justify-center rounded-full text-[11px] font-black shrink-0 tabular-nums shadow-sm ring-1 ring-inset',
+        PODIUM_STYLE[rank]
+      )}
+    >
+      {rank}
+    </div>
+  );
+}
 
 // R1: Padding i mida de text per rang
 const rankRowStyle = (rank: number) => {
@@ -132,7 +149,9 @@ const rankValueStyle = (rank: number) =>
     : 'text-sm font-black';
 
 const rankTeamStyle = (rank: number) =>
-  rank >= 11 ? 'text-[10px] text-neutral-400' : 'text-[11px] text-neutral-400';
+  rank >= 11
+    ? 'text-[10px] text-neutral-500 dark:text-neutral-400'
+    : 'text-[11px] text-neutral-500 dark:text-neutral-400';
 
 // ─── Card d'una categoria ─────────────────────────────────────────────────────
 
@@ -167,11 +186,15 @@ function CategoryCard({
   const visibleItems = showAll ? top20 : top20.slice(0, INITIAL_SHOW);
   const hiddenCount  = top20.length - INITIAL_SHOW;
 
+  const Icon = category.icon;
+
   return (
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-      {/* ── R2: Header amb badge de comptador ─────────────── */}
-      <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2', category.bgColor)}>
-        <span className="text-xl">{category.icon}</span>
+      {/* ── R2: Header amb icona en badge esmerilat + comptador ─── */}
+      <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2.5', category.bgColor)}>
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 ring-1 ring-inset ring-white/25 shadow-sm shrink-0">
+          <Icon size={16} strokeWidth={2.5} className="text-white" />
+        </span>
         <span className="text-white font-black text-xs uppercase tracking-wide whitespace-nowrap">
           {category.label}
         </span>
@@ -185,7 +208,7 @@ function CategoryCard({
 
       {/* ── Llista ────────────────────────────────────────── */}
       {top20.length === 0 ? (
-        <div className="px-4 py-6 text-center text-neutral-400 text-sm">
+        <div className="px-4 py-6 text-center text-neutral-500 dark:text-neutral-400 text-sm">
           {category.emptyText}
         </div>
       ) : (
@@ -210,10 +233,8 @@ function CategoryCard({
                     rank === 1 && 'bg-yellow-50/60 dark:bg-yellow-900/10'
                   )}
                 >
-                  {/* Posició / medalla */}
-                  <div className={cn('w-6 text-center shrink-0', rankNumStyle(rank))}>
-                    {rank <= 3 ? MEDALS[rank - 1] : rank}
-                  </div>
+                  {/* Posició / medalla metàl·lica */}
+                  <RankBadge rank={rank} />
 
                   {/* Nom + equip */}
                   <div className="flex-1 min-w-0">
@@ -240,12 +261,12 @@ function CategoryCard({
                       {category.formatValue ? category.formatValue(value) : value}
                     </div>
                     {category.valueLabel && (
-                      <div className="text-[10px] text-neutral-400 leading-tight">
+                      <div className="text-[10px] text-neutral-500 dark:text-neutral-400 leading-tight">
                         {category.valueLabel}
                       </div>
                     )}
                     {category.secondaryKey && (
-                      <div className="text-[10px] text-neutral-400 leading-tight">
+                      <div className="text-[10px] text-neutral-500 dark:text-neutral-400 leading-tight">
                         {player[category.secondaryKey] as number}{' '}
                         {category.secondaryLabel ?? ''}
                       </div>
@@ -298,7 +319,7 @@ export default function TopTen({ allStats, season, leagueName, matchDuration }: 
 
   return (
     <div>
-      <p className="text-[11px] text-neutral-400 mb-5">
+      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mb-5">
         Top 20 jugadores · {leagueName} · {season} ·{' '}
         {new Set(allStats.map(s => s.team_slug)).size} equips ·{' '}
         {allStats.length} jugadores
