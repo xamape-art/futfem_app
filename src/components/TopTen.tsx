@@ -9,7 +9,7 @@
  *  L3 — Animació fade-up al grid
  */
 
-import { ArrowRightLeft, Clock, Goal, RectangleVertical, Zap, type LucideIcon } from 'lucide-react';
+import { ArrowRightLeft, ChevronDown, ChevronUp, Clock, Goal, RectangleVertical, Zap, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat } from '../types';
@@ -23,6 +23,7 @@ interface Category {
   color: string;
   iconColor: string;   // color de la icona dins el badge blanc
   bgColor: string;
+  fillIcon?: boolean;  // icona plena (per a targetes grogues/vermelles)
   emptyText: string;
   secondaryKey?: keyof FcfStat;
   secondaryLabel?: string;
@@ -41,7 +42,7 @@ function buildCategories(matchDuration: number): Category[] {
     icon: Goal,
     color: 'text-emerald-600 dark:text-emerald-400',
     iconColor: 'text-emerald-600',
-    bgColor: 'from-emerald-600 to-emerald-800',
+    bgColor: 'from-emerald-400 to-emerald-600',
     emptyText: 'Cap gol marcat',
   },
   {
@@ -50,7 +51,7 @@ function buildCategories(matchDuration: number): Category[] {
     icon: Zap,
     color: 'text-orange-500 dark:text-orange-400',
     iconColor: 'text-orange-600',
-    bgColor: 'from-orange-600 to-orange-800',
+    bgColor: 'from-orange-400 to-orange-600',
     emptyText: `Cap jugadora amb ≥${matchDuration} min i gols marcats`,
     computedValue: (s) => Math.round((s.goles / s.minutos) * matchDuration * 100) / 100,
     formatValue: (v) => v.toFixed(2),
@@ -66,7 +67,7 @@ function buildCategories(matchDuration: number): Category[] {
     icon: Clock,
     color: 'text-blue-600 dark:text-blue-400',
     iconColor: 'text-blue-600',
-    bgColor: 'from-blue-600 to-blue-800',
+    bgColor: 'from-blue-400 to-blue-600',
     emptyText: 'Sense minuts',
     secondaryKey: 'titular',
     secondaryLabel: 'tit.',
@@ -77,7 +78,7 @@ function buildCategories(matchDuration: number): Category[] {
     icon: ArrowRightLeft,
     color: 'text-amber-600 dark:text-amber-400',
     iconColor: 'text-amber-600',
-    bgColor: 'from-amber-600 to-amber-800',
+    bgColor: 'from-amber-400 to-amber-600',
     emptyText: 'Sense suplències',
   },
   {
@@ -85,8 +86,9 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Targetes grogues',
     icon: RectangleVertical,
     color: 'text-yellow-600 dark:text-yellow-400',
-    iconColor: 'text-yellow-600',
-    bgColor: 'from-yellow-600 to-yellow-800',
+    iconColor: 'text-yellow-500',
+    bgColor: 'from-yellow-400 to-yellow-600',
+    fillIcon: true,
     emptyText: 'Cap targeta groga',
   },
   {
@@ -95,7 +97,8 @@ function buildCategories(matchDuration: number): Category[] {
     icon: RectangleVertical,
     color: 'text-red-600 dark:text-red-400',
     iconColor: 'text-red-600',
-    bgColor: 'from-red-600 to-red-800',
+    bgColor: 'from-red-400 to-red-600',
+    fillIcon: true,
     emptyText: 'Cap targeta vermella',
   },
   ];
@@ -197,17 +200,22 @@ function CategoryCard({
 
   return (
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
-      {/* ── R2: Header amb icona en badge esmerilat + comptador ─── */}
+      {/* ── R2: Header amb icona en badge blanc + comptador ─── */}
       <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2.5', category.bgColor)}>
         <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white shadow-sm shrink-0">
-          <Icon size={16} strokeWidth={2.5} className={category.iconColor} />
+          <Icon
+            size={16}
+            strokeWidth={2.5}
+            className={category.iconColor}
+            fill={category.fillIcon ? 'currentColor' : 'none'}
+          />
         </span>
-        <span className="text-white font-black text-xs uppercase tracking-wide whitespace-nowrap">
+        <span className="flex-1 min-w-0 truncate text-white font-black text-xs uppercase tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.28)]">
           {category.label}
         </span>
         {/* R2: badge amb el total de jugadores al rànquing */}
         {top20.length > 0 && (
-          <span className="ml-auto bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+          <span className="shrink-0 ml-1 bg-black/25 text-white text-[10px] font-bold px-2 py-0.5 rounded-full [text-shadow:0_1px_1px_rgba(0,0,0,0.2)]">
             {top20.length}
           </span>
         )}
@@ -284,19 +292,27 @@ function CategoryCard({
             );
           })}
 
-          {/* R3: Botó show more / show less */}
+          {/* R3: Botó show more / show less — CTA de peu destacada */}
           {top20.length > INITIAL_SHOW && (
             <button
               onClick={() => setShowAll(s => !s)}
-              className="w-full px-4 py-2 text-[11px] font-semibold text-accent border-t border-[var(--card-border)] hover:bg-neutral-50 dark:hover:bg-white/[0.03] transition-colors text-left"
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-3 text-[13px] font-bold text-accent bg-accent/[0.07] hover:bg-accent/[0.14] border-t border-[var(--card-border)] transition-colors"
             >
-              {showAll
-                ? '↑ Mostrar menys'
-                : `Veure els ${top20.length} →`}
-              {!showAll && hiddenCount > 0 && (
-                <span className="ml-1 text-[10px] font-normal text-neutral-400">
-                  (+{hiddenCount})
-                </span>
+              {showAll ? (
+                <>
+                  Mostrar menys
+                  <ChevronUp size={15} strokeWidth={2.5} />
+                </>
+              ) : (
+                <>
+                  Veure les {top20.length} jugadores
+                  <ChevronDown size={15} strokeWidth={2.5} />
+                  {hiddenCount > 0 && (
+                    <span className="ml-0.5 bg-accent/15 text-accent text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                      +{hiddenCount}
+                    </span>
+                  )}
+                </>
               )}
             </button>
           )}
