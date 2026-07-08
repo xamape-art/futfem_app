@@ -467,24 +467,24 @@ export default function App() {
       {/* ── Contenido principal ────────────────────────────────────────────── */}
       <main className={cn('mx-auto px-4 py-6', maxWidthClass)}>
 
-        {/* Línia d'introducció: què és l'app */}
-        <div className="text-center mb-6 max-w-[600px] mx-auto">
-          <p className="text-[15px] font-semibold text-neutral-700 dark:text-neutral-200">
+        {/* Línia d'introducció: què és l'app (una sola línia) */}
+        <p className="text-center text-[13px] leading-snug mt-3 mb-5 max-w-[780px] mx-auto">
+          <span className="text-[16.5px] font-bold text-neutral-700 dark:text-neutral-200">
             Estadístiques del futbol femení català
-          </p>
-          <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-1">
-            Dades oficials de la{' '}
-            <a
-              href="https://www.fcf.cat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent font-semibold hover:underline underline-offset-2"
-            >
-              FCF
-            </a>{' '}
-            · Actualitzades cada dilluns
-          </p>
-        </div>
+          </span>
+          <span className="text-neutral-400 dark:text-neutral-500"> · </span>
+          <span className="text-neutral-500 dark:text-neutral-400">dades oficials de la </span>
+          <a
+            href="https://www.fcf.cat"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent font-semibold hover:underline underline-offset-2"
+          >
+            FCF
+          </a>
+          <span className="text-neutral-400 dark:text-neutral-500"> · </span>
+          <span className="text-neutral-500 dark:text-neutral-400">actualitzades cada dilluns</span>
+        </p>
 
         {/* Cargando ligas */}
         {loadingLeagues && (
