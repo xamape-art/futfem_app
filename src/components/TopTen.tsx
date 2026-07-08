@@ -21,6 +21,7 @@ interface Category {
   label: string;
   icon: LucideIcon;
   color: string;
+  iconColor: string;   // color de la icona dins el badge blanc
   bgColor: string;
   emptyText: string;
   secondaryKey?: keyof FcfStat;
@@ -39,7 +40,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Golejadores',
     icon: Goal,
     color: 'text-emerald-600 dark:text-emerald-400',
-    bgColor: 'from-emerald-500 to-emerald-700',
+    iconColor: 'text-emerald-600',
+    bgColor: 'from-emerald-600 to-emerald-800',
     emptyText: 'Cap gol marcat',
   },
   {
@@ -47,7 +49,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: `G/${matchDuration} min`,
     icon: Zap,
     color: 'text-orange-500 dark:text-orange-400',
-    bgColor: 'from-orange-500 to-orange-600',
+    iconColor: 'text-orange-600',
+    bgColor: 'from-orange-600 to-orange-800',
     emptyText: `Cap jugadora amb ≥${matchDuration} min i gols marcats`,
     computedValue: (s) => Math.round((s.goles / s.minutos) * matchDuration * 100) / 100,
     formatValue: (v) => v.toFixed(2),
@@ -62,7 +65,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Més minuts/titular',
     icon: Clock,
     color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'from-blue-500 to-blue-700',
+    iconColor: 'text-blue-600',
+    bgColor: 'from-blue-600 to-blue-800',
     emptyText: 'Sense minuts',
     secondaryKey: 'titular',
     secondaryLabel: 'tit.',
@@ -72,7 +76,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Més suplències',
     icon: ArrowRightLeft,
     color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'from-amber-500 to-amber-600',
+    iconColor: 'text-amber-600',
+    bgColor: 'from-amber-600 to-amber-800',
     emptyText: 'Sense suplències',
   },
   {
@@ -80,7 +85,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Targetes grogues',
     icon: RectangleVertical,
     color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'from-yellow-500 to-yellow-600',
+    iconColor: 'text-yellow-600',
+    bgColor: 'from-yellow-600 to-yellow-800',
     emptyText: 'Cap targeta groga',
   },
   {
@@ -88,7 +94,8 @@ function buildCategories(matchDuration: number): Category[] {
     label: 'Targetes vermelles',
     icon: RectangleVertical,
     color: 'text-red-600 dark:text-red-400',
-    bgColor: 'from-red-500 to-red-700',
+    iconColor: 'text-red-600',
+    bgColor: 'from-red-600 to-red-800',
     emptyText: 'Cap targeta vermella',
   },
   ];
@@ -192,8 +199,8 @@ function CategoryCard({
     <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden shadow-sm">
       {/* ── R2: Header amb icona en badge esmerilat + comptador ─── */}
       <div className={cn('bg-gradient-to-r px-4 py-3 flex items-center gap-2.5', category.bgColor)}>
-        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 ring-1 ring-inset ring-white/25 shadow-sm shrink-0">
-          <Icon size={16} strokeWidth={2.5} className="text-white" />
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white shadow-sm shrink-0">
+          <Icon size={16} strokeWidth={2.5} className={category.iconColor} />
         </span>
         <span className="text-white font-black text-xs uppercase tracking-wide whitespace-nowrap">
           {category.label}
