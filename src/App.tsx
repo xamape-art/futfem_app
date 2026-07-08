@@ -19,7 +19,7 @@
  *  P5  — Regió aria-live per a screen readers
  */
 
-import { BarChart3, Info, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Maximize2, Minimize2, Moon, Search, Sun, Trophy, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
@@ -745,6 +745,19 @@ function AllTeamsOverview({
   teams: TeamOption[];
   onSelect: (slug: string) => void;
 }) {
+  type TeamSortKey = 'name' | 'players' | 'goles' | 'amarillas' | 'rojas';
+  const [sortKey, setSortKey] = useState<TeamSortKey>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (key: TeamSortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'name' ? 'asc' : 'desc');
+    }
+  };
+
   const teamSummary = teams
     .map(t => {
       const ts = stats.filter(s => s.team_slug === t.slug);
@@ -758,28 +771,46 @@ function AllTeamsOverview({
         rojas: ts.reduce((sum, s) => sum + s.rojas, 0),
       };
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      if (sortKey === 'name') {
+        return sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      }
+      const va = a[sortKey];
+      const vb = b[sortKey];
+      return sortDir === 'asc' ? va - vb : vb - va;
+    });
+
+  // Capçalera ordenable amb glif ⇅ / direcció
+  const ThSort = ({ col, label, left = false }: { col: TeamSortKey; label: string; left?: boolean }) => (
+    <th
+      onClick={() => handleSort(col)}
+      className={cn(
+        'px-3 py-2 text-[11px] font-black uppercase tracking-wider cursor-pointer select-none transition-colors hover:text-[var(--app-text)]',
+        left ? 'text-left' : 'text-right',
+        sortKey === col ? 'text-[var(--app-text)]' : 'text-neutral-500 dark:text-neutral-400'
+      )}
+    >
+      {label}
+      {sortKey === col ? (
+        sortDir === 'desc'
+          ? <ChevronDown size={13} className="inline ml-0.5 text-accent" strokeWidth={2.5} />
+          : <ChevronUp size={13} className="inline ml-0.5 text-accent" strokeWidth={2.5} />
+      ) : (
+        <ChevronsUpDown size={13} className="inline ml-0.5 text-neutral-400 dark:text-neutral-500" />
+      )}
+    </th>
+  );
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className="border-b border-[var(--card-border)]">
-            <th className="px-3 py-2 text-left text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              Equip
-            </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              Jug.
-            </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              G
-            </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              TA
-            </th>
-            <th className="px-3 py-2 text-right text-[11px] font-black uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              TR
-            </th>
+            <ThSort col="name" label="Equip" left />
+            <ThSort col="players" label="Jug." />
+            <ThSort col="goles" label="G" />
+            <ThSort col="amarillas" label="TA" />
+            <ThSort col="rojas" label="TR" />
             {/* A1: columna de chevron */}
             <th className="px-2 py-2 w-6" />
           </tr>
@@ -839,7 +870,7 @@ function AllTeamsOverview({
         </tbody>
       </table>
       <p className="px-3 py-2.5 text-[10px] text-neutral-500 dark:text-neutral-400">
-        Clica sobre un equip per veure les jugadores.
+        Clica una columna per ordenar · clica un equip per veure les jugadores.
       </p>
     </div>
   );
