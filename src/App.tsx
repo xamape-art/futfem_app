@@ -66,6 +66,14 @@ export default function App() {
 
   // Splash d'intro (logo + totals globals) que es fon cap a l'app
   const [showSplash, setShowSplash] = useState(true);
+  // Panell "Sobre FemStats"
+  const [showAbout, setShowAbout] = useState(false);
+  useEffect(() => {
+    if (!showAbout) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowAbout(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showAbout]);
 
   // P4: Wide mode toggle
   const [wideMode, setWideMode] = useState(() => {
@@ -339,6 +347,48 @@ export default function App() {
       {/* Intro splash amb totals globals */}
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
 
+      {/* Panell "Sobre FemStats" */}
+      {showAbout && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowAbout(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Sobre FemStats"
+        >
+          <div
+            className="w-full max-w-md bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-2xl p-6 relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowAbout(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-lg text-neutral-400 hover:text-[var(--app-text)] hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors"
+              aria-label="Tancar"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10 text-accent shrink-0">
+                <Info size={18} />
+              </span>
+              <h2 className="text-[17px] font-bold text-[var(--app-text)]">Sobre FemStats</h2>
+            </div>
+
+            <p className="text-[13.5px] text-neutral-600 dark:text-neutral-300 leading-relaxed mb-3">
+              FemStats recull i mostra les estadístiques de les competicions de futbol
+              femení de la <b>Federació Catalana de Futbol (FCF)</b>: partits, gols,
+              targetes, titularitats i minuts. Les dades s'actualitzen automàticament
+              cada setmana a partir de les actes oficials.
+            </p>
+            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              Nota: els minuts jugats només estan disponibles a les categories on la FCF
+              publica el detall dels canvis.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* P5: Regió aria-live per a screen readers */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {loading
@@ -380,6 +430,17 @@ export default function App() {
 
           {/* Controls de la dreta */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Botó "Sobre FemStats" */}
+            <button
+              onClick={() => setShowAbout(true)}
+              className="flex items-center gap-1.5 bg-accent/10 text-accent font-bold text-[12px] px-2.5 py-1.5 rounded-lg hover:bg-accent/20 transition-colors"
+              aria-label="Sobre FemStats"
+              title="Sobre FemStats"
+            >
+              <Info size={16} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Info</span>
+            </button>
+
             {/* P4: Wide mode toggle (visible només a lg+) */}
             <button
               onClick={() => setWideMode(w => !w)}
@@ -405,6 +466,25 @@ export default function App() {
 
       {/* ── Contenido principal ────────────────────────────────────────────── */}
       <main className={cn('mx-auto px-4 py-6', maxWidthClass)}>
+
+        {/* Línia d'introducció: què és l'app */}
+        <div className="text-center mb-6 max-w-[600px] mx-auto">
+          <p className="text-[15px] font-semibold text-neutral-700 dark:text-neutral-200">
+            Estadístiques del futbol femení català
+          </p>
+          <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-1">
+            Dades oficials de la{' '}
+            <a
+              href="https://www.fcf.cat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent font-semibold hover:underline underline-offset-2"
+            >
+              FCF
+            </a>{' '}
+            · Actualitzades cada dilluns
+          </p>
+        </div>
 
         {/* Cargando ligas */}
         {loadingLeagues && (
