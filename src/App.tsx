@@ -779,18 +779,18 @@ export default function App() {
       {/* P3: Footer enriquit ────────────────────────────────────────────────── */}
       <footer className="mt-12 border-t border-[var(--card-border)] py-8">
         <div className={cn('mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6', maxWidthClass)}>
-          <div className="flex flex-col items-center sm:items-start gap-1.5">
+          <div className="flex items-center gap-3">
             <img
               src="/xmp-logo-light.svg"
               alt="XMP Football Analysis"
-              className="h-8 dark:hidden"
+              className="h-11 dark:hidden"
             />
             <img
               src="/xmp-logo-dark.png"
               alt="XMP Football Analysis"
-              className="h-8 hidden dark:block"
+              className="h-11 hidden dark:block"
             />
-            <p className="text-[10px] text-neutral-500 dark:text-neutral-400">© {new Date().getFullYear()} XMP Football Analysis</p>
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">© {new Date().getFullYear()} XMP Football Analysis</p>
           </div>
           <div className="text-center sm:text-right space-y-1">
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
