@@ -11,7 +11,7 @@
  *  L3 — Animació fade-up a l'arribada de dades (tbody)
  */
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat, SortKey } from '../types';
@@ -71,10 +71,14 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
   });
 
   const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return null;
+    // Columna inactiva: glif ⇅ atenuat per indicar que és ordenable
+    if (sortKey !== col) {
+      return <ChevronsUpDown size={11} className="inline ml-0.5 opacity-30" />;
+    }
+    // Columna activa: direcció d'ordenació en color de marca
     return sortDir === 'desc'
-      ? <ChevronDown size={10} className="inline ml-0.5" />
-      : <ChevronUp   size={10} className="inline ml-0.5" />;
+      ? <ChevronDown size={11} className="inline ml-0.5 text-brand" />
+      : <ChevronUp   size={11} className="inline ml-0.5 text-brand" />;
   };
 
   // D1 + D3: Th amb sticky opcional i title tooltip
@@ -121,9 +125,10 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
 
   return (
     <div>
-      {/* ── D4: Chips de filtre ràpid ──────────────────────── */}
+      {/* ── D4: Chips de filtre ràpid + pista d'ordenació ──── */}
       {showFilters && (
-        <div className="flex gap-1.5 px-3 pt-2.5 pb-1 flex-wrap">
+        <div className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-1">
+        <div className="flex gap-1.5 flex-wrap">
           {(
             [
               { key: 'all',     label: 'Totes' },
@@ -151,6 +156,11 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
               {f.label}
             </button>
           ))}
+        </div>
+        {/* Pista: les columnes es poden ordenar */}
+        <span className="hidden sm:flex items-center gap-1 text-[10px] font-medium text-neutral-400 dark:text-neutral-500 shrink-0">
+          <ChevronsUpDown size={11} /> Ordena per columna
+        </span>
         </div>
       )}
 
