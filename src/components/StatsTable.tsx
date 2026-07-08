@@ -71,14 +71,14 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
   });
 
   const SortIcon = ({ col }: { col: SortKey }) => {
-    // Columna inactiva: glif ⇅ atenuat per indicar que és ordenable
+    // Columna inactiva: glif ⇅ clarament visible → indica que és ordenable
     if (sortKey !== col) {
-      return <ChevronsUpDown size={11} className="inline ml-0.5 opacity-30" />;
+      return <ChevronsUpDown size={13} className="inline ml-0.5 text-neutral-400 dark:text-neutral-500" />;
     }
     // Columna activa: direcció d'ordenació en color de marca
     return sortDir === 'desc'
-      ? <ChevronDown size={11} className="inline ml-0.5 text-brand" />
-      : <ChevronUp   size={11} className="inline ml-0.5 text-brand" />;
+      ? <ChevronDown size={13} className="inline ml-0.5 text-brand" strokeWidth={2.5} />
+      : <ChevronUp   size={13} className="inline ml-0.5 text-brand" strokeWidth={2.5} />;
   };
 
   // D1 + D3: Th amb sticky opcional i title tooltip
@@ -158,8 +158,8 @@ export default function StatsTable({ data }: { data: FcfStat[] }) {
           ))}
         </div>
         {/* Pista: les columnes es poden ordenar */}
-        <span className="hidden sm:flex items-center gap-1 text-[10px] font-medium text-neutral-400 dark:text-neutral-500 shrink-0">
-          <ChevronsUpDown size={11} /> Ordena per columna
+        <span className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 shrink-0">
+          <ChevronsUpDown size={13} className="text-accent" strokeWidth={2.5} /> Ordena per columna
         </span>
         </div>
       )}

@@ -76,7 +76,7 @@ export default function TeamSelector({ teams, selected, onChange }: TeamSelector
         {sorted.length > MAX_VISIBLE && (
           <button
             onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold rounded-full border border-dashed border-[var(--card-border)] text-accent hover:bg-accent/[0.08] transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold rounded-full border border-accent/40 bg-accent/[0.08] text-accent hover:bg-accent/[0.16] transition-colors"
           >
             {expanded ? (
               <>
