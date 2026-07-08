@@ -558,7 +558,16 @@ export default function App() {
 
             {/* N2: Toggle de vista com a segmented control */}
             {!loading && allStats.length > 0 && (
-              <div className="flex items-stretch bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-2xl p-1.5 gap-1.5 mb-6">
+              <div className="relative flex items-stretch bg-neutral-100 dark:bg-neutral-800/60 border border-[var(--card-border)] rounded-2xl p-1.5 mb-6 shadow-[0_10px_30px_rgba(16,32,60,0.18)]">
+                {/* Indicador lliscant (pestanya activa) */}
+                <div
+                  aria-hidden="true"
+                  className="absolute top-1.5 bottom-1.5 left-1.5 rounded-xl bg-brand shadow-md transition-transform duration-300 ease-out"
+                  style={{
+                    width: 'calc((100% - 12px) / 3)',
+                    transform: `translateX(calc(${view === 'stats' ? 0 : view === 'top10' ? 1 : 2} * 100%))`,
+                  }}
+                />
                 {(
                   [
                     { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
@@ -576,10 +585,10 @@ export default function App() {
                         setSearchQuery('');
                       }}
                       className={cn(
-                        'flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 sm:py-3 text-[13px] sm:text-[14px] font-bold rounded-xl transition-all',
+                        'relative z-10 flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 sm:py-3 text-[13px] sm:text-[14px] font-bold transition-colors',
                         active
-                          ? 'bg-brand text-white shadow-md'
-                          : 'text-neutral-500 dark:text-neutral-300 hover:text-[var(--app-text)] hover:bg-white/70 dark:hover:bg-white/5'
+                          ? 'text-white'
+                          : 'text-neutral-500 dark:text-neutral-300 hover:text-[var(--app-text)]'
                       )}
                     >
                       <TabIcon size={16} strokeWidth={2.5} className="shrink-0" />
