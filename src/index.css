@@ -74,3 +74,15 @@
 .animate-fade-up {
   animation: fade-up 0.25s ease-out both;
 }
+
+/* ── Pista pulsant per al selector de grups ──────────────────────────── */
+@keyframes pulse-hint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 125, 46, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(214, 125, 46, 0.40); }
+}
+.animate-pulse-hint {
+  animation: pulse-hint 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-hint { animation: none; }
+}
