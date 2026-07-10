@@ -50,7 +50,7 @@ function ScatterMinutsGols({ allStats, matchDuration }: { allStats: FcfStat[]; m
         team: s.team_name,
         partits: s.partidos,
         gx: ((s.goles / s.minutos) * matchDuration).toFixed(2),
-        color: teamColorMap[s.team_slug] ?? '#1A3A5C',
+        color: teamColorMap[s.team_slug] ?? '#224E77',
         id: s.id,
       })),
     [allStats, matchDuration, teamColorMap]

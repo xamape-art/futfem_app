@@ -795,7 +795,7 @@ export default function App() {
               className="h-11 dark:hidden"
             />
             <img
-              src="/xmp-logo-dark.png"
+              src="/xmp-logo-dark.svg"
               alt="XMP Football Analysis"
               className="h-11 hidden dark:block"
             />

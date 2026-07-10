@@ -7,10 +7,10 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Color de marca XMP — azul profundo (primario) */
-  --color-brand:       #1A3A5C;
-  --color-brand-dark:  #15314D;   /* hover del primario */
-  --color-brand-light: #E8EEF4;   /* tinte claro del primario */
+  /* Color de marca FemStats — azul profundo (primario) */
+  --color-brand:       #224E77;
+  --color-brand-dark:  #1B3E60;   /* hover del primario */
+  --color-brand-light: #E9EEF4;   /* tinte claro del primario */
   /* Acento — naranja terracota (enlaces, "FICHA →", micro-acentos) */
   --color-accent:      #D67D2E;
 }
@@ -38,7 +38,7 @@
     /* P1: shadow més intensa en dark mode */
     --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
     /* Primari més clar perquè conservi contrast sobre fons fosc */
-    --color-brand: #4A7BA8;
+    --color-brand: #5286B5;
   }
 
   body {
@@ -51,8 +51,8 @@
 /* ── Scrollbar global ────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1A3A5C; border-radius: 10px; }
-.dark ::-webkit-scrollbar-thumb { background: #4A7BA8; }
+::-webkit-scrollbar-thumb { background: #224E77; border-radius: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: #5286B5; }
 
 /* ── N1: Scrollbar ocult (tabs horitzontals) ─────────────────────────── */
 .scrollbar-none { scrollbar-width: none; }
