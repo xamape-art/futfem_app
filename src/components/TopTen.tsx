@@ -64,7 +64,7 @@ function buildCategories(matchDuration: number, minutesReliable: boolean): Categ
   };
   const mesMinuts: Category = {
     key: 'minutos',
-    label: 'Més minuts/titular',
+    label: 'Més minuts',
     icon: Clock,
     color: 'text-blue-600 dark:text-blue-400',
     iconColor: 'text-blue-700',
