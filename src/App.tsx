@@ -19,7 +19,7 @@
  *  P5  — Regió aria-live per a screen readers
  */
 
-import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Maximize2, Minimize2, MousePointerClick, Moon, Search, Sun, Trophy, X } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, ListOrdered, Maximize2, Minimize2, MousePointerClick, Moon, Search, Sun, Trophy, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
@@ -32,9 +32,10 @@ import SyncStatusCard from './components/SyncStatusCard';
 import TeamSelector from './components/TeamSelector';
 import TopTen from './components/TopTen';
 import Charts from './components/Charts';
+import Classificacio from './components/Classificacio';
 import { fetchAllPaginated, supabase } from './lib/supabase';
 import { cn, fcfSeasonToApp } from './lib/utils';
-import type { ActaProcesada, FcfStat, League, TeamOption } from './types';
+import type { ActaProcesada, ClassificacioRow, FcfStat, League, TeamOption } from './types';
 
 // ─── Dark mode helper ─────────────────────────────────────────────────────────
 
@@ -99,13 +100,14 @@ export default function App() {
   // ── Datos ───────────────────────────────────────────────────────────────────
   const [allStats, setAllStats]         = useState<FcfStat[]>([]);
   const [actas, setActas]               = useState<ActaProcesada[]>([]);
+  const [classificacio, setClassificacio] = useState<ClassificacioRow[]>([]);
   const [teams, setTeams]               = useState<TeamOption[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [teamStats, setTeamStats]       = useState<FcfStat[]>([]);
   const [loading, setLoading]           = useState(false);
 
   // ── Vista activa ────────────────────────────────────────────────────────────
-  const [view, setView] = useState<'stats' | 'top10' | 'charts'>('stats');
+  const [view, setView] = useState<'classificacio' | 'stats' | 'top10' | 'charts'>('stats');
 
   // ── Búsqueda global ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -194,11 +196,12 @@ export default function App() {
     setTeams([]);
     setTeamStats([]);
     setActas([]);
+    setClassificacio([]);
     setSelectedTeam(null);
 
     // Paginat: superem el límit de 1000 files de PostgREST perquè les lligues
     // grans (p. ex. 1ª Div Femenina) carreguin TOTES les jugadores.
-    const [stats, acts] = await Promise.all([
+    const [stats, acts, classif] = await Promise.all([
       fetchAllPaginated<FcfStat>((from, to) =>
         supabase
           .from('fcf_stats')
@@ -217,6 +220,15 @@ export default function App() {
           .order('processed_at', { ascending: false })
           .range(from, to)
       ),
+      fetchAllPaginated<ClassificacioRow>((from, to) =>
+        supabase
+          .from('fcf_classificacio')
+          .select('*')
+          .in('league_id', leagueIds)
+          .eq('season', season)
+          .order('posicio', { ascending: true })
+          .range(from, to)
+      ),
     ]);
 
     const seen  = new Set<string>();
@@ -231,6 +243,7 @@ export default function App() {
     setAllStats(stats);
     setTeams(tList);
     setActas(acts);
+    setClassificacio(classif);
     setLoading(false);
   }
 
@@ -564,12 +577,13 @@ export default function App() {
                   aria-hidden="true"
                   className="absolute top-1.5 bottom-1.5 left-1.5 rounded-xl bg-brand shadow-md transition-transform duration-300 ease-out"
                   style={{
-                    width: 'calc((100% - 12px) / 3)',
-                    transform: `translateX(calc(${view === 'stats' ? 0 : view === 'top10' ? 1 : 2} * 100%))`,
+                    width: 'calc((100% - 12px) / 4)',
+                    transform: `translateX(calc(${view === 'classificacio' ? 0 : view === 'stats' ? 1 : view === 'top10' ? 2 : 3} * 100%))`,
                   }}
                 />
                 {(
                   [
+                    { id: 'classificacio', label: 'Classificació', icon: ListOrdered },
                     { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
                     { id: 'top10', label: 'Top 20',        icon: Trophy     },
                     { id: 'charts', label: 'Gràfiques',     icon: BarChart3  },
@@ -646,6 +660,16 @@ export default function App() {
                 leagueName={displayLeague.name}
                 matchDuration={matchDuration}
                 minutesReliable={minutesReliable}
+              />
+            )}
+
+            {/* Vista Classificació */}
+            {!loading && view === 'classificacio' && displayLeague && (
+              <Classificacio
+                rows={classificacio}
+                leagues={leagues}
+                season={selectedSeason}
+                leagueName={displayLeague.name}
               />
             )}
 

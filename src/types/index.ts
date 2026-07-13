@@ -32,6 +32,23 @@ export interface FcfStat {
   updated_at: string;
 }
 
+export interface ClassificacioRow {
+  id: string;
+  league_id: string;
+  season: string;           // '25-26' | '26-27'
+  team_slug: string;
+  team_name: string;        // 'BARCELONA, F.C. C'
+  posicio: number;
+  pj: number;
+  guanyats: number;
+  empatats: number;
+  perduts: number;
+  gf: number;
+  gc: number;
+  punts: number;
+  updated_at: string;
+}
+
 export interface ActaProcesada {
   id: string;
   league_id: string;

@@ -77,6 +77,15 @@ jobs:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
+      - name: Run classification sync
+        run: |
+          node scripts/sync-classificacio.js \
+            --league "${{ matrix.league }}" \
+            --season "${{ matrix.season }}"
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Step summary
         if: always()
         run: |
@@ -114,6 +123,15 @@ jobs:
           if [ "${{ inputs.dry_run }}" = "true" ]; then FLAGS="$FLAGS --dry-run"; fi
           echo "▶ node scripts/sync-actas.js $FLAGS"
           node scripts/sync-actas.js $FLAGS
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Run classification sync
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          echo "▶ node scripts/sync-classificacio.js --league ${{ inputs.league }} --season ${{ inputs.season }}"
+          node scripts/sync-classificacio.js --league "${{ inputs.league }}" --season "${{ inputs.season }}"
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
