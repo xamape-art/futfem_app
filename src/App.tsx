@@ -107,7 +107,7 @@ export default function App() {
   const [loading, setLoading]           = useState(false);
 
   // ── Vista activa ────────────────────────────────────────────────────────────
-  const [view, setView] = useState<'classificacio' | 'stats' | 'top10' | 'charts'>('stats');
+  const [view, setView] = useState<'classificacio' | 'stats' | 'top10' | 'charts'>('classificacio');
 
   // ── Búsqueda global ─────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,7 +191,7 @@ export default function App() {
 
   async function loadData(leagueIds: string[], season: string) {
     setLoading(true);
-    setView('stats');
+    setView('classificacio');
     setAllStats([]);
     setTeams([]);
     setTeamStats([]);
