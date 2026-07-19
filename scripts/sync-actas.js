@@ -244,16 +244,18 @@ async function parseActa(url, matchDuration = 90) {
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  // Extraer slugs de la URL — el separador varía por división FCF:
-  //   Tercera Federació  → /fn/local/fn/visitant
-  //   Preferent          → /pf/local/pf/visitant
-  //   Primera Divisió    → /1f/local/1f/visitant
-  // Detectamos el separador buscando el patrón /XX/slug/XX/ en la URL.
-  const sepMatch = url.match(/\/([a-z0-9]+)\/[^/]+\/\1\//);
-  const sep      = sepMatch ? `/${sepMatch[1]}/` : '/fn/';
-  const slugParts    = url.split(sep);
-  const localSlug    = slugParts[1] || '';
-  const visitantSlug = slugParts[2] || '';
+  // Extraer slugs de la URL. Estructura FCF:
+  //   …/acta/{season}/{groupPath}/{codeLocal}/{slugLocal}/{codeVisitant}/{slugVisitant}
+  // El código previo a cada slug (fn, pf, 1f, 1ia, 2ia, pfi…) indica la divisió
+  // pròpia de CADA equip, i pot DIFERIR entre local i visitant (freqüent a base:
+  // infantil/cadet/juvenil, on s'hi barregen equips de diferents divisions). Per
+  // això no assumim un separador comú: agafem els 4 últims segments de la URL.
+  const segs         = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
+  const n            = segs.length;
+  const localCode    = segs[n - 4] || '';
+  const localSlug    = segs[n - 3] || '';
+  const visitantCode = segs[n - 2] || '';
+  const visitantSlug = segs[n - 1] || '';
 
   // Nombres de equipo
   let localName    = localSlug;
@@ -262,8 +264,8 @@ async function parseActa(url, matchDuration = 90) {
     const href = $(el).attr('href') || '';
     const span = $(el).find('span').text().trim();
     if (!span) return;
-    if (href.endsWith(`${sep}${localSlug}`))    localName    = span;
-    if (href.endsWith(`${sep}${visitantSlug}`)) visitantName = span;
+    if (href.endsWith(`/${localCode}/${localSlug}`))       localName    = span;
+    if (href.endsWith(`/${visitantCode}/${visitantSlug}`)) visitantName = span;
   });
 
   const jornadaMatch = html.match(/jornada-(\d+)/);

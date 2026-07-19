@@ -12,12 +12,12 @@ const supabase = createClient(
 );
 
 const league = {
-  name:           'Preferent Femení Infantil - Grup 1',
-  short_name:     'Preferent Infantil Gr.1',
-  group_path:     'futbol-femeni/preferent-femeni-infantil/grup-1',
+  name:           'Primera Divisió Femení Infantil - Grup 3',
+  short_name:     '1ª Div Infantil Gr.3',
+  group_path:     'futbol-femeni/primera-divisio-femeni-infantil/grup-3',
   fcf_seasons:    ['2526', '2627'],
   active:         true,
-  sort_order:     9,
+  sort_order:     13,
   match_duration: 68,  // Femení Infantil F7: 4×17 min = 68'
 };
 
