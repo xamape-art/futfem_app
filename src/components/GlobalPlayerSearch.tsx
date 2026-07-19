@@ -21,6 +21,28 @@ const DEBOUNCE_MS = 250;
 const FETCH_LIMIT = 80;   // marge per ordenar al client
 const SHOW_LIMIT  = 30;   // resultats visibles
 
+// Classes de caràcter per fer la cerca insensible als accents: escrivint "nuria"
+// també troba "NÚRIA", "perez" → "PÉREZ", etc.
+const ACCENT_CLASS: Record<string, string> = {
+  a: '[aàáâä]', e: '[eèéêë]', i: '[iìíîï]', o: '[oòóôö]', u: '[uùúûü]', c: '[cç]', n: '[nñ]',
+};
+
+// Converteix una paraula en un patró regex POSIX (per a l'operador ~* / imatge)
+// tolerant a accents. Es descarten els caràcters no alfabètics.
+function tokenRegex(t: string): string {
+  return t
+    .replace(/[^a-zà-ÿ]/gi, '')
+    .toLowerCase()
+    .split('')
+    .map(ch => ACCENT_CLASS[ch] ?? ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('');
+}
+
+// Treu accents per ordenar de forma sensata al client.
+function normalize(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+}
+
 export interface SearchHit {
   league_id: string;
   season: string;
@@ -74,14 +96,16 @@ export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
     setLoading(true);
     const reqId = ++reqRef.current;
     const handle = setTimeout(async () => {
-      // Permet cercar per cognom + nom encara que hi hagi text entremig:
-      // "blasi julia" → "%blasi%julia%"
-      const pattern = '%' + query.replace(/\s+/g, '%') + '%';
-      const { data } = await supabase
+      // Els noms FCF són "COGNOM COGNOM, NOM". Cerquem cada paraula per separat
+      // (regex ~* insensible a accents) i les encadenem com AND, així "carla perez"
+      // troba "PEREZ …, CARLA" (l'ordre no importa) i "núria" = "nuria".
+      const patterns = query.toLowerCase().split(/\s+/).map(tokenRegex).filter(rx => rx.length > 0);
+      let req = supabase
         .from('fcf_stats')
         .select('league_id,season,team_slug,team_name,player_fcf_name,dorsal,partidos,titular,suplente,minutos,goles,amarillas,rojas')
-        .ilike('player_fcf_name', pattern)
         .limit(FETCH_LIMIT);
+      for (const rx of patterns) req = req.filter('player_fcf_name', 'imatch', rx);
+      const { data } = await req;
 
       if (reqId !== reqRef.current) return;  // resposta obsoleta
       setResults((data as FcfStat[]) ?? []);
@@ -94,11 +118,13 @@ export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
   // ── Ordenació client: coincidència pel començament primer, després més PJ ────
   const sortedResults = useMemo(() => {
     if (!results) return null;
-    const needle = q.trim().toLowerCase();
+    // Prioritza qui comença pel primer terme escrit (p. ex. el cognom), i després
+    // per partits jugats. Comparació sense accents.
+    const first = normalize(q.trim().split(/\s+/)[0] ?? '');
     return [...results]
       .sort((a, b) => {
-        const aStarts = a.player_fcf_name.toLowerCase().startsWith(needle) ? 0 : 1;
-        const bStarts = b.player_fcf_name.toLowerCase().startsWith(needle) ? 0 : 1;
+        const aStarts = first && normalize(a.player_fcf_name).startsWith(first) ? 0 : 1;
+        const bStarts = first && normalize(b.player_fcf_name).startsWith(first) ? 0 : 1;
         if (aStarts !== bStarts) return aStarts - bStarts;
         return b.partidos - a.partidos;
       })
