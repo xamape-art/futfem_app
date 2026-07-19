@@ -108,13 +108,13 @@ export default function CompetitionSelector({
                       <span
                         title={`${c.groupCount} grups`}
                         className={cn(
-                          'inline-flex items-center gap-0.5 rounded-full pl-1 pr-1.5 py-0.5 text-[10px] font-black leading-none',
+                          'inline-flex items-center gap-1 rounded-full pl-1.5 pr-2 py-0.5 text-[11.5px] font-black leading-none',
                           selectedCompetitionKey === c.key
                             ? 'bg-white/25 text-white'
                             : 'bg-brand/10 text-brand'
                         )}
                       >
-                        <Layers size={10} strokeWidth={2.5} />
+                        <Layers size={13} strokeWidth={2.5} />
                         {c.groupCount}
                       </span>
                     )}
