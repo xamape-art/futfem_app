@@ -43,12 +43,10 @@ import type { ActaProcesada, ClassificacioRow, FcfStat, League, TeamOption } fro
 
 function useDarkMode() {
   const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return (
-      localStorage.getItem('futfem-theme') === 'dark' ||
-      (!localStorage.getItem('futfem-theme') &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    );
+    if (typeof window === 'undefined') return true;
+    // Per defecte fosc; només clar si l'usuari ho ha triat explícitament.
+    const stored = localStorage.getItem('futfem-theme');
+    return stored ? stored === 'dark' : true;
   });
 
   useEffect(() => {

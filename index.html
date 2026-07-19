@@ -9,8 +9,23 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icon_16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon_180.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#224E77" />
+    <meta name="theme-color" content="#121212" />
     <title>FemStats Analytics</title>
+    <!-- Tema per defecte: fosc (excepte si l'usuari ha triat clar). S'aplica
+         abans del primer pintat per evitar el parpelleig clar→fosc. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('futfem-theme');
+          var dark = t ? t === 'dark' : true;
+          if (dark) document.documentElement.classList.add('dark');
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.content = dark ? '#121212' : '#ffffff';
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
