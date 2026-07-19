@@ -41,29 +41,41 @@ import type { ActaProcesada, ClassificacioRow, FcfStat, League, TeamOption } fro
 
 // ─── Dark mode helper ─────────────────────────────────────────────────────────
 
+// Clau nova (v2): ignora els valors antics (que s'escrivien a cada càrrega),
+// perquè el mode fosc per defecte apliqui també a qui ja havia entrat abans.
+const THEME_KEY = 'femstats-theme';
+
 function useDarkMode() {
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return true;
-    // Per defecte fosc; només clar si l'usuari ho ha triat explícitament.
-    const stored = localStorage.getItem('futfem-theme');
+    // Per defecte fosc; només clar si l'usuari ho ha triat explícitament (toggle).
+    const stored = localStorage.getItem(THEME_KEY);
     return stored ? stored === 'dark' : true;
   });
 
+  // Només apliquem el tema al DOM; NO desem a localStorage aquí (si no, cada
+  // visita quedaria "fixada" i el default no s'aplicaria mai).
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('futfem-theme', dark ? 'dark' : 'light');
-    // H2: actualitzar meta theme-color
     const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (meta) meta.content = dark ? '#121212' : '#ffffff';
   }, [dark]);
 
-  return [dark, setDark] as const;
+  // El tema només es persisteix quan l'usuari el canvia explícitament.
+  const toggleDark = () =>
+    setDark(d => {
+      const next = !d;
+      try { localStorage.setItem(THEME_KEY, next ? 'dark' : 'light'); } catch { /* ignore */ }
+      return next;
+    });
+
+  return [dark, toggleDark] as const;
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function App() {
-  const [dark, setDark] = useDarkMode();
+  const [dark, toggleDark] = useDarkMode();
 
   // Splash d'intro (logo + totals globals) que es fon cap a l'app
   const [showSplash, setShowSplash] = useState(true);
@@ -567,7 +579,7 @@ export default function App() {
 
             {/* H2: Dark mode toggle com a chip pressable */}
             <button
-              onClick={() => setDark(d => !d)}
+              onClick={toggleDark}
               className="bg-neutral-100 dark:bg-white/10 p-1.5 rounded-lg text-neutral-500 hover:text-[var(--app-text)] transition-colors"
               aria-label="Canviar tema"
               title="Mode clar/fosc"
