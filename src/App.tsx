@@ -23,6 +23,7 @@ import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Li
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
+import GlobalPlayerSearch, { type SearchHit } from './components/GlobalPlayerSearch';
 import SeasonSelector from './components/SeasonSelector';
 import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
 import SplashScreen from './components/SplashScreen';
@@ -113,6 +114,45 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Cerca global de jugadores (navegació entre lligues) ─────────────────────
+  // pendingNav: objectiu de navegació mentre es carreguen les dades de la lliga.
+  // highlightPlayer: nom FCF a ressaltar a la taula un cop carregada.
+  interface PendingNav {
+    competitionKey: string;
+    groupId: string;
+    season: string;
+    teamSlug: string;
+    playerName: string;
+  }
+  const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
+  const [highlightPlayer, setHighlightPlayer] = useState<string | null>(null);
+  // Ref perquè l'efecte de derivació de temporada (que no depèn de pendingNav)
+  // pugui respectar la temporada demanada per la cerca.
+  const pendingNavRef = useRef<PendingNav | null>(null);
+  pendingNavRef.current = pendingNav;
+
+  // En triar un resultat de la cerca global: fixem competició + grup + temporada
+  // i deixem pendingNav perquè, quan carreguin les dades, s'obri Estadístiques
+  // amb l'equip i la jugadora ressaltada.
+  function handleGlobalSearchSelect(hit: SearchHit) {
+    const league = leagues.find(l => l.id === hit.league_id);
+    if (!league) return;
+    const competitionKey = league.competition_key ?? league.id;
+    const nav: PendingNav = {
+      competitionKey,
+      groupId: league.id,
+      season: hit.season,
+      teamSlug: hit.team_slug,
+      playerName: hit.player_fcf_name,
+    };
+    pendingNavRef.current = nav;
+    setPendingNav(nav);
+    setSelectedCompetitionKey(competitionKey);
+    setSelectedGroupId(league.id);
+    setSelectedSeason(hit.season);
+    setSearchQuery('');
+  }
+
   // ── 1. Cargar ligas al montar ───────────────────────────────────────────────
 
   useEffect(() => {
@@ -169,8 +209,13 @@ export default function App() {
       if (cancelled) return;
       const withData = new Set(checks.filter(c => c.has).map(c => c.appS));
       setSeasonsWithData(withData);
-      // Temporada més recent amb dades; si cap en té, la més recent disponible.
-      const best = appSeasons.find(s => withData.has(s)) ?? appSeasons[0] ?? '';
+      // Si venim d'una cerca global cap a aquesta competició, respectem la
+      // temporada de la jugadora; si no, la més recent amb dades.
+      const nav = pendingNavRef.current;
+      const best =
+        nav && nav.competitionKey === selectedCompetitionKey
+          ? nav.season
+          : appSeasons.find(s => withData.has(s)) ?? appSeasons[0] ?? '';
       setSelectedSeason(best);
     })();
 
@@ -303,6 +348,30 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view]);
+
+  // ── Cerca global: aplicar la navegació quan les dades ja s'han carregat ─────
+  // Espera que la lliga+temporada objectiu estigui carregada (l'equip present a
+  // allStats) i llavors obre Estadístiques amb l'equip i la jugadora ressaltats.
+  useEffect(() => {
+    const nav = pendingNav;
+    if (!nav || loading) return;
+    if (selectedSeason !== nav.season || selectedGroupId !== nav.groupId) return;
+    // Ens assegurem que allStats són ja les dades del grup objectiu (no unes
+    // d'obsoletes d'una altra selecció) i que l'equip hi és present.
+    if (allStats.length === 0 || !allStats.every(s => s.league_id === nav.groupId)) return;
+    if (!allStats.some(s => s.team_slug === nav.teamSlug)) return;
+    setView('stats');
+    setSelectedTeam(nav.teamSlug);
+    setHighlightPlayer(nav.playerName);
+    setPendingNav(null);
+  }, [pendingNav, loading, selectedSeason, selectedGroupId, allStats]);
+
+  // Auto-esvaïment del ressaltat després d'uns segons
+  useEffect(() => {
+    if (!highlightPlayer) return;
+    const t = setTimeout(() => setHighlightPlayer(null), 5000);
+    return () => clearTimeout(t);
+  }, [highlightPlayer]);
 
   // Prop 2: temporada més recent amb dades (per al CTA de l'estat buit)
   const newestSeasonWithData = useMemo(() => {
@@ -516,6 +585,12 @@ export default function App() {
         {/* Contenido principal */}
         {!loadingLeagues && leagues.length > 0 && (
           <>
+            {/* Cercador global de jugadores (totes les lligues i temporades) */}
+            <GlobalPlayerSearch
+              leagues={leagues}
+              onSelect={handleGlobalSearchSelect}
+            />
+
             {/* Competició + Grup + Temporada */}
             <CompetitionSelector
               leagues={leagues}
@@ -525,10 +600,12 @@ export default function App() {
                 setSelectedCompetitionKey(key);
                 setSelectedGroupId(null);
                 setSearchQuery('');
+                setPendingNav(null);
               }}
               onGroupChange={id => {
                 setSelectedGroupId(id);
                 setSearchQuery('');
+                setPendingNav(null);
               }}
             />
             <div className="mb-5">
@@ -539,6 +616,7 @@ export default function App() {
                 onChange={s => {
                   setSelectedSeason(s);
                   setSearchQuery('');
+                  setPendingNav(null);
                 }}
               />
             </div>
@@ -785,7 +863,7 @@ export default function App() {
                                   partits
                                 </span>
                               </div>
-                              <StatsTable data={teamStats} showMinutes={minutesReliable} />
+                              <StatsTable data={teamStats} showMinutes={minutesReliable} highlightName={highlightPlayer} />
                             </>
                           ) : (
                             /* A1: AllTeamsOverview amb files clicables */

@@ -12,7 +12,7 @@
  */
 
 import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfStat, SortKey } from '../types';
 
@@ -38,13 +38,24 @@ type QuickFilter = 'all' | 'scorers' | 'yellow' | 'red';
 export default function StatsTable({
   data,
   showMinutes = true,
+  highlightName,
 }: {
   data: FcfStat[];
   showMinutes?: boolean;
+  /** Nom FCF exacte d'una jugadora a ressaltar i cap a la qual fer scroll (cerca global). */
+  highlightName?: string | null;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('partidos');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+
+  // Ressaltat de la jugadora arribada des de la cerca global
+  const highlightRef = useRef<HTMLTableRowElement | null>(null);
+  useEffect(() => {
+    if (highlightName && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightName, data]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -191,13 +202,17 @@ export default function StatsTable({
             {sorted.map((s, i) => {
               const displayName = formatPlayerName(s.player_fcf_name);
               const isOdd = i % 2 !== 0;
+              const isHighlight = !!highlightName && s.player_fcf_name === highlightName;
 
               return (
                 <tr
                   key={s.id}
+                  ref={isHighlight ? highlightRef : undefined}
                   className={cn(
                     'group border-b border-[var(--card-border)] transition-colors hover:bg-neutral-100 dark:hover:bg-white/5',
-                    isOdd ? 'bg-neutral-50 dark:bg-[#272727]' : 'bg-transparent'
+                    isHighlight
+                      ? 'bg-accent/15 ring-1 ring-accent ring-inset'
+                      : isOdd ? 'bg-neutral-50 dark:bg-[#272727]' : 'bg-transparent'
                   )}
                 >
                   {/* D1: primera columna sticky amb bg explícit + group-hover */}
@@ -205,7 +220,9 @@ export default function StatsTable({
                     className={cn(
                       'px-2 py-2.5 text-left font-semibold text-[var(--app-text)] max-w-[160px]',
                       'sticky left-0 z-10 table-sticky-col transition-colors',
-                      isOdd
+                      isHighlight
+                        ? 'bg-accent/15 group-hover:bg-accent/20'
+                        : isOdd
                         ? 'bg-neutral-50 dark:bg-[#272727] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
                         : 'bg-[var(--card-bg)] group-hover:bg-neutral-100 dark:group-hover:bg-white/5'
                     )}
