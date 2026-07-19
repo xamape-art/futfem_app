@@ -10,7 +10,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronsUpDown, ChevronUp, MousePointerClick } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { cn } from '../lib/utils';
 import type { ClassificacioRow, League } from '../types';
@@ -19,7 +19,7 @@ type SortKey = 'posicio' | 'team_name' | 'pj' | 'guanyats' | 'empatats' | 'perdu
 
 // ─── Tabla de un grupo ────────────────────────────────────────────────────────
 
-function GroupTable({ rows }: { rows: ClassificacioRow[] }) {
+function GroupTable({ rows, onTeamClick }: { rows: ClassificacioRow[]; onTeamClick?: (slug: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>('posicio');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -92,14 +92,21 @@ function GroupTable({ rows }: { rows: ClassificacioRow[] }) {
             return (
               <tr
                 key={r.id}
+                onClick={onTeamClick ? () => onTeamClick(r.team_slug) : undefined}
                 className={cn(
-                  'border-b border-[var(--card-border)] transition-colors hover:bg-brand/5',
+                  'group border-b border-[var(--card-border)] transition-colors hover:bg-brand/5',
+                  onTeamClick && 'cursor-pointer',
                   isOdd ? 'bg-neutral-50 dark:bg-[#272727]' : 'bg-transparent'
                 )}
               >
                 <td className="px-2 py-2.5 text-left font-bold tabular-nums text-neutral-500 dark:text-neutral-400 w-8">{r.posicio}</td>
                 <td className="px-2 py-2.5 text-left font-semibold text-[var(--app-text)] max-w-[200px]">
-                  <span className="block truncate" title={r.team_name}>{r.team_name}</span>
+                  <span className="flex items-center gap-1 min-w-0">
+                    <span className="block truncate" title={r.team_name}>{r.team_name}</span>
+                    {onTeamClick && (
+                      <span className="shrink-0 text-neutral-300 group-hover:text-accent transition-colors text-base leading-none">›</span>
+                    )}
+                  </span>
                 </td>
                 <td className="px-2 py-2.5 text-right tabular-nums text-neutral-800 dark:text-neutral-200">{r.pj}</td>
                 <td className="px-2 py-2.5 text-right tabular-nums text-neutral-800 dark:text-neutral-200">{r.guanyats}</td>
@@ -128,11 +135,13 @@ export default function Classificacio({
   leagues,
   season,
   leagueName,
+  onTeamClick,
 }: {
   rows: ClassificacioRow[];
   leagues: League[];
   season: string;
   leagueName: string;
+  onTeamClick?: (slug: string) => void;
 }) {
   // Agrupar por league_id (una tabla por grupo). Ordenar grupos por sort_order.
   const groups = useMemo(() => {
@@ -186,14 +195,22 @@ export default function Classificacio({
             </div>
           )}
           <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
-            <GroupTable rows={g.rows} />
+            <GroupTable rows={g.rows} onTeamClick={onTeamClick} />
           </div>
         </div>
       ))}
 
-      <div className="flex items-center gap-1.5 text-[12.5px] font-semibold text-neutral-600 dark:text-neutral-300">
-        <ChevronsUpDown size={15} className="text-accent" strokeWidth={2.5} />
-        Clica una columna per ordenar
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] font-semibold text-neutral-600 dark:text-neutral-300">
+        <span className="flex items-center gap-1.5">
+          <ChevronsUpDown size={15} className="text-accent" strokeWidth={2.5} />
+          Clica una columna per ordenar
+        </span>
+        {onTeamClick && (
+          <span className="flex items-center gap-1.5">
+            <MousePointerClick size={15} className="text-accent" strokeWidth={2.5} />
+            Clica un equip per veure les jugadores
+          </span>
+        )}
       </div>
     </div>
   );

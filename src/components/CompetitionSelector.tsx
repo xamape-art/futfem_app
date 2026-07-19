@@ -1,3 +1,4 @@
+import { Layers } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { League } from '../types';
 
@@ -36,15 +37,16 @@ export default function CompetitionSelector({
 }: Props) {
   if (leagues.length <= 1) return null;
 
-  // Competitions úniques preservant sort_order
-  const seen = new Set<string>();
-  const competitions: { key: string; name: string }[] = [];
+  // Competitions úniques preservant sort_order, amb el nombre de grups de cada una
+  const competitions: { key: string; name: string; groupCount: number }[] = [];
+  const compIndex = new Map<string, number>();
   for (const l of leagues) {
     const key = l.competition_key ?? l.id;
-    if (!seen.has(key)) {
-      seen.add(key);
-      competitions.push({ key, name: l.competition_name ?? l.short_name });
+    if (!compIndex.has(key)) {
+      compIndex.set(key, competitions.length);
+      competitions.push({ key, name: l.competition_name ?? l.short_name, groupCount: 0 });
     }
+    competitions[compIndex.get(key)!].groupCount++;
   }
 
   // Grups de la competició seleccionada
@@ -95,13 +97,27 @@ export default function CompetitionSelector({
                     key={c.key}
                     onClick={() => onCompetitionChange(c.key)}
                     className={cn(
-                      'shrink-0 whitespace-nowrap px-4 py-2 text-[12.5px] font-semibold rounded-full border transition-colors',
+                      'shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-semibold rounded-full border transition-colors',
                       selectedCompetitionKey === c.key
                         ? 'bg-brand text-white border-brand shadow-sm'
                         : 'bg-[var(--card-bg)] text-neutral-600 dark:text-neutral-300 border-[var(--card-border)] hover:border-brand hover:text-brand'
                     )}
                   >
                     {c.name}
+                    {c.groupCount > 1 && (
+                      <span
+                        title={`${c.groupCount} grups`}
+                        className={cn(
+                          'inline-flex items-center gap-0.5 rounded-full pl-1 pr-1.5 py-0.5 text-[10px] font-black leading-none',
+                          selectedCompetitionKey === c.key
+                            ? 'bg-white/25 text-white'
+                            : 'bg-brand/10 text-brand'
+                        )}
+                      >
+                        <Layers size={10} strokeWidth={2.5} />
+                        {c.groupCount}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

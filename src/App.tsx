@@ -782,6 +782,11 @@ export default function App() {
                 leagues={leagues}
                 season={selectedSeason}
                 leagueName={displayLeague.name}
+                onTeamClick={slug => {
+                  setSelectedTeam(slug);
+                  setView('stats');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
               />
             )}
 
