@@ -27,8 +27,14 @@ export interface SearchHit {
   team_slug: string;
   team_name: string;
   player_fcf_name: string;
-  goles: number;
+  dorsal: number | null;
   partidos: number;
+  titular: number;
+  suplente: number;
+  minutos: number;
+  goles: number;
+  amarillas: number;
+  rojas: number;
 }
 
 interface Props {
@@ -73,7 +79,7 @@ export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
       const pattern = '%' + query.replace(/\s+/g, '%') + '%';
       const { data } = await supabase
         .from('fcf_stats')
-        .select('league_id,season,team_slug,team_name,player_fcf_name,goles,partidos')
+        .select('league_id,season,team_slug,team_name,player_fcf_name,dorsal,partidos,titular,suplente,minutos,goles,amarillas,rojas')
         .ilike('player_fcf_name', pattern)
         .limit(FETCH_LIMIT);
 
@@ -122,8 +128,14 @@ export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
       team_slug:       hit.team_slug,
       team_name:       hit.team_name,
       player_fcf_name: hit.player_fcf_name,
-      goles:           hit.goles,
+      dorsal:          hit.dorsal,
       partidos:        hit.partidos,
+      titular:         hit.titular,
+      suplente:        hit.suplente,
+      minutos:         hit.minutos,
+      goles:           hit.goles,
+      amarillas:       hit.amarillas,
+      rojas:           hit.rojas,
     });
     clear();
   };

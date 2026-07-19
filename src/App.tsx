@@ -24,6 +24,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
 import GlobalPlayerSearch, { type SearchHit } from './components/GlobalPlayerSearch';
+import PlayerCard from './components/PlayerCard';
 import SeasonSelector from './components/SeasonSelector';
 import { SkeletonTable, SkeletonTopTen } from './components/SkeletonTable';
 import SplashScreen from './components/SplashScreen';
@@ -123,18 +124,33 @@ export default function App() {
     season: string;
     teamSlug: string;
     playerName: string;
+    highlight: boolean;
   }
   const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
   const [highlightPlayer, setHighlightPlayer] = useState<string | null>(null);
+  // Jugadora seleccionada al cercador → obre la ficha modal
+  const [selectedPlayer, setSelectedPlayer] = useState<SearchHit | null>(null);
   // Ref perquè l'efecte de derivació de temporada (que no depèn de pendingNav)
   // pugui respectar la temporada demanada per la cerca.
   const pendingNavRef = useRef<PendingNav | null>(null);
   pendingNavRef.current = pendingNav;
 
-  // En triar un resultat de la cerca global: fixem competició + grup + temporada
-  // i deixem pendingNav perquè, quan carreguin les dades, s'obri Estadístiques
-  // amb l'equip i la jugadora ressaltada.
+  // Etiqueta visible d'una lliga: "competició · Gr.N"
+  function leagueLabelOf(league: League): string {
+    const g = league.group_path.match(/grup-(\w+)$/);
+    const comp = league.competition_name ?? league.short_name;
+    return g ? `${comp} · Gr.${g[1].toUpperCase()}` : comp;
+  }
+
+  // En triar un resultat de la cerca global: obrim la ficha (no naveguem encara).
   function handleGlobalSearchSelect(hit: SearchHit) {
+    setSelectedPlayer(hit);
+    setSearchQuery('');
+  }
+
+  // Navegació a la lliga/grup/temporada de la jugadora. Amb highlight=true, un
+  // cop carregades les dades s'obre Estadístiques amb la seva fila ressaltada.
+  function navigateToPlayer(hit: SearchHit, highlight: boolean) {
     const league = leagues.find(l => l.id === hit.league_id);
     if (!league) return;
     const competitionKey = league.competition_key ?? league.id;
@@ -144,6 +160,7 @@ export default function App() {
       season: hit.season,
       teamSlug: hit.team_slug,
       playerName: hit.player_fcf_name,
+      highlight,
     };
     pendingNavRef.current = nav;
     setPendingNav(nav);
@@ -151,6 +168,7 @@ export default function App() {
     setSelectedGroupId(league.id);
     setSelectedSeason(hit.season);
     setSearchQuery('');
+    setSelectedPlayer(null);
   }
 
   // ── 1. Cargar ligas al montar ───────────────────────────────────────────────
@@ -362,7 +380,7 @@ export default function App() {
     if (!allStats.some(s => s.team_slug === nav.teamSlug)) return;
     setView('stats');
     setSelectedTeam(nav.teamSlug);
-    setHighlightPlayer(nav.playerName);
+    if (nav.highlight) setHighlightPlayer(nav.playerName);
     setPendingNav(null);
   }, [pendingNav, loading, selectedSeason, selectedGroupId, allStats]);
 
@@ -470,6 +488,22 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Ficha modal de jugadora (des del cercador global) */}
+      {selectedPlayer && (() => {
+        const lg = leagues.find(l => l.id === selectedPlayer.league_id);
+        const minutesPublished = !!lg && lg.group_path.includes('tercera-federacio');
+        return (
+          <PlayerCard
+            hit={selectedPlayer}
+            leagueLabel={lg ? leagueLabelOf(lg) : ''}
+            minutesPublished={minutesPublished}
+            onClose={() => setSelectedPlayer(null)}
+            onViewList={() => navigateToPlayer(selectedPlayer, true)}
+            onViewTeam={() => navigateToPlayer(selectedPlayer, false)}
+          />
+        );
+      })()}
 
       {/* P5: Regió aria-live per a screen readers */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
