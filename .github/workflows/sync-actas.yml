@@ -56,6 +56,7 @@ jobs:
           - 'futbol-femeni/primera-divisio-femeni-infantil/grup-2'
           - 'futbol-femeni/primera-divisio-femeni-infantil/grup-3'
           - 'futbol-femeni/primera-divisio-femeni-infantil/grup-4'
+          - 'futbol-femeni/femeni-infantil-f11/grup-1'
         season:
           - '2627'
 
