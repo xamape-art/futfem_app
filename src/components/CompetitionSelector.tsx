@@ -87,8 +87,12 @@ export default function CompetitionSelector({
           return (
             <div key={bucket.cat}>
               {showCategoryLabels && (
-                <div className="text-[10px] font-black uppercase tracking-[0.12em] text-neutral-400 dark:text-neutral-500 mb-1.5 pl-0.5">
-                  {CATEGORY_LABEL[bucket.cat]}
+                <div className="flex items-center gap-2.5 mb-2">
+                  <span className="h-3.5 w-1 rounded-full bg-accent shrink-0" />
+                  <span className="text-[11.5px] font-black uppercase tracking-[0.14em] text-neutral-600 dark:text-neutral-200">
+                    {CATEGORY_LABEL[bucket.cat]}
+                  </span>
+                  <span className="flex-1 h-px bg-[var(--card-border)]" />
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
