@@ -23,6 +23,7 @@ import { BarChart3, ChevronDown, ChevronsUpDown, ChevronUp, Info, LayoutList, Li
 import { Analytics } from '@vercel/analytics/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CompetitionSelector from './components/CompetitionSelector';
+import ExportMenu from './components/ExportMenu';
 import GlobalPlayerSearch, { type SearchHit } from './components/GlobalPlayerSearch';
 import PlayerCard from './components/PlayerCard';
 import SeasonSelector from './components/SeasonSelector';
@@ -898,32 +899,63 @@ export default function App() {
                         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
                           {selectedTeam ? (
                             <>
-                              <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
-                                <span className="text-[12px] font-bold text-[var(--app-text)]">
+                              <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between gap-3">
+                                <span className="text-[12px] font-bold text-[var(--app-text)] min-w-0 truncate">
                                   {teams.find(t => t.slug === selectedTeam)?.name ?? selectedTeam}
                                 </span>
-                                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                                  {teamStats.length} jugadores ·{' '}
-                                  {actas.filter(
-                                    a =>
-                                      a.local_slug === selectedTeam ||
-                                      a.visitant_slug === selectedTeam
-                                  ).length}{' '}
-                                  partits
-                                </span>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="hidden sm:inline text-[11px] text-neutral-500 dark:text-neutral-400">
+                                    {teamStats.length} jugadores ·{' '}
+                                    {actas.filter(
+                                      a =>
+                                        a.local_slug === selectedTeam ||
+                                        a.visitant_slug === selectedTeam
+                                    ).length}{' '}
+                                    partits
+                                  </span>
+                                  <ExportMenu
+                                    rows={teamStats}
+                                    showMinutes={minutesReliable}
+                                    includeTeam={false}
+                                    title={teams.find(t => t.slug === selectedTeam)?.name ?? selectedTeam}
+                                    subtitle={`${displayLeague?.name ?? ''} · ${selectedSeason}`}
+                                    filenameBase={`${teams.find(t => t.slug === selectedTeam)?.name ?? selectedTeam}_${selectedSeason}`}
+                                  />
+                                </div>
                               </div>
                               <StatsTable data={teamStats} showMinutes={minutesReliable} highlightName={highlightPlayer} />
                             </>
                           ) : (
-                            /* A1: AllTeamsOverview amb files clicables */
-                            <AllTeamsOverview
-                              stats={allStats}
-                              teams={teams}
-                              onSelect={slug => {
-                                setSelectedTeam(slug);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
-                            />
+                            <>
+                              {/* Capçalera amb exportació de tota la lliga/grup */}
+                              <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between gap-3">
+                                <span className="text-[12px] font-bold text-[var(--app-text)] min-w-0 truncate">
+                                  Totes les jugadores
+                                </span>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="hidden sm:inline text-[11px] text-neutral-500 dark:text-neutral-400">
+                                    {allStats.length} jugadores · {teams.length} equips
+                                  </span>
+                                  <ExportMenu
+                                    rows={allStats}
+                                    showMinutes={minutesReliable}
+                                    includeTeam={true}
+                                    title={displayLeague?.name ?? 'Lliga'}
+                                    subtitle={selectedSeason}
+                                    filenameBase={`${displayLeague?.short_name ?? 'lliga'}_${selectedSeason}`}
+                                  />
+                                </div>
+                              </div>
+                              {/* A1: AllTeamsOverview amb files clicables */}
+                              <AllTeamsOverview
+                                stats={allStats}
+                                teams={teams}
+                                onSelect={slug => {
+                                  setSelectedTeam(slug);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                              />
+                            </>
                           )}
                         </div>
                       </>
