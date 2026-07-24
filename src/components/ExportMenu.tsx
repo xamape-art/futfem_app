@@ -121,15 +121,15 @@ export default function ExportMenu({ rows, showMinutes, includeTeam, title, subt
         onClick={() => setOpen(o => !o)}
         disabled={busy !== null || rows.length === 0}
         className={cn(
-          'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] font-bold border transition-colors',
-          'bg-[var(--input-bg)] border-[var(--card-border)] text-neutral-600 dark:text-neutral-300 hover:border-brand hover:text-brand',
-          (busy !== null || rows.length === 0) && 'opacity-60 cursor-not-allowed'
+          'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-bold border shadow-sm transition-all',
+          'bg-accent border-accent text-white hover:brightness-110 active:scale-[.98]',
+          (busy !== null || rows.length === 0) && 'opacity-50 cursor-not-allowed'
         )}
-        title="Exportar aquesta taula"
+        title="Exportar aquesta taula a Excel o PDF"
       >
-        {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} strokeWidth={2.5} />}
+        {busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} strokeWidth={2.5} />}
         Exportar
-        <ChevronDown size={13} className={cn('transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={14} className={cn('transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (
