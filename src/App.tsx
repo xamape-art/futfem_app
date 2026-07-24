@@ -89,14 +89,19 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [showAbout]);
 
-  // P4: Wide mode toggle
+  // P4: Wide mode toggle — per defecte ampliat (clau nova perquè apliqui també a
+  // qui ja havia entrat abans; només es persisteix quan l'usuari canvia el toggle).
   const [wideMode, setWideMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('futfem-wide') === 'true';
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('femstats-wide');
+    return stored ? stored === 'true' : true;
   });
-  useEffect(() => {
-    localStorage.setItem('futfem-wide', wideMode ? 'true' : 'false');
-  }, [wideMode]);
+  const toggleWide = () =>
+    setWideMode(w => {
+      const next = !w;
+      try { localStorage.setItem('femstats-wide', next ? 'true' : 'false'); } catch { /* ignore */ }
+      return next;
+    });
 
   // ── Estado de ligas ─────────────────────────────────────────────────────────
   const [leagues, setLeagues]                             = useState<League[]>([]);
@@ -570,7 +575,7 @@ export default function App() {
 
             {/* P4: Wide mode toggle (visible només a lg+) */}
             <button
-              onClick={() => setWideMode(w => !w)}
+              onClick={toggleWide}
               className="hidden lg:flex items-center justify-center bg-neutral-100 dark:bg-white/10 p-1.5 rounded-lg text-neutral-400 hover:text-[var(--app-text)] transition-colors"
               title={wideMode ? 'Vista normal' : 'Vista ampliada'}
               aria-label={wideMode ? 'Vista normal' : 'Vista ampliada'}
