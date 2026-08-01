@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Bar,
+  BarChart,
+  Cell,
   PolarAngleAxis,
   PolarGrid,
   Radar,
@@ -13,10 +16,11 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { cn, formatPlayerName } from '../lib/utils';
-import type { FcfStat } from '../types';
+import type { FcfGoal, FcfStat } from '../types';
 
 interface Props {
   allStats: FcfStat[];
+  goals: FcfGoal[];
   season: string;
   leagueName: string;
   matchDuration: number;
@@ -492,9 +496,133 @@ function RadarJugadora({ allStats, matchDuration, minutesReliable }: { allStats:
   );
 }
 
+// ─── Anàlisi de gols (minut + tipus + penals) ────────────────────────────────
+
+function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDuration: number }) {
+  // Distribució per minut (trams de 10')
+  const dist = useMemo(() => {
+    const size = 10;
+    const nb = Math.max(1, Math.ceil(matchDuration / size)); // 9 trams per 90'
+    const arr = Array.from({ length: nb }, (_, i) => ({ label: `${i * size + 1}–${(i + 1) * size}`, count: 0 }));
+    let extra = 0, sense = 0;
+    for (const g of goals) {
+      const m = g.minute;
+      if (m == null) { sense++; continue; }
+      if (m > nb * size) { extra++; continue; }
+      const idx = Math.min(Math.max(Math.floor((m - 1) / size), 0), nb - 1);
+      arr[idx].count++;
+    }
+    const data = [...arr];
+    if (extra > 0) data.push({ label: `${nb * size}+`, count: extra });
+    return { data, sense };
+  }, [goals, matchDuration]);
+  const maxCount = Math.max(...dist.data.map(d => d.count), 1);
+
+  // Tipus de gol
+  const types = useMemo(() => {
+    let normal = 0, penal = 0, pp = 0;
+    for (const g of goals) {
+      if (g.goal_type === 'penal') penal++;
+      else if (g.goal_type === 'pp') pp++;
+      else normal++;
+    }
+    return { normal, penal, pp, total: goals.length };
+  }, [goals]);
+  const pct = (n: number) => (types.total ? Math.round((n / types.total) * 100) : 0);
+
+  // Ranking de penals
+  const penalRanking = useMemo(() => {
+    const map = new Map<string, { name: string; team: string; count: number }>();
+    for (const g of goals) {
+      if (g.goal_type !== 'penal' || !g.player_fcf_name) continue;
+      const key = `${g.player_fcf_name}|${g.team_name ?? ''}`;
+      const e = map.get(key) ?? { name: formatPlayerName(g.player_fcf_name), team: g.team_name ?? '', count: 0 };
+      e.count++;
+      map.set(key, e);
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+  }, [goals]);
+
+  return (
+    <div>
+      <div className="mb-4">
+        <h3 className="text-[16px] font-bold text-[var(--app-text)]">Anàlisi de gols</h3>
+        <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
+          {types.total} gols · quan es marquen, de quin tipus i qui transforma els penals
+        </p>
+      </div>
+
+      {/* Tipus de gol */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { k: 'Normal', n: types.normal, cls: 'text-emerald-600 dark:text-emerald-400' },
+          { k: 'Penal', n: types.penal, cls: 'text-blue-600 dark:text-blue-400' },
+          { k: 'Pròpia porta', n: types.pp, cls: 'text-red-600 dark:text-red-400' },
+        ].map(t => (
+          <div key={t.k} className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl py-3 px-2 text-center">
+            <div className={cn('text-[24px] font-extrabold leading-none tabular-nums', t.cls)}>{t.n}</div>
+            <div className="text-[10.5px] font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mt-1.5">{t.k}</div>
+            <div className="text-[10.5px] text-neutral-400 mt-0.5 tabular-nums">{pct(t.n)}%</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Distribució per minut */}
+      <div className="mb-1 flex items-center justify-between">
+        <h4 className="text-[13.5px] font-bold text-[var(--app-text)]">Gols per minut</h4>
+        {dist.sense > 0 && <span className="text-[11px] text-neutral-400">{dist.sense} sense minut</span>}
+      </div>
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={dist.data} margin={{ top: 8, right: 8, bottom: 4, left: -18 }}>
+          <XAxis dataKey="label" tick={{ fontSize: 10.5, fill: '#6b7280' }} tickLine={false} axisLine={false} interval={0} />
+          <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
+          <Tooltip
+            cursor={{ fill: 'var(--card-border)', fillOpacity: 0.3 }}
+            content={({ payload, label }) => {
+              if (!payload?.length) return null;
+              return (
+                <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-2 shadow-lg text-[12px]">
+                  <p className="font-bold text-[var(--app-text)]">Minut {label}</p>
+                  <p className="text-brand font-semibold">{payload[0].value} gols</p>
+                </div>
+              );
+            }}
+          />
+          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+            {dist.data.map((d, i) => (
+              <Cell key={i} fill={d.count === maxCount ? 'var(--color-accent)' : 'var(--color-brand)'} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Ranking de penals */}
+      {penalRanking.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-[13.5px] font-bold text-[var(--app-text)] mb-2">Màximes golejadores de penal</h4>
+          <div className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
+            {penalRanking.map((p, i) => (
+              <div key={p.name + p.team} className={cn('flex items-center gap-3 px-3.5 py-2', i > 0 && 'border-t border-[var(--card-border)]')}>
+                <span className="w-5 text-[12px] font-bold text-neutral-400 tabular-nums shrink-0">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold text-[var(--app-text)] truncate">{p.name}</div>
+                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">{p.team}</div>
+                </div>
+                <span className="shrink-0 text-[13px] font-black text-blue-600 dark:text-blue-400 tabular-nums">
+                  {p.count} <span className="text-[10px] font-bold text-neutral-400">penals</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component principal ──────────────────────────────────────────────────────
 
-export default function Charts({ allStats, season, leagueName, matchDuration, minutesReliable }: Props) {
+export default function Charts({ allStats, goals, season, leagueName, matchDuration, minutesReliable }: Props) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-500 dark:text-neutral-400 text-sm">
@@ -510,6 +638,13 @@ export default function Charts({ allStats, season, leagueName, matchDuration, mi
         {new Set(allStats.map(s => s.team_slug)).size} equips ·{' '}
         {allStats.length} jugadores
       </p>
+
+      {/* Anàlisi de gols (minut + tipus + penals) — només si hi ha detall de gols */}
+      {goals.length > 0 && (
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+          <GoalsAnalysis goals={goals} matchDuration={matchDuration} />
+        </div>
+      )}
 
       {/* El scatter minuts/gols només té sentit amb minuts reals (Tercera Federació) */}
       {minutesReliable && (

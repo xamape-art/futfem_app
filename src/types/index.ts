@@ -77,3 +77,20 @@ export interface TeamOption {
   slug: string;
   name: string;
 }
+
+export type GoalType = 'normal' | 'penal' | 'pp';
+
+export interface FcfGoal {
+  id: string;
+  league_id: string;
+  season: string;
+  jornada: number | null;
+  team_slug: string | null;
+  team_name: string | null;
+  player_fcf_name: string | null;
+  minute: number | null;
+  minute_raw: string | null;
+  goal_type: GoalType;
+  marcador: string | null;
+  acta_url: string | null;
+}

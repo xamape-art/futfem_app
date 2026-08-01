@@ -38,7 +38,7 @@ import Charts from './components/Charts';
 import Classificacio from './components/Classificacio';
 import { fetchAllPaginated, supabase } from './lib/supabase';
 import { cn, fcfSeasonToApp } from './lib/utils';
-import type { ActaProcesada, ClassificacioRow, FcfStat, League, TeamOption } from './types';
+import type { ActaProcesada, ClassificacioRow, FcfGoal, FcfStat, League, TeamOption } from './types';
 
 // ─── Dark mode helper ─────────────────────────────────────────────────────────
 
@@ -119,6 +119,7 @@ export default function App() {
   const [allStats, setAllStats]         = useState<FcfStat[]>([]);
   const [actas, setActas]               = useState<ActaProcesada[]>([]);
   const [classificacio, setClassificacio] = useState<ClassificacioRow[]>([]);
+  const [goals, setGoals]               = useState<FcfGoal[]>([]);
   const [teams, setTeams]               = useState<TeamOption[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [teamStats, setTeamStats]       = useState<FcfStat[]>([]);
@@ -276,11 +277,12 @@ export default function App() {
     setTeamStats([]);
     setActas([]);
     setClassificacio([]);
+    setGoals([]);
     setSelectedTeam(null);
 
     // Paginat: superem el límit de 1000 files de PostgREST perquè les lligues
     // grans (p. ex. 1ª Div Femenina) carreguin TOTES les jugadores.
-    const [stats, acts, classif] = await Promise.all([
+    const [stats, acts, classif, goalsData] = await Promise.all([
       fetchAllPaginated<FcfStat>((from, to) =>
         supabase
           .from('fcf_stats')
@@ -308,6 +310,14 @@ export default function App() {
           .order('posicio', { ascending: true })
           .range(from, to)
       ),
+      fetchAllPaginated<FcfGoal>((from, to) =>
+        supabase
+          .from('fcf_goals')
+          .select('*')
+          .in('league_id', leagueIds)
+          .eq('season', season)
+          .range(from, to)
+      ),
     ]);
 
     const seen  = new Set<string>();
@@ -323,6 +333,7 @@ export default function App() {
     setTeams(tList);
     setActas(acts);
     setClassificacio(classif);
+    setGoals(goalsData);
     setLoading(false);
   }
 
@@ -810,6 +821,7 @@ export default function App() {
             {!loading && view === 'charts' && displayLeague && (
               <Charts
                 allStats={allStats}
+                goals={goals}
                 season={selectedSeason}
                 leagueName={displayLeague.name}
                 matchDuration={matchDuration}

@@ -115,7 +115,7 @@ function err(msg)  { console.log(`  ❌ ${msg}`); }
 async function resolveLeague(groupPath) {
   const { data, error } = await supabase
     .from('leagues')
-    .select('id, name, group_path, match_duration')
+    .select('id, name, group_path, match_duration, track_goals')
     .eq('group_path', groupPath)
     .single();
 
@@ -343,10 +343,49 @@ async function parseActa(url, matchDuration = 90) {
   const localStats    = calcStats(localTitulars, localSuplents, localSubs, localCards, localGoals);
   const visitantStats = calcStats(visitantTitulars, visitantSuplents, visitantSubs, visitantCards, visitantGoals);
 
+  // ── Detall de gols (minut + tipus) per a fcf_goals ──────────────────────────
+  // Equip via l'escut del gol; el nom i l'escut de cada equip venen en <a>
+  // /equip/ diferents però amb el mateix href, així que els creuem per href.
+  const href2name = new Map(), href2escut = new Map();
+  $('a[href*="/equip/"]').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    const span = $(el).find('span').first().text().trim();
+    const img  = $(el).find('img').attr('src');
+    if (span) href2name.set(href, span);
+    if (img)  href2escut.set(href, img);
+  });
+  const escut2name = new Map(), escut2slug = new Map();
+  for (const [href, es] of href2escut) {
+    if (href2name.has(href)) escut2name.set(es, href2name.get(href));
+    escut2slug.set(es, href.split('/').pop());
+  }
+  const GOAL_TYPE = { 'gol-normal': 'normal', 'gol-penal': 'penal', 'gol-propia': 'pp' };
+  const goalsDetailed = [];
+  $(golsTable).find('tbody tr').each((_, tr) => {
+    const player = normName($(tr).find('td a').first().text());
+    if (!player) return;
+    const cls   = $(tr).find('.gol > div').first().attr('class') || '';
+    const gtype = GOAL_TYPE[(cls.match(/gol-[a-z]+/) || [''])[0]] || 'normal';
+    const escut = $(tr).find('img.acta-escut-gol').attr('src') || '';
+    const minuteRaw = $(tr).find('td').last().text().trim();
+    const mNum = parseInt(minuteRaw.replace(/[^0-9].*$/, ''), 10);
+    const marcador = $(tr).find('.acta-marcador-gol').text().trim().replace(/\s+/g, ' ');
+    goalsDetailed.push({
+      team_name: escut2name.get(escut) || null,
+      team_slug: escut2slug.get(escut) || null,
+      player_fcf_name: player,
+      minute: isNaN(mNum) ? null : mNum,
+      minute_raw: minuteRaw,
+      goal_type: gtype,
+      marcador,
+    });
+  });
+
   return {
     localSlug, localName, localStats,
     visitantSlug, visitantName, visitantStats,
     jornada,
+    goalsDetailed,
     totalPlayers: Object.keys(localStats).length + Object.keys(visitantStats).length,
   };
 }
@@ -476,6 +515,15 @@ async function main() {
       .eq('season', SEASON_APP);
     if (e2) { err(`Error eliminant actas_procesadas: ${e2.message}`); process.exit(1); }
 
+    if (league.track_goals) {
+      const { error: e3 } = await supabase
+        .from('fcf_goals')
+        .delete()
+        .eq('league_id', league.id)
+        .eq('season', SEASON_APP);
+      if (e3) warn(`Error eliminant fcf_goals: ${e3.message}`);
+    }
+
     ok('Dades eliminades. Reimportant des de zero...');
   }
 
@@ -523,6 +571,28 @@ async function main() {
       }
       if (Object.keys(result.visitantStats).length > 0) {
         await upsertStats(result.visitantStats, result.visitantSlug, result.visitantName, league.id, SEASON_APP);
+      }
+
+      // Detall de gols (només lligues amb track_goals). Idempotent per acta.
+      if (league.track_goals) {
+        await supabase.from('fcf_goals').delete().eq('acta_url', url);
+        if (result.goalsDetailed.length > 0) {
+          const goalRows = result.goalsDetailed.map(g => ({
+            league_id:       league.id,
+            season:          SEASON_APP,
+            jornada:         result.jornada,
+            team_slug:       g.team_slug,
+            team_name:       g.team_name,
+            player_fcf_name: g.player_fcf_name,
+            minute:          g.minute,
+            minute_raw:      g.minute_raw,
+            goal_type:       g.goal_type,
+            marcador:        g.marcador,
+            acta_url:        url,
+          }));
+          const { error: gErr } = await supabase.from('fcf_goals').insert(goalRows);
+          if (gErr) warn(`insert fcf_goals: ${gErr.message}`);
+        }
       }
 
       await markProcessed(url, result, league.id);
