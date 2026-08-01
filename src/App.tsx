@@ -725,7 +725,7 @@ export default function App() {
                     { id: 'classificacio', label: 'Classificació', icon: ListOrdered },
                     { id: 'stats',  label: 'Estadístiques', icon: LayoutList },
                     { id: 'top10', label: 'Top 20',        icon: Trophy     },
-                    { id: 'charts', label: 'Gràfiques',     icon: BarChart3  },
+                    { id: 'charts', label: 'Anàlisi',       icon: BarChart3  },
                   ] as const
                 ).map(tab => {
                   const TabIcon = tab.icon;
