@@ -15,6 +15,7 @@ import {
   YAxis,
   ReferenceLine,
 } from 'recharts';
+import { Goal, UserRound, type LucideIcon } from 'lucide-react';
 import { cn, formatPlayerName } from '../lib/utils';
 import type { FcfGoal, FcfStat } from '../types';
 
@@ -25,6 +26,7 @@ interface Props {
   leagueName: string;
   matchDuration: number;
   minutesReliable: boolean;
+  onViewTop20?: () => void;
 }
 
 // ─── Scatter: Minuts vs Gols ──────────────────────────────────────────────────
@@ -496,25 +498,79 @@ function RadarJugadora({ allStats, matchDuration, minutesReliable }: { allStats:
   );
 }
 
-// ─── Anàlisi de gols (minut + tipus + penals) ────────────────────────────────
+// ─── Capçalera de secció ──────────────────────────────────────────────────────
 
-function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDuration: number }) {
-  // Distribució per minut (trams de 10')
+function SectionHeader({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="h-4 w-1 rounded-full bg-accent shrink-0" />
+      <Icon size={16} className="text-accent shrink-0" strokeWidth={2.5} />
+      <h2 className="text-[14px] font-black uppercase tracking-[0.08em] text-[var(--app-text)]">{title}</h2>
+      <span className="flex-1 h-px bg-[var(--card-border)]" />
+    </div>
+  );
+}
+
+// Mini-rànquing compacte (top 5) reutilitzable
+function MiniRank({ title, rows, valueClass }: {
+  title: string;
+  rows: { name: string; team: string; value: string; sub?: string }[];
+  valueClass: string;
+}) {
+  return (
+    <div className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
+      <div className="px-3.5 py-2 text-[11px] font-black uppercase tracking-wide text-neutral-500 dark:text-neutral-400 border-b border-[var(--card-border)]">
+        {title}
+      </div>
+      {rows.map((r, i) => (
+        <div key={r.name + r.team} className={cn('flex items-center gap-2.5 px-3.5 py-2', i > 0 && 'border-t border-[var(--card-border)]')}>
+          <span className="w-4 text-[11px] font-bold text-neutral-400 tabular-nums shrink-0">{i + 1}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[12.5px] font-semibold text-[var(--app-text)] truncate">{r.name}</div>
+            <div className="text-[10.5px] text-neutral-500 dark:text-neutral-400 truncate">{r.team}</div>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className={cn('text-[13px] font-black tabular-nums', valueClass)}>{r.value}</div>
+            {r.sub && <div className="text-[9.5px] text-neutral-400">{r.sub}</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Anàlisi de gols (tipus + top compactes + per minut + penals) ─────────────
+
+function GoalsAnalysis({ goals, allStats, matchDuration, minutesReliable, onViewTop20 }: {
+  goals: FcfGoal[];
+  allStats: FcfStat[];
+  matchDuration: number;
+  minutesReliable: boolean;
+  onViewTop20?: () => void;
+}) {
+  // Distribució per minut (trams de 15' que respecten cada part: cap tram creua
+  // el descans del minut matchDuration/2, p. ex. 45').
   const dist = useMemo(() => {
-    const size = 10;
-    const nb = Math.max(1, Math.ceil(matchDuration / size)); // 9 trams per 90'
-    const arr = Array.from({ length: nb }, (_, i) => ({ label: `${i * size + 1}–${(i + 1) * size}`, count: 0 }));
+    const half = Math.round(matchDuration / 2);
+    const STEP = 15;
+    const ranges: { from: number; to: number; count: number }[] = [];
+    const build = (start: number, end: number) => {
+      let a = start;
+      while (a < end) { const to = Math.min(a + STEP, end); ranges.push({ from: a + 1, to, count: 0 }); a = to; }
+    };
+    build(0, half);
+    build(half, matchDuration);
     let extra = 0, sense = 0;
     for (const g of goals) {
       const m = g.minute;
       if (m == null) { sense++; continue; }
-      if (m > nb * size) { extra++; continue; }
-      const idx = Math.min(Math.max(Math.floor((m - 1) / size), 0), nb - 1);
-      arr[idx].count++;
+      if (m > matchDuration) { extra++; continue; }
+      const r = ranges.find(x => m <= x.to) ?? ranges[ranges.length - 1];
+      r.count++;
     }
-    const data = [...arr];
-    if (extra > 0) data.push({ label: `${nb * size}+`, count: extra });
-    return { data, sense };
+    const data = ranges.map(r => ({ label: `${r.from}–${r.to}`, count: r.count }));
+    if (extra > 0) data.push({ label: `${matchDuration}+`, count: extra });
+    return { data, sense, half };
   }, [goals, matchDuration]);
   const maxCount = Math.max(...dist.data.map(d => d.count), 1);
 
@@ -540,17 +596,26 @@ function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDurati
       e.count++;
       map.set(key, e);
     }
-    return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 10);
+    return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 5);
   }, [goals]);
+
+  // Top compactes (des de fcf_stats agregat)
+  const topScorers = useMemo(() =>
+    [...allStats].filter(s => s.goles > 0).sort((a, b) => b.goles - a.goles).slice(0, 5),
+    [allStats]);
+  const topG90 = useMemo(() =>
+    [...allStats]
+      .filter(s => s.goles > 0 && s.minutos >= matchDuration)
+      .map(s => ({ s, g90: (s.goles / s.minutos) * matchDuration }))
+      .sort((a, b) => b.g90 - a.g90)
+      .slice(0, 5),
+    [allStats, matchDuration]);
 
   return (
     <div>
-      <div className="mb-4">
-        <h3 className="text-[16px] font-bold text-[var(--app-text)]">Anàlisi de gols</h3>
-        <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
-          {types.total} gols · quan es marquen, de quin tipus i qui transforma els penals
-        </p>
-      </div>
+      <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mb-4">
+        {types.total} gols · repartiment, quan es marquen i qui transforma els penals
+      </p>
 
       {/* Tipus de gol */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -565,6 +630,32 @@ function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDurati
             <div className="text-[10.5px] text-neutral-400 mt-0.5 tabular-nums">{pct(t.n)}%</div>
           </div>
         ))}
+      </div>
+
+      {/* Top compactes: golejadores + G/min */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-[13.5px] font-bold text-[var(--app-text)]">Màximes golejadores</h4>
+          {onViewTop20 && (
+            <button onClick={onViewTop20} className="text-[12px] font-bold text-accent hover:underline">
+              Veure Top 20 →
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <MiniRank
+            title="Gols"
+            valueClass="text-emerald-600 dark:text-emerald-400"
+            rows={topScorers.map(s => ({ name: formatPlayerName(s.player_fcf_name), team: s.team_name, value: String(s.goles) }))}
+          />
+          {minutesReliable && topG90.length > 0 && (
+            <MiniRank
+              title={`G/${matchDuration} min`}
+              valueClass="text-orange-500 dark:text-orange-400"
+              rows={topG90.map(({ s, g90 }) => ({ name: formatPlayerName(s.player_fcf_name), team: s.team_name, value: g90.toFixed(2), sub: `${s.goles} gols` }))}
+            />
+          )}
+        </div>
       </div>
 
       {/* Distribució per minut */}
@@ -596,24 +687,14 @@ function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDurati
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Ranking de penals */}
+      {/* Ranking de penals — compacte, mitja amplada */}
       {penalRanking.length > 0 && (
-        <div className="mt-6">
-          <h4 className="text-[13.5px] font-bold text-[var(--app-text)] mb-2">Màximes golejadores de penal</h4>
-          <div className="bg-[var(--input-bg)] border border-[var(--card-border)] rounded-xl overflow-hidden">
-            {penalRanking.map((p, i) => (
-              <div key={p.name + p.team} className={cn('flex items-center gap-3 px-3.5 py-2', i > 0 && 'border-t border-[var(--card-border)]')}>
-                <span className="w-5 text-[12px] font-bold text-neutral-400 tabular-nums shrink-0">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-[var(--app-text)] truncate">{p.name}</div>
-                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">{p.team}</div>
-                </div>
-                <span className="shrink-0 text-[13px] font-black text-blue-600 dark:text-blue-400 tabular-nums">
-                  {p.count} <span className="text-[10px] font-bold text-neutral-400">penals</span>
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <MiniRank
+            title="Màximes de penal"
+            valueClass="text-blue-600 dark:text-blue-400"
+            rows={penalRanking.map(p => ({ name: p.name, team: p.team, value: String(p.count) }))}
+          />
         </div>
       )}
     </div>
@@ -622,7 +703,7 @@ function GoalsAnalysis({ goals, matchDuration }: { goals: FcfGoal[]; matchDurati
 
 // ─── Component principal ──────────────────────────────────────────────────────
 
-export default function Charts({ allStats, goals, season, leagueName, matchDuration, minutesReliable }: Props) {
+export default function Charts({ allStats, goals, season, leagueName, matchDuration, minutesReliable, onViewTop20 }: Props) {
   if (allStats.length === 0) {
     return (
       <div className="text-center py-16 text-neutral-500 dark:text-neutral-400 text-sm">
@@ -631,31 +712,47 @@ export default function Charts({ allStats, goals, season, leagueName, matchDurat
     );
   }
 
+  const card = 'bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm';
+  const hasGolsSection = goals.length > 0 || minutesReliable;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400">
         Anàlisi visual · {leagueName} · {season} ·{' '}
         {new Set(allStats.map(s => s.team_slug)).size} equips ·{' '}
         {allStats.length} jugadores
       </p>
 
-      {/* Anàlisi de gols (minut + tipus + penals) — només si hi ha detall de gols */}
-      {goals.length > 0 && (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-          <GoalsAnalysis goals={goals} matchDuration={matchDuration} />
-        </div>
+      {/* ── Bloc GOLS (només si hi ha detall de gols o minuts reals) ── */}
+      {hasGolsSection && (
+        <section className="space-y-4">
+          <SectionHeader icon={Goal} title="Gols" />
+          {goals.length > 0 && (
+            <div className={card}>
+              <GoalsAnalysis
+                goals={goals}
+                allStats={allStats}
+                matchDuration={matchDuration}
+                minutesReliable={minutesReliable}
+                onViewTop20={onViewTop20}
+              />
+            </div>
+          )}
+          {minutesReliable && (
+            <div className={card}>
+              <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
+            </div>
+          )}
+        </section>
       )}
 
-      {/* El scatter minuts/gols només té sentit amb minuts reals (Tercera Federació) */}
-      {minutesReliable && (
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-          <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
+      {/* ── Bloc PERFIL DE JUGADORES ── */}
+      <section className="space-y-4">
+        <SectionHeader icon={UserRound} title="Perfil de jugadores" />
+        <div className={card}>
+          <RadarJugadora allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
         </div>
-      )}
-
-      <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
-        <RadarJugadora allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
-      </div>
+      </section>
     </div>
   );
 }

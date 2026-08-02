@@ -833,6 +833,7 @@ export default function App() {
                 leagueName={displayLeague.name}
                 matchDuration={matchDuration}
                 minutesReliable={minutesReliable}
+                onViewTop20={() => setView('top10')}
               />
             )}
 
