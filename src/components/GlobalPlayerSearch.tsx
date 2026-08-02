@@ -62,9 +62,11 @@ export interface SearchHit {
 interface Props {
   leagues: League[];
   onSelect: (hit: SearchHit) => void;
+  /** Si es passa, la cerca es limita a aquestes lligues (mode una sola lliga). */
+  restrictLeagueIds?: string[];
 }
 
-export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
+export default function GlobalPlayerSearch({ leagues, onSelect, restrictLeagueIds }: Props) {
   const [q, setQ]             = useState('');
   const [results, setResults] = useState<FcfStat[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -104,6 +106,7 @@ export default function GlobalPlayerSearch({ leagues, onSelect }: Props) {
         .from('fcf_stats')
         .select('league_id,season,team_slug,team_name,player_fcf_name,dorsal,partidos,titular,suplente,minutos,goles,amarillas,rojas')
         .limit(FETCH_LIMIT);
+      if (restrictLeagueIds && restrictLeagueIds.length > 0) req = req.in('league_id', restrictLeagueIds);
       for (const rx of patterns) req = req.filter('player_fcf_name', 'imatch', rx);
       const { data } = await req;
 

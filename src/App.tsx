@@ -40,6 +40,11 @@ import { fetchAllPaginated, supabase } from './lib/supabase';
 import { cn, fcfSeasonToApp } from './lib/utils';
 import type { ActaProcesada, ClassificacioRow, FcfGoal, FcfStat, League, TeamOption } from './types';
 
+// Mode "una sola lliga": si VITE_ONLY_LEAGUE està definida (group_path FCF),
+// l'app es bloqueja a aquesta lliga i s'oculten els selectors de competició/grup
+// (una app dedicada). Si no, funciona com sempre (totes les lligues).
+const ONLY_LEAGUE = (import.meta.env.VITE_ONLY_LEAGUE as string | undefined)?.trim() || null;
+
 // ─── Dark mode helper ─────────────────────────────────────────────────────────
 
 // Clau nova (v2): ignora els valors antics (que s'escrivien a cada càrrega),
@@ -197,7 +202,8 @@ export default function App() {
       .eq('active', true)
       .order('sort_order', { ascending: true })
       .then(({ data }) => {
-        const rows = data || [];
+        // Mode una lliga: filtrem només la lliga configurada.
+        const rows = (data || []).filter(l => !ONLY_LEAGUE || l.group_path === ONLY_LEAGUE);
         setLeagues(rows);
         if (rows.length > 0) {
           setSelectedCompetitionKey(rows[0].competition_key ?? rows[0].id);
@@ -649,6 +655,7 @@ export default function App() {
             {/* Cercador global de jugadores (totes les lligues i temporades) */}
             <GlobalPlayerSearch
               leagues={leagues}
+              restrictLeagueIds={ONLY_LEAGUE ? leagues.map(l => l.id) : undefined}
               onSelect={handleGlobalSearchSelect}
             />
 
