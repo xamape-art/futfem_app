@@ -235,10 +235,12 @@ function PlayerCombobox({
   players,
   selectedId,
   onSelect,
+  placeholder = 'Selecciona jugadora',
 }: {
   players: FcfStat[];
   selectedId: string;
   onSelect: (id: string) => void;
+  placeholder?: string;
 }) {
   const [open, setOpen]         = useState(false);
   const [query, setQuery]       = useState('');
@@ -289,7 +291,7 @@ function PlayerCombobox({
         className="w-full flex items-center justify-between gap-2 text-[13px] bg-[var(--input-bg)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-[var(--app-text)] hover:border-brand transition-colors text-left"
       >
         <span className="truncate">
-          {selected ? `${formatPlayerName(selected.player_fcf_name)} — ${selected.team_name}` : 'Selecciona jugadora'}
+          {selected ? `${formatPlayerName(selected.player_fcf_name)} — ${selected.team_name}` : placeholder}
         </span>
         <span className="text-neutral-500 dark:text-neutral-400 shrink-0">{open ? '▲' : '▼'}</span>
       </button>
@@ -381,90 +383,112 @@ function RadarJugadora({ allStats, matchDuration, minutesReliable }: { allStats:
     [allStats]
   );
 
-  const [selectedId, setSelectedId] = useState<string>(players[0]?.id ?? '');
-  const player = players.find(p => p.id === selectedId) ?? players[0];
+  const [idA, setIdA] = useState<string>(players[0]?.id ?? '');
+  const [idB, setIdB] = useState<string>('');
+  const playerA = players.find(p => p.id === idA) ?? players[0];
+  const playerB = idB ? players.find(p => p.id === idB) ?? null : null;
 
-  if (!player) return null;
+  const BRAND = 'var(--color-brand)';
+  const ACCENT = 'var(--color-accent)';
 
-  const radarData = buildRadarData(player, allStats, matchDuration, minutesReliable);
+  const dataA = playerA ? buildRadarData(playerA, allStats, matchDuration, minutesReliable) : [];
+  const dataB = playerB ? buildRadarData(playerB, allStats, matchDuration, minutesReliable) : null;
+
+  if (!playerA) return null;
+
+  const chartData = dataA.map((d, i) => ({ axis: d.axis, a: d.value, b: dataB ? dataB[i].value : undefined }));
+
+  const statItems = (p: FcfStat) => (minutesReliable
+    ? [
+        { label: 'Partits', value: p.partidos },
+        { label: 'Minuts', value: p.minutos },
+        { label: 'Gols', value: p.goles },
+        { label: `G/${matchDuration}`, value: p.minutos >= matchDuration ? ((p.goles / p.minutos) * matchDuration).toFixed(2) : '—' },
+        { label: '🟨', value: p.amarillas },
+        { label: '🟥', value: p.rojas },
+      ]
+    : [
+        { label: 'Titular', value: p.titular },
+        { label: 'Suplent', value: p.suplente },
+        { label: 'Gols', value: p.goles },
+        { label: 'G/partit', value: p.partidos > 0 ? (p.goles / p.partidos).toFixed(2) : '—' },
+        { label: '🟨', value: p.amarillas },
+        { label: '🟥', value: p.rojas },
+      ]) as { label: string; value: string | number }[];
+
+  const StatRow = ({ p, color }: { p: FcfStat; color: string }) => (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span
+        className="flex items-center gap-1.5 text-[12px] font-bold truncate max-w-[240px]"
+        style={{ color }}
+        title={`${formatPlayerName(p.player_fcf_name)} — ${p.team_name}`}
+      >
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+        {formatPlayerName(p.player_fcf_name)}
+      </span>
+      <div className="flex gap-1.5 flex-wrap">
+        {statItems(p).map(it => (
+          <div key={it.label} className="bg-neutral-100 dark:bg-white/10 rounded-lg px-2.5 py-1 text-center min-w-[50px]">
+            <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">{it.label}</div>
+            <div className="text-[13px] font-bold text-[var(--app-text)] tabular-nums">{it.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-3 gap-4">
+      <div className="flex items-start justify-between mb-3 gap-4 flex-wrap">
         <div>
-          <h3 className="text-[16px] font-bold text-[var(--app-text)]">Perfil de jugadora</h3>
+          <h3 className="text-[16px] font-bold text-[var(--app-text)]">{playerB ? 'Comparativa de jugadores' : 'Perfil de jugadora'}</h3>
           <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 mt-1">
             Percentil respecte a tota la lliga · 100 = millor que ningú
           </p>
         </div>
-        <PlayerCombobox
-          players={players}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-        />
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+          <PlayerCombobox players={players} selectedId={idA} onSelect={setIdA} />
+          <div className="flex items-center gap-1.5">
+            <PlayerCombobox players={players} selectedId={idB} onSelect={setIdB} placeholder="＋ Comparar amb…" />
+            {idB && (
+              <button
+                onClick={() => setIdB('')}
+                className="shrink-0 text-neutral-400 hover:text-[var(--app-text)] px-1 text-[14px]"
+                title="Treure comparació"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Info de la jugadora seleccionada */}
-      <div className="flex flex-wrap gap-2.5 mb-4">
-        {(
-          (minutesReliable
-            ? [
-                { label: 'Equip',    value: player.team_name, wide: true },
-                { label: 'Partits',  value: player.partidos },
-                { label: 'Minuts',   value: player.minutos },
-                { label: 'Gols',     value: player.goles },
-                { label: `G/${matchDuration}`, value: player.minutos >= matchDuration ? ((player.goles / player.minutos) * matchDuration).toFixed(2) : '—' },
-                { label: '🟨 TA',    value: player.amarillas },
-                { label: '🟥 TR',    value: player.rojas },
-              ]
-            : [
-                { label: 'Equip',    value: player.team_name, wide: true },
-                { label: 'Titular',  value: player.titular },
-                { label: 'Suplent',  value: player.suplente },
-                { label: 'Gols',     value: player.goles },
-                { label: 'G/partit', value: player.partidos > 0 ? (player.goles / player.partidos).toFixed(2) : '—' },
-                { label: '🟨 TA',    value: player.amarillas },
-                { label: '🟥 TR',    value: player.rojas },
-              ]) as { label: string; value: string | number; wide?: boolean }[]
-        ).map(item => (
-          <div
-            key={item.label}
-            className={cn(
-              'bg-neutral-100 dark:bg-white/10 rounded-lg px-3 py-2',
-              item.wide ? 'text-left flex-1 min-w-[150px] max-w-[300px]' : 'text-center'
-            )}
-          >
-            <div className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">{item.label}</div>
-            <div className={cn('text-[14px] font-bold text-[var(--app-text)]', item.wide && 'truncate')}>
-              {item.value}
-            </div>
-          </div>
-        ))}
+      {/* Stats de la/les jugadora/es */}
+      <div className="space-y-2 mb-4">
+        <StatRow p={playerA} color={BRAND} />
+        {playerB && <StatRow p={playerB} color={ACCENT} />}
       </div>
 
       <ResponsiveContainer width="100%" height={330}>
-        <RadarChart data={radarData} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+        <RadarChart data={chartData} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
           <PolarGrid stroke="#94a3b8" strokeOpacity={0.55} strokeWidth={1.25} />
-          <PolarAngleAxis
-            dataKey="axis"
-            tick={{ fontSize: 13, fontWeight: 600, fill: '#64748b' }}
-          />
-          <Radar
-            dataKey="value"
-            stroke="var(--color-brand)"
-            fill="var(--color-brand)"
-            fillOpacity={0.25}
-            strokeWidth={2}
-          />
+          <PolarAngleAxis dataKey="axis" tick={{ fontSize: 13, fontWeight: 600, fill: '#64748b' }} />
+          <Radar name={formatPlayerName(playerA.player_fcf_name)} dataKey="a" stroke={BRAND} fill={BRAND} fillOpacity={playerB ? 0.15 : 0.25} strokeWidth={2} />
+          {playerB && (
+            <Radar name={formatPlayerName(playerB.player_fcf_name)} dataKey="b" stroke={ACCENT} fill={ACCENT} fillOpacity={0.15} strokeWidth={2} />
+          )}
           <Tooltip
             content={({ payload }) => {
               if (!payload?.length) return null;
-              const d = payload[0];
+              const axis = (payload[0] as { payload?: { axis?: string } })?.payload?.axis;
               return (
                 <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl px-3 py-2 shadow-lg text-[12px]">
-                  <p className="font-bold text-[var(--app-text)]">{d.payload.axis}</p>
-                  <p className="text-brand font-semibold">Percentil {d.value}</p>
-                  <p className="text-neutral-500 dark:text-neutral-400 text-[11px]">Millor que el {d.value}% de la lliga</p>
+                  <p className="font-bold text-[var(--app-text)] mb-1">{axis}</p>
+                  {payload.map((pl) => (
+                    <p key={String(pl.dataKey)} className="font-semibold" style={{ color: (pl as { stroke?: string; color?: string }).stroke ?? pl.color }}>
+                      {pl.name}: percentil {pl.value}
+                    </p>
+                  ))}
                 </div>
               );
             }}
@@ -713,7 +737,6 @@ export default function Charts({ allStats, goals, season, leagueName, matchDurat
   }
 
   const card = 'bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl p-5 shadow-sm';
-  const hasGolsSection = goals.length > 0 || minutesReliable;
 
   return (
     <div className="space-y-8">
@@ -723,36 +746,34 @@ export default function Charts({ allStats, goals, season, leagueName, matchDurat
         {allStats.length} jugadores
       </p>
 
-      {/* ── Bloc GOLS (només si hi ha detall de gols o minuts reals) ── */}
-      {hasGolsSection && (
-        <section className="space-y-4">
-          <SectionHeader icon={Goal} title="Gols" />
-          {goals.length > 0 && (
-            <div className={card}>
-              <GoalsAnalysis
-                goals={goals}
-                allStats={allStats}
-                matchDuration={matchDuration}
-                minutesReliable={minutesReliable}
-                onViewTop20={onViewTop20}
-              />
-            </div>
-          )}
-          {minutesReliable && (
-            <div className={card}>
-              <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* ── Bloc PERFIL DE JUGADORES ── */}
+      {/* ── Bloc JUGADORES (primer) ── */}
       <section className="space-y-4">
-        <SectionHeader icon={UserRound} title="Perfil de jugadores" />
+        <SectionHeader icon={UserRound} title="Jugadores" />
+        {minutesReliable && (
+          <div className={card}>
+            <ScatterMinutsGols allStats={allStats} matchDuration={matchDuration} />
+          </div>
+        )}
         <div className={card}>
           <RadarJugadora allStats={allStats} matchDuration={matchDuration} minutesReliable={minutesReliable} />
         </div>
       </section>
+
+      {/* ── Bloc GOLS (només si hi ha detall de gols) ── */}
+      {goals.length > 0 && (
+        <section className="space-y-4">
+          <SectionHeader icon={Goal} title="Gols" />
+          <div className={card}>
+            <GoalsAnalysis
+              goals={goals}
+              allStats={allStats}
+              matchDuration={matchDuration}
+              minutesReliable={minutesReliable}
+              onViewTop20={onViewTop20}
+            />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
