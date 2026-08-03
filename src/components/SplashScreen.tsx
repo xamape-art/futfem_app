@@ -72,21 +72,32 @@ function SplashTile({
   );
 }
 
-export default function SplashScreen({ onDone }: { onDone: () => void }) {
+export default function SplashScreen({ onDone, onlyLeague }: { onDone: () => void; onlyLeague?: string | null }) {
   const [totals, setTotals] = useState<Totals | null>(null);
   const [leaving, setLeaving] = useState(false);
 
-  // ── Carregar totals globals (totes les lligues i temporades) ────────────────
+  // ── Carregar totals (globals, o d'una sola lliga si onlyLeague) ─────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Mode una lliga: resolem el/s league_id per filtrar els totals.
+      let leagueIds: string[] | null = null;
+      if (onlyLeague) {
+        const { data: lg } = await supabase.from('leagues').select('id').eq('group_path', onlyLeague);
+        leagueIds = (lg ?? []).map(l => l.id);
+        if (leagueIds.length === 0) leagueIds = ['00000000-0000-0000-0000-000000000000'];
+      }
       const [stats, actas] = await Promise.all([
-        fetchAllPaginated<{ goles: number | null; team_slug: string }>((from, to) =>
-          supabase.from('fcf_stats').select('goles, team_slug').range(from, to)
-        ),
-        fetchAllPaginated<{ acta_url: string }>((from, to) =>
-          supabase.from('actas_procesadas').select('acta_url').range(from, to)
-        ),
+        fetchAllPaginated<{ goles: number | null; team_slug: string }>((from, to) => {
+          let q = supabase.from('fcf_stats').select('goles, team_slug');
+          if (leagueIds) q = q.in('league_id', leagueIds);
+          return q.range(from, to);
+        }),
+        fetchAllPaginated<{ acta_url: string }>((from, to) => {
+          let q = supabase.from('actas_procesadas').select('acta_url');
+          if (leagueIds) q = q.in('league_id', leagueIds);
+          return q.range(from, to);
+        }),
       ]);
       if (cancelled) return;
       const goals = stats.reduce((sum, r) => sum + (r.goles ?? 0), 0);
@@ -97,7 +108,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onlyLeague]);
 
   // ── Temporització ───────────────────────────────────────────────────────────
   // Quan arriben les dades: es fa el count-up (~1,1s) i es mantenen visibles

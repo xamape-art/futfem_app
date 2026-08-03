@@ -478,7 +478,7 @@ export default function App() {
       style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}
     >
       {/* Intro splash amb totals globals */}
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} onlyLeague={ONLY_LEAGUE} />}
 
       {/* Panell "Sobre FemStats" */}
       {showAbout && (
