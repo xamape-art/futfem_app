@@ -64,6 +64,17 @@ jobs:
           - 'futbol-femeni/segona-divisio-femeni/grup-5'
           - 'futbol-femeni/segona-divisio-femeni/grup-6'
           - 'futbol-femeni/segona-divisio-femeni/grup-7'
+          - 'futbol-femeni/primera-divisio-femeni-cadet-f11/grup-1'
+          - 'futbol-femeni/primera-divisio-femeni-cadet-f11/grup-2'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-1'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-2'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-3'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-4'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-5'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-6'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-7'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-8'
+          - 'futbol-femeni/segona-divisio-femeni-cadet-f11/grup-9'
         season:
           - '2627'
 
@@ -82,7 +93,7 @@ jobs:
 
       - name: Run sync
         run: |
-          node scripts/sync-actas.js \
+          node scripts/sync-actas-api.js \
             --league "${{ matrix.league }}" \
             --season "${{ matrix.season }}"
         env:
@@ -133,8 +144,8 @@ jobs:
           FLAGS="--league ${{ inputs.league }} --season ${{ inputs.season }}"
           if [ "${{ inputs.force }}"   = "true" ]; then FLAGS="$FLAGS --force";   fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then FLAGS="$FLAGS --dry-run"; fi
-          echo "▶ node scripts/sync-actas.js $FLAGS"
-          node scripts/sync-actas.js $FLAGS
+          echo "▶ node scripts/sync-actas-api.js $FLAGS"
+          node scripts/sync-actas-api.js $FLAGS
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
