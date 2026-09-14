@@ -20,11 +20,6 @@ on:
         type: choice
         options:
           - '2627'
-          - '2526'
-      force:
-        description: 'Reimportar actas ya procesadas'
-        default: false
-        type: boolean
       dry_run:
         description: 'Solo parsear, no escribir en Supabase'
         default: false
@@ -142,7 +137,6 @@ jobs:
       - name: Run sync
         run: |
           FLAGS="--league ${{ inputs.league }} --season ${{ inputs.season }}"
-          if [ "${{ inputs.force }}"   = "true" ]; then FLAGS="$FLAGS --force";   fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then FLAGS="$FLAGS --dry-run"; fi
           echo "▶ node scripts/sync-actas-api.js $FLAGS"
           node scripts/sync-actas-api.js $FLAGS
@@ -167,6 +161,5 @@ jobs:
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Liga** | ${{ inputs.league }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Season** | ${{ inputs.season }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Force** | ${{ inputs.force }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Dry run** | ${{ inputs.dry_run }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Timestamp** | $(date -u '+%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY

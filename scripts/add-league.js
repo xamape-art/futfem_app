@@ -1,7 +1,7 @@
 /**
  * add-league.js — Helper per inserir una nova lliga a Supabase
  * Ús: node scripts/add-league.js
- * Requereix les mateixes vars d'entorn que sync-actas.js
+ * Requereix les mateixes vars d'entorn que sync-actas-api.js
  */
 
 import { createClient } from '@supabase/supabase-js';

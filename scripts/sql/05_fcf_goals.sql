@@ -4,7 +4,7 @@
 -- Font: taula "Gols" de cada acta FCF (minut, escut d'equip, jugadora, tipus).
 -- =============================================================================
 
--- Un gol per fila. S'omple des de scripts/sync-actas.js (només per a lligues amb
+-- Un gol per fila. S'omple des de scripts/sync-actas-api.js (només per a lligues amb
 -- leagues.track_goals = true). Idempotent: abans d'inserir, s'esborren els gols
 -- d'aquella acta (per acta_url).
 

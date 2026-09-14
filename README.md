@@ -24,27 +24,23 @@ cp .env.example .env.local
 npm run dev
 ```
 
-## Sync script
+## Sync scripts
+
+Leen la API JSON de la FCF y recalculan la temporada entera en cada ejecución (idempotentes).
+GitHub Actions los ejecuta cada lunes para las ligas del `matrix` de `.github/workflows/sync-actas.yml`.
 
 ```bash
-# Test sin escribir (dry-run)
-node scripts/sync-actas.js \
-  --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v \
-  --season 2627 \
-  --dry-run
+# Estadísticas de jugadoras y goles (dry-run: no escribe)
+node scripts/sync-actas-api.js   --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v   --season 2627   --dry-run
 
-# Backfill histórico (una vez)
-node scripts/sync-actas.js \
-  --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v \
-  --season 2526
-
-# Sync actual (lo ejecuta GitHub Actions cada lunes)
-node scripts/sync-actas.js \
-  --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v \
-  --season 2627
+# Clasificación
+node scripts/sync-classificacio.js   --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v   --season 2627
 ```
 
-Variables de entorno para el script (no van a Vercel):
+> **La temporada 25-26 está congelada.** Sus datos ya están importados y verificados y no se
+> vuelven a tocar: los dos scripts se niegan a ejecutarse sobre ella.
+
+Variables de entorno para los scripts (no van a Vercel):
 ```
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
