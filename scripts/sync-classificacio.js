@@ -1,12 +1,13 @@
 /**
  * scripts/sync-classificacio.js — FUTFEM_APP
  * ─────────────────────────────────────────────────────────────────────────────
- * Sincroniza la clasificación de una liga desde la web de la FCF → Supabase
- * (tabla fcf_classificacio). Generalizado para múltiples ligas: la liga se pasa
- * con --league (mismo group_path que sync-actas.js).
+ * Sincroniza la clasificación de una liga desde la API JSON de la FCF → Supabase
+ * (tabla fcf_classificacio). Sustituye al raspado del HTML, que murió cuando la
+ * FCF rehízo su web en Next.js (agosto 2026): la ruta vieja da 307 → 404 y el
+ * script antiguo lo tomaba por "temporada sin datos" y salía en verde.
  *
- * La clasificación es un snapshot completo: cada ejecución hace upsert de todas
- * las filas (una por equipo) de la liga+temporada. Idempotente.
+ * La clasificación es un snapshot completo: cada ejecución reemplaza las filas
+ * de la liga+temporada. Idempotente.
  *
  * USO:
  *   node scripts/sync-classificacio.js \
@@ -15,8 +16,8 @@
  *     [--dry-run]
  *
  *   --league <group_path>  group_path FCF de la liga (OBLIGATORIO)
- *   --season 2526|2627     Código FCF de temporada (default: 2627)
- *   --dry-run              Solo parsea y muestra, no escribe en Supabase
+ *   --season 2627|2728…    Código FCF de temporada (default: 2627)
+ *   --dry-run              Solo descarga y muestra, no escribe en Supabase
  *
  * VARIABLES DE ENTORNO requeridas (salvo --dry-run):
  *   SUPABASE_URL
@@ -24,14 +25,11 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import * as cheerio from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
-
-// Polyfill WebSocket para Node.js < 22
-if (typeof globalThis.WebSocket === 'undefined') {
-  const { default: ws } = await import('ws');
-  globalThis.WebSocket = ws;
-}
+// Mismo slug y misma resolución de grupo que el sync de actas: así los
+// team_slug de la clasificación y de fcf_stats son idénticos y el clic en un
+// equipo de la tabla lleva a sus jugadoras.
+import { slugify, resolveGrupId, FROZEN_SEASONS } from './sync-actas-api.js';
 
 // ─── CLI args ─────────────────────────────────────────────────────────────────
 
@@ -42,49 +40,19 @@ const getFlag = (flag, def = null) => {
 };
 
 const LEAGUE_PATH = getFlag('--league', null);      // OBLIGATORIO
-const FCF_SEASON  = getFlag('--season', '2627');    // '2526' | '2627'
+const FCF_SEASON  = getFlag('--season', '2627');
 const DRY_RUN     = args.includes('--dry-run');
 
 const SEASON_APP = FCF_SEASON.length === 4
   ? `${FCF_SEASON.slice(0, 2)}-${FCF_SEASON.slice(2)}`
   : FCF_SEASON;
 
-const FCF_BASE = 'https://www.fcf.cat';
-
-// ─── Validación ────────────────────────────────────────────────────────────────
-
-if (!LEAGUE_PATH) {
-  console.error('\n❌ --league <group_path> es obligatorio\n');
-  console.error('Ejemplo:');
-  console.error('  node scripts/sync-classificacio.js \\');
-  console.error('    --league futbol-femeni/tercera-federacio-futbol-femeni/grup-v \\');
-  console.error('    --season 2627\n');
-  process.exit(1);
-}
-
-if (!DRY_RUN && (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
-  console.error('\n❌ Faltan variables de entorno:');
-  console.error('   SUPABASE_URL');
-  console.error('   SUPABASE_SERVICE_ROLE_KEY\n');
-  process.exit(1);
-}
-
-// ─── Supabase (lazy: no se crea en --dry-run) ──────────────────────────────────
-
-let _supabase = null;
-function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  }
-  return _supabase;
-}
+const API        = 'https://www.fcf.cat/api/competition';
+const USER_AGENT = 'Mozilla/5.0 (compatible; FUTFEM-App/2.1; dades@futfem.cat)';
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 
-const num = (t) => {
-  const n = parseInt(String(t).replace(/[^0-9-]/g, ''), 10);
-  return isNaN(n) ? 0 : n;
-};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function log(msg)  { console.log(`  ${msg}`); }
 function info(msg) { console.log(`\n🔵 ${msg}`); }
@@ -92,138 +60,181 @@ function ok(msg)   { console.log(`  ✅ ${msg}`); }
 function warn(msg) { console.log(`  ⚠️  ${msg}`); }
 function err(msg)  { console.log(`  ❌ ${msg}`); }
 
-// ─── Resolver liga desde Supabase ─────────────────────────────────────────────
-
-async function resolveLeague(groupPath) {
-  const { data, error } = await getSupabase()
-    .from('leagues')
-    .select('id, name, group_path')
-    .eq('group_path', groupPath)
-    .single();
-
-  if (error || !data) {
-    err(`Liga no encontrada en Supabase: "${groupPath}"`);
-    if (error) err(`Detalle: ${error.message || error.code}`);
-    process.exit(1);
+async function apiGet(path) {
+  let lastErr;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const res = await fetch(`${API}/${path}`, {
+        headers: { 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+      if (attempt < 4) await sleep(1000 * attempt);
+    }
   }
-  return data;
+  throw new Error(`GET ${path}: ${lastErr.message}`);
 }
 
-// ─── Parse clasificación ──────────────────────────────────────────────────────
-// Estructura verificada en las categorías Tercera, Preferent, 1ª Div, Cadet e
-// Infantil (idéntica: 23 celdas). Mapeo de columnas:
-//   td[0]=posición · td[4]=punts · td[6..9]=PJ,G,E,P · td[19]=F · td[20]=C
-// Se valida cada fila (pj=g+e+p y punts=3g+e) para no guardar basura si la web
-// cambiara de estructura.
+// ─── Parse ────────────────────────────────────────────────────────────────────
 
-function parseClassificacio(html) {
-  const $ = cheerio.load(html);
+/** "3.00" → 3 */
+const toInt = v => {
+  const x = parseFloat(String(v ?? '').replace(',', '.'));
+  return Number.isFinite(x) ? Math.round(x) : 0;
+};
 
-  let table = null;
-  $('table').each((_, t) => {
-    if (table) return;
-    if ($(t).find('tbody tr a[href*="/equip/"]').length >= 3) table = t;
-  });
-  // Sin tabla = temporada aún no comenzada (la página existe pero está vacía).
-  if (!table) return [];
+/**
+ * played/won/drawn/lost NO son números: son DOS cifras pegadas —casa y fuera—
+ * con las dos mitades del mismo ancho. "1111" = 11 + 11 = 22 jugados; "10" en
+ * la J1 es 1 + 0, no diez. Leerlo con parseInt da una tabla falsa que además
+ * pasa el control de coherencia (10 = 0 + 0 + 10). Los goles NO van partidos.
+ *
+ * Si la longitud es impar, el formato ha cambiado y adivinar dónde partir
+ * ("110" ¿es 1+10 o 11+0?) sería inventarse la tabla: se devuelve NaN.
+ */
+function homePlusAway(v) {
+  const s = String(v ?? '').trim();
+  if (s === '') return 0;
+  if (!/^\d+$/.test(s) || s.length % 2 !== 0) return NaN;
+  const half = s.length / 2;
+  return parseInt(s.slice(0, half), 10) + parseInt(s.slice(half), 10);
+}
 
+function parseClassificacio(payload, season) {
+  const data = Array.isArray(payload) ? payload : (payload?.data ?? []);
   const rows = [];
-  $(table).find('tbody tr').each((_, tr) => {
-    const $tr = $(tr);
-    const tds = $tr.find('td');
-    if (tds.length < 20) return;
+  const rejected = [];
 
-    // El separador del enlace varía por categoría (/fn/, /pf/, /1f/…), así que
-    // tomamos el último segmento de la URL como slug (robusto para todas).
-    const equipHref = $tr.find('a[href*="/equip/"]').attr('href') || '';
-    const slug = (equipHref.split('/').pop() || '').trim();
-    if (!slug) return;
+  for (const e of data) {
+    const name = (e.team?.name || '').replace(/\s+/g, ' ').trim();
+    if (!name) continue;
 
-    const name = ($tr.find('td.tl a').first().text() || slug).replace(/\s+/g, ' ').trim();
+    const posicio  = toInt(e.position);
+    const punts    = toInt(e.points);
+    const pj       = homePlusAway(e.played);
+    const guanyats = homePlusAway(e.won);
+    const empatats = homePlusAway(e.drawn);
+    const perduts  = homePlusAway(e.lost);
+    const gf       = toInt(e.goalsFor);
+    const gc       = toInt(e.goalsAgainst);
 
-    const posicio  = num($(tds[0]).text());
-    const punts    = num($(tds[4]).text());
-    const pj       = num($(tds[6]).text());
-    const guanyats = num($(tds[7]).text());
-    const empatats = num($(tds[8]).text());
-    const perduts  = num($(tds[9]).text());
-    const gf       = num($(tds[19]).text());
-    const gc       = num($(tds[20]).text());
-
-    // Coherencia estructural: PJ = G+E+P siempre. Los puntos deben ser ≤ 3·G+E
-    // (pueden ser MENOS por sanciones/deducciones de la FCF, nunca más). Si no
-    // cuadra, es que las columnas se han desalineado → se omite la fila.
-    const coherent = pj === guanyats + empatats + perduts
-      && punts <= guanyats * 3 + empatats
-      && punts >= 0;
-    if (!coherent) {
-      warn(`Fila incoherente "${name}" (P${posicio}): PJ=${pj} G=${guanyats} E=${empatats} P=${perduts} Pts=${punts} → se omite`);
-      return;
+    if ([pj, guanyats, empatats, perduts].some(Number.isNaN)) {
+      rejected.push(`"${name}": played/won/drawn/lost ilegibles (${e.played}/${e.won}/${e.drawn}/${e.lost})`);
+      continue;
+    }
+    // Necesario pero NO suficiente (una lectura mal partida puede cuadrar
+    // consigo misma): PJ = G+E+P, y puntos nunca por encima de 3·G+E (por
+    // debajo sí, la FCF sanciona).
+    if (!(pj === guanyats + empatats + perduts && punts <= guanyats * 3 + empatats && punts >= 0)) {
+      rejected.push(`"${name}": incoherente PJ=${pj} G=${guanyats} E=${empatats} P=${perduts} Pts=${punts}`);
+      continue;
     }
 
     rows.push({
-      season: SEASON_APP,
-      team_slug: slug,
+      season,
+      team_slug: slugify(name),
       team_name: name,
       posicio, pj, guanyats, empatats, perduts, gf, gc, punts,
-      updated_at: new Date().toISOString(),
     });
-  });
+  }
 
-  return rows.sort((a, b) => a.posicio - b.posicio);
+  return { rows: rows.sort((a, b) => a.posicio - b.posicio), rejected };
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 async function main() {
+  if (!LEAGUE_PATH) {
+    console.error('\n❌ --league <group_path> es obligatorio\n');
+    process.exit(1);
+  }
+  if (FROZEN_SEASONS.has(SEASON_APP)) {
+    console.error(`\n🔒 PROHIBIDO: la temporada ${SEASON_APP} está CONGELADA. No se recalcula su clasificación.\n`);
+    process.exit(1);
+  }
+  if (!DRY_RUN && (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    console.error('\n❌ Faltan variables de entorno SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY\n');
+    process.exit(1);
+  }
+
   console.log('\n════════════════════════════════════════════════════════');
-  console.log('  FUTFEM_APP · Sync Clasificación FCF');
+  console.log('  FUTFEM_APP · Sync Clasificación FCF (API JSON)');
   console.log(`  League:     ${LEAGUE_PATH}`);
   console.log(`  FCF_SEASON: ${FCF_SEASON}  →  App season: ${SEASON_APP}`);
   console.log(`  DRY_RUN:    ${DRY_RUN}`);
-  console.log('════════════════════════════════════════════════════════\n');
+  console.log('════════════════════════════════════════════════════════');
 
-  // En dry-run no tocamos Supabase (ni resolvemos league_id).
-  const league = DRY_RUN ? { id: null, name: LEAGUE_PATH } : await resolveLeague(LEAGUE_PATH);
-
-  const url = `${FCF_BASE}/classificacio/${FCF_SEASON}/${LEAGUE_PATH}`;
-  info(`Descargando clasificación: ${url}`);
-
-  const res = await fetch(url, { headers: { 'User-Agent': 'FUTFEM-App/1.0 (dades@futfem.cat)' } });
-  if (!res.ok) {
-    err(`HTTP ${res.status} al descargar la clasificación. ¿Temporada ${SEASON_APP} aún sin datos?`);
-    process.exit(res.status === 404 ? 0 : 1);
+  info('Resolviendo grupId en la API…');
+  const grp = await resolveGrupId(LEAGUE_PATH, FCF_SEASON);
+  if (grp.notPublished) {
+    log(`${grp.notPublished}. Nada que sincronizar.`);
+    process.exit(0);
   }
+  ok(`${grp.label} → grupId ${grp.grupId}`);
 
-  const rows = parseClassificacio(await res.text());
+  const { rows, rejected } = parseClassificacio(await apiGet(`classificacio?grupId=${grp.grupId}`), SEASON_APP);
 
+  for (const r of rejected) warn(`fila omitida · ${r}`);
+  if (rejected.length) {
+    // Una tabla a medias miente: si falta algún equipo no se escribe nada.
+    err(`${rejected.length} fila(s) no se han podido leer: la API ha cambiado de formato. No se escribe nada.`);
+    process.exit(1);
+  }
   if (rows.length === 0) {
-    log(`Sin filas de clasificación para "${league.name}" · ${SEASON_APP} (temporada no comenzada o web vacía).`);
+    log('La clasificación aún está vacía (temporada sin partidos jugados). Nada que sincronizar.');
     process.exit(0);
   }
 
-  log(`${rows.length} equipos parseados:`);
+  log(`${rows.length} equipos:`);
   for (const r of rows) {
-    log(`  ${String(r.posicio).padStart(2)}. ${r.team_name.padEnd(38)} PJ ${r.pj}  ${r.guanyats}-${r.empatats}-${r.perduts}  GF ${r.gf} GC ${r.gc} (${r.gf - r.gc >= 0 ? '+' : ''}${r.gf - r.gc})  ${r.punts} pts`);
+    const dg = r.gf - r.gc;
+    log(`  ${String(r.posicio).padStart(2)}. ${r.team_name.padEnd(38)} PJ ${r.pj}  ${r.guanyats}-${r.empatats}-${r.perduts}  GF ${r.gf} GC ${r.gc} (${dg >= 0 ? '+' : ''}${dg})  ${r.punts} pts`);
   }
 
   if (DRY_RUN) {
     console.log('\n  [DRY-RUN] No se ha escrito nada en Supabase.\n');
-    process.exit(0);
+    return;
   }
 
-  const payload = rows.map(r => ({ ...r, league_id: league.id }));
-  const { error } = await getSupabase()
-    .from('fcf_classificacio')
-    .upsert(payload, { onConflict: 'league_id,season,team_slug' });
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { data: league, error: lgErr } = await supabase
+    .from('leagues').select('id, name').eq('group_path', LEAGUE_PATH).single();
+  if (lgErr || !league) {
+    err(`Liga no encontrada en Supabase: "${LEAGUE_PATH}"`);
+    process.exit(1);
+  }
 
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('fcf_classificacio')
+    .upsert(rows.map(r => ({ ...r, league_id: league.id, updated_at: now })), { onConflict: 'league_id,season,team_slug' });
   if (error) {
     err(`Error al guardar en Supabase: ${error.message}`);
     process.exit(1);
+  }
+
+  // Equipos que ya no están en la tabla (retirados, cambio de nombre) → fuera.
+  const keep = new Set(rows.map(r => r.team_slug));
+  const { data: existing } = await supabase
+    .from('fcf_classificacio').select('id, team_slug').eq('league_id', league.id).eq('season', SEASON_APP);
+  const stale = (existing ?? []).filter(r => !keep.has(r.team_slug)).map(r => r.id);
+  if (stale.length) {
+    await supabase.from('fcf_classificacio').delete().in('id', stale);
+    log(`${stale.length} fila(s) obsoleta(s) eliminada(s)`);
   }
 
   ok(`Clasificación "${league.name}" · ${SEASON_APP} guardada (${rows.length} equipos).`);
   console.log('\n════════════════════════════════════════════════════════\n');
 }
 
-main().catch(e => { console.error('Error fatal:', e); process.exit(1); });
+const invokedDirectly = process.argv[1] && import.meta.url.endsWith(
+  process.argv[1].replace(/\\/g, '/').split('/').pop()
+);
+if (invokedDirectly) {
+  main().catch(e => { console.error('Error fatal:', e); process.exit(1); });
+}
+
+export { parseClassificacio, homePlusAway };
