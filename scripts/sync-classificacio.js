@@ -94,8 +94,14 @@ const toInt = v => {
  *
  * Si la longitud es impar, el formato ha cambiado y adivinar dónde partir
  * ("110" ¿es 1+10 o 11+0?) sería inventarse la tabla: se devuelve NaN.
+ *
+ * La FCF cambió el formato el 28-09-2026, con la J3: desde entonces llegan como
+ * NÚMEROS de JSON con el total ya sumado (played: 3). Un número se cree tal
+ * cual; una cadena se sigue partiendo, que es lo que permite releer temporadas
+ * viejas sin tocar nada.
  */
 function homePlusAway(v) {
+  if (typeof v === 'number') return Number.isInteger(v) && v >= 0 ? v : NaN;
   const s = String(v ?? '').trim();
   if (s === '') return 0;
   if (!/^\d+$/.test(s) || s.length % 2 !== 0) return NaN;
