@@ -26,3 +26,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Página del marcador FCF → FemStats: lleva la clave dentro
+*.local.html

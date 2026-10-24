@@ -255,7 +255,7 @@ async function fetchActas(grupId) {
   const closed   = all.filter(m => String(m.CERRADA) === '1');
 
   log(`${all.length} partidos en el calendario · ${closed.length} con acta cerrada`);
-  if (closed.length === 0) return { actas: [], total: all.length };
+  if (closed.length === 0) return { actas: [], total: all.length, missing: 0 };
 
   const actas = await pool(closed, async m => {
     try {
@@ -274,7 +274,8 @@ async function fetchActas(grupId) {
     }
   });
 
-  return { actas: actas.filter(Boolean), total: all.length };
+  const ok = actas.filter(Boolean);
+  return { actas: ok, total: all.length, missing: closed.length - ok.length };
 }
 
 // ─── 3. Cálculo de la temporada ───────────────────────────────────────────────
@@ -576,7 +577,14 @@ async function main() {
   ok(`${grp.label} → grupId ${grp.grupId}`);
 
   info('Descargando actas cerradas…');
-  const { actas, total } = await fetchActas(grp.grupId);
+  const { actas, total, missing } = await fetchActas(grp.grupId);
+  // La temporada se reconstruye entera y se purga lo que no sale: con un acta
+  // de menos se borrarían sus jugadoras y sus goles. Mejor no escribir nada.
+  if (missing > 0 && !DRY_RUN) {
+    err(`${missing} acta(s) cerrada(s) no se han podido leer. No se escribe nada para no perder datos.`);
+    err('Si es la caché del marcador, vuelve a pulsar «FCF → FemStats» en fcf.cat y relanza.');
+    process.exit(1);
+  }
   if (actas.length === 0) {
     log('Todavía no hay ninguna acta cerrada en este grupo. Nada que sincronizar.');
     process.exit(0);

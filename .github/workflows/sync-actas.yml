@@ -30,10 +30,16 @@ jobs:
   sync-scheduled:
     if: github.event_name == 'schedule'
     name: "Sync ${{ matrix.league }}"
-    # En el PC de casa: desde el 05-10-2026 la FCF responde 403 a las IP de
-    # GitHub Actions. El runner es Windows, así que los pasos van en pwsh.
-    runs-on: [self-hosted, fcf]
+    # Ya no lee fcf.cat: desde el 23-10-2026 la FCF solo responde a navegadores
+    # (403 a GitHub desde el 05-10 y al PC de casa desde el 23-10). Los datos los
+    # guarda el navegador con el marcador «FCF → FemStats» en fcf_cache (SQL 06),
+    # y scripts/lib/fcf-cache.mjs hace que los scripts lean de ahí. Así que vuelve
+    # a correr en GitHub y no depende de que el PC esté encendido.
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
 
     strategy:
       fail-fast: false  # Si una liga falla, las otras siguen
@@ -89,21 +95,22 @@ jobs:
 
       - name: Run sync
         run: |
-          node scripts/sync-actas-api.js \
-            --league "${{ matrix.league }}" \
-            --season "${{ matrix.season }}"
+          node scripts/sync-actas-api.js --league "${{ matrix.league }}" --season "${{ matrix.season }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # La FCF se lee de fcf_cache, no de fcf.cat.
+          NODE_OPTIONS:              --import=./scripts/lib/fcf-cache.mjs
 
       - name: Run classification sync
         run: |
-          node scripts/sync-classificacio.js \
-            --league "${{ matrix.league }}" \
-            --season "${{ matrix.season }}"
+          node scripts/sync-classificacio.js --league "${{ matrix.league }}" --season "${{ matrix.season }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS:              --import=./scripts/lib/fcf-cache.mjs
 
       - name: Step summary
         if: always()
@@ -121,8 +128,11 @@ jobs:
   sync-manual:
     if: github.event_name == 'workflow_dispatch'
     name: "Manual Sync · ${{ inputs.league }}"
-    runs-on: [self-hosted, fcf]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout
@@ -146,6 +156,7 @@ jobs:
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS:              --import=./scripts/lib/fcf-cache.mjs
 
       - name: Run classification sync
         if: ${{ inputs.dry_run != true }}
@@ -156,6 +167,7 @@ jobs:
         env:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS:              --import=./scripts/lib/fcf-cache.mjs
 
       - name: Step summary
         if: always()
