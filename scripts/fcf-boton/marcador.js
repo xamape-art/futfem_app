@@ -120,9 +120,14 @@
     const partidos = [];
     for (const [i, g] of grupIds.entries()) {
       decir(`Partidos y clasificación: ${i + 1} de ${grupIds.length}`);
-      partidos.push(...Object.values(await leer(`/partidos?grupId=${g}`) || {}).flat());
+      // Desde el 26-10-2026 la FCF lo manda como { jornada, partidos: { "1": [...] } };
+      // antes eran las jornadas sueltas. Leyendo el formato viejo salían cero
+      // actas y el marcador acababa en «Guardado» sin traer ninguna.
+      const d = await leer(`/partidos?grupId=${g}`) || {};
+      partidos.push(...Object.values(d.partidos ?? d).flat().filter(p => p && p.CODACTA));
       await leer(`/classificacio?grupId=${g}`);
     }
+    if (grupIds.length && !partidos.length) throw new Error('La FCF ha cambiado el formato de los partidos: no se reconoce ninguno.');
 
     const ahora = Date.now();
     const urlActa = p => `${BASE}${API}/acta?codacta=${p.CODACTA}`;

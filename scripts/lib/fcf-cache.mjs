@@ -70,5 +70,22 @@ globalThis.fetch = async (entrada, opciones) => {
     console.log('    Pulsa el marcador «FCF → FemStats» en fcf.cat y vuelve a lanzar.');
     return new Response('{}', { status: 404, statusText: 'No está en fcf_cache' });
   }
-  return new Response(JSON.stringify(fila.body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(normalizar(url, fila.body)), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
+
+/**
+ * Los partidos, siempre en el formato de siempre: { "1": [...], ..., "26": [...] }.
+ *
+ * Desde el 26-10-2026 la FCF los manda como { jornada: {…}, partidos: { "1": [...] } }.
+ * sync-actas-api.js hace Object.values(…).flat() y con el formato nuevo salían dos
+ * objetos que no son partidos: ninguna acta cerrada y «nada que sincronizar». Se
+ * arregla aquí, en un solo sitio, y se planta si tampoco reconoce el formato.
+ */
+function normalizar(url, body) {
+  if (!url.includes('/api/competition/partidos?') || !body || typeof body !== 'object') return body;
+  const jornadas = body.partidos ?? body;
+  if (!Object.values(jornadas).some(v => Array.isArray(v))) {
+    throw new Error(`fcf-cache: ${url} no trae jornadas reconocibles. ¿Ha vuelto a cambiar el formato de la FCF?`);
+  }
+  return jornadas;
+}
