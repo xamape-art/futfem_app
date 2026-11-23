@@ -105,7 +105,7 @@
     if (!temporada) throw new Error(`La FCF no conoce la temporada ${etiqueta}.`);
     const comps = await leer(`/competicions?temporada=${temporada.value}&disciplinaId=${DISCIPLINA_FEM}`) || [];
 
-    const gruposDe = new Map(), grupIds = [], sinPublicar = [];
+    const gruposDe = new Map(), grupIds = [], ligaDe = new Map(), sinPublicar = [];
     for (const [i, liga] of LIGAS.entries()) {
       decir(`Ligas: ${i + 1} de ${LIGAS.length}`);
       const [, compSlug, grupSlug] = liga.split('/');
@@ -115,6 +115,7 @@
       const grupo = gruposDe.get(comp.value).find(g => slugify(g.label) === grupSlug);
       if (!grupo) { sinPublicar.push(liga); continue; }
       grupIds.push(grupo.value);
+      ligaDe.set(grupo.value, liga);
     }
 
     const partidos = [];
@@ -124,7 +125,7 @@
       // antes eran las jornadas sueltas. Leyendo el formato viejo salían cero
       // actas y el marcador acababa en «Guardado» sin traer ninguna.
       const d = await leer(`/partidos?grupId=${g}`) || {};
-      partidos.push(...Object.values(d.partidos ?? d).flat().filter(p => p && p.CODACTA));
+      partidos.push(...Object.values(d.partidos ?? d).flat().filter(p => p && p.CODACTA).map(p => ({ ...p, _grupo: g })));
       await leer(`/classificacio?grupId=${g}`);
     }
     if (grupIds.length && !partidos.length) throw new Error('La FCF ha cambiado el formato de los partidos: no se reconoce ninguno.');
@@ -139,9 +140,23 @@
       else if (Date.parse(String(p.COMIENZO1).replace(' ', 'T')) >= ahora - DIAS_RELEER * 864e5
         && copia < ahora - HORAS_COPIA * 36e5) releer.push(p);
     }
-    // Primero las que faltan: sin ellas el sync de esa liga no escribe.
-    const cola = [...faltan, ...releer];
+    // Primero las que faltan: sin ellas el sync de esa liga no escribe. Van por
+    // ligas enteras y empezando por la que menos tiene pendiente: así el tope
+    // completa el máximo de ligas. (En el orden de la lista, las últimas —cadet
+    // F11— se quedaban fuera; y repartir por turnos dejaría todas a medias, y una
+    // liga a medias falla igual que una vacía.)
+    const porLiga = new Map();
+    for (const p of faltan) { if (!porLiga.has(p._grupo)) porLiga.set(p._grupo, []); porLiga.get(p._grupo).push(p); }
+    const faltanOrden = [...porLiga.values()].sort((x, y) => x.length - y.length).flat();
+    const cola = [...faltanOrden, ...releer];
     const tanda = cola.slice(0, MAX_ACTAS);
+    // Ligas que se quedan con actas sin guardar: su sync fallará hasta otra pulsación.
+    const enTanda = new Set(tanda);
+    const incompletas = new Map();
+    for (const p of faltan) if (!enTanda.has(p)) {
+      const liga = ligaDe.get(p._grupo).split('/').slice(1).join('/');
+      incompletas.set(liga, (incompletas.get(liga) ?? 0) + 1);
+    }
     for (const [i, p] of tanda.entries()) {
       decir(`Actas: ${i + 1} de ${tanda.length}` + (cola.length > tanda.length ? ` (quedan ${cola.length - tanda.length} para otra pulsación)` : ''));
       await leer(`/acta?codacta=${p.CODACTA}`);
@@ -150,7 +165,8 @@
     const resto = cola.length - tanda.length;
     const resumen = `${grupIds.length} liga(s), ${tanda.length} acta(s) leídas.`
       + (sinPublicar.length ? `\n${sinPublicar.length} liga(s) aún sin publicar en la FCF.` : '')
-      + (resto ? `\n⏳ Quedan ${resto} acta(s): vuelve a pulsar el marcador.` : '\nYa puede correr el sync.');
+      + (resto ? `\n⏳ Quedan ${resto} acta(s): vuelve a pulsar el marcador.` : '\nYa puede correr el sync.')
+      + (incompletas.size ? `\nSin completar (su sync fallará):\n${[...incompletas].map(([l, n]) => `· ${l}: ${n}`).join('\n')}` : '');
     decir('Guardando en FemStats…');
     await subir(true);
     if (!sinConexion) {

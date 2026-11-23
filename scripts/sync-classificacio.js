@@ -68,10 +68,14 @@ async function apiGet(path) {
         headers: { 'User-Agent': USER_AGENT },
         signal: AbortSignal.timeout(20000),
       });
+      // 404 = no está en fcf_cache (o no existe en la FCF): reintentar no lo
+      // va a cambiar, solo alarga el job ~6 s por dirección.
+      if (res.status === 404) { lastErr = new Error('HTTP 404'); lastErr.final = true; throw lastErr; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
       lastErr = e;
+      if (e.final) break;
       if (attempt < 4) await sleep(1000 * attempt);
     }
   }
