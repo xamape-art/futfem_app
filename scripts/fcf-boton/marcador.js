@@ -32,10 +32,12 @@
   const LIGAS = __LIGAS__;
   const TEMPORADA = '2627';
   const DISCIPLINA_FEM = '19308237';       // Futbol Femení (igual que sync-actas-api.js)
-  const MAX_ACTAS = 400;
+  // 24-11-2026: a 0,7 s y 400 por pulsación la FCF cortaba con 403 tras ~250
+  // peticiones. Más despacio, menos por pulsación y con algo de azar.
+  const MAX_ACTAS = 150;
   const DIAS_RELEER = 15;
   const HORAS_COPIA = 72;
-  const PAUSA_MS = 700;
+  const PAUSA_MS = 2000;
   const BASE = 'https://www.fcf.cat';
   const API = '/api/competition';
 
@@ -79,7 +81,7 @@
     }
   };
   const leer = async ruta => {
-    await pausa(PAUSA_MS);
+    await pausa(PAUSA_MS + Math.random() * PAUSA_MS / 2);
     const r = await fetch(BASE + API + ruta, { headers: { Accept: 'application/json' } });
     if (!r.ok) throw new Error(`${API}${ruta} → HTTP ${r.status}`);
     const body = await r.json();
@@ -184,7 +186,8 @@
   } catch (e) {
     // Lo leído hasta aquí no se pierde.
     try { await subir(true); } catch {}
-    decir(`❌ ${e.message}` + (subidas ? `\n(${subidas} respuesta(s) ya guardadas)` : ''));
+    decir(`❌ ${e.message}` + (subidas ? `\n(${subidas} respuesta(s) ya guardadas)` : '')
+      + (/HTTP 403/.test(e.message) ? '\nLa FCF ha cortado por exceso de peticiones. Espera un buen rato (mejor horas) antes de volver a pulsar.' : ''));
     cerrar();
   }
 })();
