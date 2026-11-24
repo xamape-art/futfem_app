@@ -56,8 +56,8 @@
   const slugify = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/['’.]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-  const rpc = async (f, cuerpo) => {
-    const r = await fetch(`${SB}/rest/v1/rpc/${f}`, {
+  const rpc = async (f, cuerpo, query = '') => {
+    const r = await fetch(`${SB}/rest/v1/rpc/${f}${query}`, {
       method: 'POST',
       headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ clave: CLAVE, ...cuerpo }),
@@ -95,7 +95,17 @@
     // Qué hay ya guardado. Si la web no deja hablar con Supabase, se sigue igual
     // y al final se descarga el archivo.
     let guardadas = new Map();
-    try { guardadas = new Map((await rpc('fcf_cache_urls', {})).map(f => [f.url, Date.parse(f.fetched_at)])); }
+    // A trozos: Supabase corta cada respuesta en 1.000 filas, y la caché ya pasa
+    // de 1.000. Leyendo de una vez, lo que quedaba fuera parecía «sin guardar» y
+    // se volvía a pedir a la FCF (cientos de actas de más y los 403 del 24-11).
+    try {
+      for (let desde = 0; ; ) {
+        const trozo = await rpc('fcf_cache_urls', {}, `?select=url,fetched_at&order=url&limit=1000&offset=${desde}`);
+        if (!trozo.length) break;
+        for (const f of trozo) guardadas.set(f.url, Date.parse(f.fetched_at));
+        desde += trozo.length;
+      }
+    }
     catch (e) {
       if (/clave incorrecta/.test(e.message)) throw new Error('La clave del marcador no vale: vuelve a generarlo.');
       sinConexion = true;
